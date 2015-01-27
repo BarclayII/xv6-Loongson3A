@@ -11,29 +11,32 @@
  *
  */
 
-#include "regdef.h"
-#include "cp0regdef.h"
-#include "asm.h"
+#include <regdef.h>
+#include <cp0regdef.h>
+#include <asm.h>
+
+#define RAMSIZE	0x100000
 
 LEAF(_start)
+	
+	.set	mips3
+	.set	noreorder
+
 	/* Disable interrupts */
-	mtc0	zero, CP0_STATUS
+	mfc0	t0, CP0_STATUS
+	or	t0, ST_KX|ST_CU0
+	and	t0, ~(ST_IE)
+	mtc0	t0, CP0_STATUS
 
         /* Disable watch exception. */
         mtc0    zero, CP0_WATCHLO
         mtc0    zero, CP0_WATCHHI
 
-	/* disable kernel mode cache */
-	mfc0	t0, CP0_CONFIG
-	and	t0, ~0x7
-	ori	t0, 0x2
-	mtc0	t0, CP0_CONFIG
-
 	/* set up stack */
-	/* li	sp, 0xa0000000 + RAMSIZE - 16 */
+	li	sp, 0xffffffff802c0000 + RAMSIZE - 16
 	
 	/* jump to main */
-	/* jal	main */
+	jal	main
 			
 loop:
 	j	loop

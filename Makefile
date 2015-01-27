@@ -13,27 +13,40 @@ LOADADDR = 0xffffffff80300000
 
 CROSS_COMPILE = mips64el-linux-
 
+# Install destination, feel free to change this.
+DEST	= /srv/tftp/vmlinux-smp-4core
+
 ######## End of configuration ###########
 
 CC	= $(CROSS_COMPILE)gcc
 CPP	= $(CROSS_COMPILE)cpp
 LD	= $(CROSS_COMPILE)ld
+OBJDUMP = $(CROSS_COMPILE)objdump
 
-INCFLAG	= -Iarch/mips/include
-CFLAGS	= -O -G 0 -mno-abicalls -fno-pic -Wall -mabi=64 $(INCFLAG)
+INCFLAG	=  -I./arch/mips/include -I./include
+CFLAGS	=  -O -G 0 -mno-abicalls -fno-pic -Wall -mabi=64 -fno-builtin
+CFLAGS	+= -nostdinc -nostdlib $(INCFLAG)
 
 LDSCRIPT= barebone.lds
 LDFLAGS	= -N -T$(LDSCRIPT) -Ttext $(LOADADDR)
 
-OUTPUT	= stupid
+OBJS	= arch/mips/entry/start.o \
+	  drivers/serial/uart16550.o \
+	  kern/init.o
+
+OUTPUT	= hello
 
 all: elf
 
-elf: start.o
+elf: $(OBJS)
 	$(LD) $(LDFLAGS) -o $(OUTPUT) $^
+	$(OBJDUMP) -D $(OUTPUT) >kernel.s
+
+install: all
+	cp $(OUTPUT) $(DEST)
 
 clean:
-	rm -rf *.o $(OUTPUT)
+	rm -rf $(OBJS) $(OUTPUT)
 
 .S.o:
 	$(CC) $(CFLAGS) -c $< -o $*.o
