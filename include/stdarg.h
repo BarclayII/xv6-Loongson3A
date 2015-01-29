@@ -8,21 +8,13 @@
  *
  */
 
-#include <drivers/uart16550.h>
+#ifndef _STDARG_H
+#define _STDARG_H
 
-void dbg_puts(const char *s)
-{
-	const char *p;
-	for (p = s; *p != '\0'; ++p)
-		Uart16550Put((unsigned char)*p);
-	Uart16550Put('\r');
-	Uart16550Put('\n');
-}
+typedef __builtin_va_list	va_list;
 
-int main(void)
-{
-	dbg_puts("Hello Loongson 3A!");
-	dbg_printf(NULL);
-	for (;;)
-		/* do nothing */;
-}
+#define va_start(ap, last)	(__builtin_va_start(ap, last))
+#define va_arg(ap)		(__builtin_va_arg(ap))
+#define va_end(ap)		(__builtin_va_end(ap))
+
+#endif

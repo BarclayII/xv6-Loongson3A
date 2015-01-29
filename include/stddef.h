@@ -8,21 +8,11 @@
  *
  */
 
-#include <drivers/uart16550.h>
+#ifndef _STDDEF_H
+#define _STDDEF_H
 
-void dbg_puts(const char *s)
-{
-	const char *p;
-	for (p = s; *p != '\0'; ++p)
-		Uart16550Put((unsigned char)*p);
-	Uart16550Put('\r');
-	Uart16550Put('\n');
-}
+#ifndef NULL
+#define NULL	(void *)0
+#endif
 
-int main(void)
-{
-	dbg_puts("Hello Loongson 3A!");
-	dbg_printf(NULL);
-	for (;;)
-		/* do nothing */;
-}
+#endif

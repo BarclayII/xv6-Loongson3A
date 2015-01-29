@@ -6,8 +6,8 @@
  *
  * Copyright (C) 2015, Gan Quan <coin2028@hotmail.com>
  */
-#ifndef _cp0regdef_h_
-#define _cp0regdef_h_
+#ifndef _ASM_CP0REGDEF_H
+#define _ASM_CP0REGDEF_H
 
 #define CP0_INDEX	$0
 #define CP0_RANDOM	$1
