@@ -11,9 +11,9 @@
  *
  */
 
-#include <regdef.h>
-#include <cp0regdef.h>
-#include <asm.h>
+#include <asm/regdef.h>
+#include <asm/cp0regdef.h>
+#include <asm/asm.h>
 
 #define RAMSIZE	0x100000
 

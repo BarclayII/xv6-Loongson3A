@@ -12,8 +12,7 @@
 #ifndef _uart16550_h_
 #define _uart16550_h_
 
-typedef         unsigned char uint8;
-typedef         unsigned int  uint32;
+#include <sys/types.h>
 
 #define         UART16550_BAUD_2400             2400
 #define         UART16550_BAUD_4800             4800
