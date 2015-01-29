@@ -19,7 +19,7 @@
 
 LEAF(_start)
 	
-	.set	mips3
+	.set	mips64r2
 	.set	noreorder
 
 	/* Disable interrupts */

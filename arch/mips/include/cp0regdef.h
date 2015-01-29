@@ -9,34 +9,45 @@
 #ifndef _cp0regdef_h_
 #define _cp0regdef_h_
 
-#define CP0_INDEX $0
-#define CP0_RANDOM $1
-#define CP0_ENTRYLO0 $2
-#define CP0_ENTRYLO1 $3
-#define CP0_CONTEXT $4
-#define CP0_PAGEMASK $5
-#define CP0_WIRED $6
-#define CP0_BADVADDR $8		/* Bad Virtual Address Register */
-#define CP0_COUNT $9		/* Counter */
-#define CP0_ENTRYHI $10
-#define CP0_COMPARE $11		/* Comparer: raises interrupt when = $9 */
-#define CP0_STATUS $12		/* Status Register */
-#define CP0_CAUSE $13		/* Cause Register */
-#define CP0_EPC $14		/* Exception Program Counter */
-#define CP0_PRID $15
-#define CP0_CONFIG $16
-#define CP0_LLADDR $17
-#define CP0_WATCHLO $18
-#define CP0_WATCHHI $19
-#define CP0_XCONTEXT $20
-#define CP0_FRAMEMASK $21
-#define CP0_DIAGNOSTIC $22
-#define CP0_PERFORMANCE $25
-#define CP0_ECC $26
-#define CP0_CACHEERR $27
-#define CP0_TAGLO $28
-#define CP0_TAGHI $29
-#define CP0_ERROREPC $30
+#define CP0_INDEX	$0
+#define CP0_RANDOM	$1
+#define CP0_ENTRYLO0	$2
+#define CP0_ENTRYLO1	$3
+#define CP0_CONTEXT	$4
+#define CP0_PAGEMASK	$5
+#define CP0_WIRED	$6
+#define CP0_HWRENA	$7
+#define CP0_BADVADDR	$8	/* Bad Virtual Address Register */
+#define CP0_COUNT	$9	/* Counter */
+#define CP0_ENTRYHI	$10
+#define CP0_COMPARE	$11	/* Comparer: raises interrupt when = $9 */
+#define CP0_STATUS	$12	/* Status Register */
+# define CP0_INTCTL	$12, 1	/* Interrupt control */
+# define CP0_SRSCTL	$12, 2
+# define CP0_SRSMAP	$12, 3
+#define CP0_CAUSE	$13	/* Cause Register */
+#define CP0_EPC		$14	/* Exception Program Counter */
+#define CP0_PRID	$15
+# define CP0_EBASE	$15, 1	/* Exception base, and CPU ID for multicore */
+#define CP0_CONFIG	$16
+# define CP0_CONFIG1	$16, 1
+# define CP0_CONFIG2	$16, 2
+# define CP0_CONFIG3	$16, 3
+#define CP0_LLADDR	$17
+#define CP0_WATCHLO	$18
+#define CP0_WATCHHI	$19
+#define CP0_XCONTEXT	$20
+#define CP0_FRAMEMASK	$21
+#define CP0_DIAGNOSTIC	$22
+#define CP0_PERFCTL	$25
+# define CP0_PERFCNT	$25, $1
+#define CP0_ECC		$26
+#define CP0_CACHEERR	$27
+#define CP0_TAGLO	$28
+# define CP0_DATALO	$28, $1
+#define CP0_TAGHI	$29
+# define CP0_DATAHI	$29, $1
+#define CP0_ERROREPC	$30
 
 /*
  * Status register (CP0_STATUS) mode bits
