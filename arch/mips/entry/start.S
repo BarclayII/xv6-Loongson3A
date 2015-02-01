@@ -15,7 +15,7 @@
 #include <asm/cp0regdef.h>
 #include <asm/asm.h>
 
-#define RAMSIZE	0x100000
+#define RAMSIZE	0x1000000
 
 LEAF(_start)
 	

@@ -8,18 +8,10 @@
  *
  */
 
-#include <stdio.h>
-#include <drivers/prom_printk.h>
+#ifndef _KERNEL_PRINTK_H
+#define _KERNEL_PRINTK_H
 
-int main(void)
-{
-	prom_printk("Hello Loongson 3A!\r\n");
-	prom_printk("Testing: %c %08x %016x %08x %u\r\n",
-	    'a',
-	    256,
-	    -1,
-	    -1,
-	    -1);
-	for (;;)
-		/* do nothing */;
-}
+int prom_printk(const char *fmt, ...);
+void prom_puts(const char *s);
+
+#endif

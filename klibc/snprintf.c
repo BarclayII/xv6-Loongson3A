@@ -142,6 +142,10 @@ print_default:	set_ch(*fmt);
 		++fmt;
 	}
 	set_ch('\0');
+#undef FLAG_UNSIGNED
+#undef FLAG_ZEROPAD
+#undef FLAG_NEG
+#undef is_digit
 #undef set_ch
 	return pos;
 }
