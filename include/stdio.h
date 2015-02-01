@@ -8,13 +8,15 @@
  *
  */
 
-#ifndef _STDARG_H
-#define _STDARG_H
+#ifndef _STDIO_H
+#define _STDIO_H
 
-typedef __builtin_va_list	va_list;
+#include <sys/types.h>
+#include <stdarg.h>
 
-#define va_start(ap, last)	(__builtin_va_start(ap, last))
-#define va_arg(ap, type)	(__builtin_va_arg(ap, type))
-#define va_end(ap)		(__builtin_va_end(ap))
+int snprintf(char *str, size_t size, const char *fmt, ...);
+int vsnprintf(char *str, size_t size, const char *fmt, va_list ap);
+
+#define BUFSIZ		8192
 
 #endif

@@ -8,13 +8,10 @@
  *
  */
 
-#ifndef _STDARG_H
-#define _STDARG_H
+#ifndef _STRING_H
+#define _STRING_H
 
-typedef __builtin_va_list	va_list;
-
-#define va_start(ap, last)	(__builtin_va_start(ap, last))
-#define va_arg(ap, type)	(__builtin_va_arg(ap, type))
-#define va_end(ap)		(__builtin_va_end(ap))
+size_t strlcat(char *dst, const char *src, size_t dsize);
+size_t strlcpy(char *dst, const char *src, size_t dsize);
 
 #endif
