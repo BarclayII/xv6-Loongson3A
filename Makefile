@@ -18,23 +18,25 @@ DEST	= /srv/tftp/vmlinux-smp-4core
 
 ######## End of configuration ###########
 
-CC	= $(CROSS_COMPILE)gcc
-CPP	= $(CROSS_COMPILE)cpp
-LD	= $(CROSS_COMPILE)ld
-OBJDUMP = $(CROSS_COMPILE)objdump
+CC		= $(CROSS_COMPILE)gcc
+CPP		= $(CROSS_COMPILE)cpp
+LD		= $(CROSS_COMPILE)ld
+OBJDUMP 	= $(CROSS_COMPILE)objdump
 
-INCFLAG	=  -I./arch/mips/include -I./include
-CFLAGS	=  -O -G 0 -mno-abicalls -fno-pic -Wall -mabi=64 -fno-builtin
-CFLAGS	+= -nostdinc -nostdlib $(INCFLAG)
+INCFLAG		=  -I./arch/mips/include -I./include
+CFLAGS		=  -O -G 0 -mno-abicalls -fno-pic -Wall -mabi=64 -fno-builtin
+CFLAGS		+= -nostdinc -nostdlib $(INCFLAG)
 
-LDSCRIPT= barebone.lds
-LDFLAGS	= -N -T$(LDSCRIPT) -Ttext $(LOADADDR)
+LDSCRIPT	= barebone.lds
+LDFLAGS		= -N -T$(LDSCRIPT) -Ttext $(LOADADDR)
 
-OBJS	= arch/mips/entry/start.o \
-	  drivers/serial/uart16550.o \
-	  kern/init.o
+KLIBC_OBJS	= klibc/snprintf.o
 
-OUTPUT	= hello
+OBJS		= arch/mips/entry/start.o \
+		  drivers/serial/uart16550.o \
+		  kern/init.o $(KLIBC_OBJS)
+
+OUTPUT		= hello
 
 all: elf
 

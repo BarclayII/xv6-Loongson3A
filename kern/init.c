@@ -8,6 +8,7 @@
  *
  */
 
+#include <stdio.h>
 #include <drivers/uart16550.h>
 
 void dbg_puts(const char *s)
@@ -15,14 +16,14 @@ void dbg_puts(const char *s)
 	const char *p;
 	for (p = s; *p != '\0'; ++p)
 		Uart16550Put((unsigned char)*p);
-	Uart16550Put('\r');
-	Uart16550Put('\n');
 }
 
 int main(void)
 {
-	dbg_puts("Hello Loongson 3A!");
-	dbg_printf(NULL);
+	char buf[256];
+	snprintf(buf, 256, "%s debug: %c %08x %u %d\r\n", "snprintf", 'a', 256, 128, -4);
+	dbg_puts(buf);
+	dbg_puts("Hello Loongson 3A!\r\n");
 	for (;;)
 		/* do nothing */;
 }

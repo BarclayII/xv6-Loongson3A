@@ -20,4 +20,7 @@ typedef signed int __s32;
 typedef unsigned long long uint64, __u64;
 typedef signed long long int64, __s64;
 
+typedef unsigned int size_t;
+typedef signed int ssize_t;
+
 #endif
