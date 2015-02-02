@@ -9,6 +9,7 @@
  */
 
 #include <stdio.h>
+#include <drivers/uart16550.h>
 #include <drivers/prom_printk.h>
 
 int main(void)
@@ -21,5 +22,6 @@ int main(void)
 	    -1,
 	    -1);
 	for (;;)
-		/* do nothing */;
+		/* echo characters */
+		Uart16550Put(Uart16550GetPoll());
 }

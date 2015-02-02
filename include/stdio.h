@@ -13,10 +13,9 @@
 
 #include <sys/types.h>
 #include <stdarg.h>
+#include <stddef.h>
 
 int snprintf(char *str, size_t size, const char *fmt, ...);
 int vsnprintf(char *str, size_t size, const char *fmt, va_list ap);
-
-#define BUFSIZ		8192
 
 #endif

@@ -15,4 +15,8 @@
 #define NULL	(void *)0
 #endif
 
+#ifndef BUFSIZ
+#define BUFSIZ		8192
+#endif
+
 #endif

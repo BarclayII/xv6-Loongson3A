@@ -32,7 +32,7 @@ LDFLAGS		= -N -T$(LDSCRIPT) -Ttext $(LOADADDR)
 
 KLIBC_OBJS	= klibc/snprintf.o
 
-OBJS		= arch/mips/entry/start.o \
+OBJS		= arch/mips/entry.o \
 		  drivers/serial/uart16550.o \
 		  drivers/serial/prom_printk.o \
 		  kern/init.o $(KLIBC_OBJS)

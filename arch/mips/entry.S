@@ -19,13 +19,12 @@
 
 LEAF(_start)
 	
-	.set	mips64r2
+	.set	mips64
 	.set	noreorder
 
-	/* Disable interrupts */
 	mfc0	t0, CP0_STATUS
 	or	t0, ST_KX|ST_CU0
-	and	t0, ~(ST_IE)
+	/*and	t0, ~(ST_IE)*/
 	mtc0	t0, CP0_STATUS
 
         /* Disable watch exception. */
