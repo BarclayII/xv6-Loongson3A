@@ -28,7 +28,7 @@ OBJDUMP 	= $(CROSS_COMPILE)objdump
 INCFLAG		=  -I./arch/mips/include -I./include \
 		   -I./arch/mips/mach/$(MACH)/include
 CFLAGS		=  -O -G 0 -mno-abicalls -fno-pic -Wall -mabi=64 -fno-builtin
-CFLAGS		+= -nostdinc -nostdlib $(INCFLAG)
+CFLAGS		+= -nostdinc -nostdlib -g $(INCFLAG)
 
 LDSCRIPT	= kernel.lds
 LDFLAGS		= -N -T$(LDSCRIPT) -Ttext $(LOADADDR)
@@ -37,6 +37,7 @@ KLIBC_OBJS	= klibc/snprintf.o \
 		  klibc/memset.o
 
 OBJS		= arch/mips/entry.o \
+		  arch/mips/setup.o \
 		  drivers/serial/uart16550.o \
 		  drivers/serial/prom_printk.o \
 		  kern/printk.o \
@@ -48,7 +49,7 @@ all: elf
 
 elf: $(OBJS)
 	$(LD) $(LDFLAGS) -o $(OUTPUT) $^
-	$(OBJDUMP) -D $(OUTPUT) >kernel.s
+	$(OBJDUMP) -S $(OUTPUT) >kernel.s
 
 install: all
 	cp $(OUTPUT) $(DEST)

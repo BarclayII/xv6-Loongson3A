@@ -8,6 +8,7 @@
  *
  */
 
+#include <drivers/uart16550.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -32,6 +33,7 @@ int vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
 {
 #define set_ch(ch) \
 	do { \
+		/*Uart16550Put(ch);*/ \
 		str[pos++] = ch; \
 		if (pos == size) { \
 			str[size - 1] = '\0'; \
@@ -40,6 +42,7 @@ int vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
 	} while (0)
 
 #define is_digit(ch)	(((ch) >= '0') && ((ch) <= '9'))
+#define tick(ch)	(((ch) == '9') ? '0' : ((ch) + 1))
 
 	static const char *digits = "0123456789abcdef";
 
@@ -50,11 +53,14 @@ int vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
 	int flag = 0;
 	ssize_t pos = 0;
 
+	char ticker = '0';
+
 	int buf_pos;
 	char buf[25];
 	char *s;
 
-	for (;;) {
+	for ( ; *fmt != '\0'; ) {
+		ticker = tick(ticker);
 		if (*fmt == '%') {
 			++fmt;
 fmt_loop:		switch (*fmt) {
@@ -79,6 +85,8 @@ print_uint:			buf_pos = 0;
 					buf[buf_pos++] = digits[u64 % base];
 					u64 /= base;
 				}
+				if (buf_pos == 0)
+					buf[buf_pos++] = '0';
 				if (width == 0) {
 					if (flag & FLAG_NEG)
 						set_ch('-');
@@ -110,7 +118,8 @@ print_uint:			buf_pos = 0;
 				++fmt;
 				break;
 			case 's':
-				for (s = va_arg(ap, char *); *s != '\0'; ++s)
+				s = va_arg(ap, char *);
+				for (; *s != '\0'; ++s)
 					set_ch(*s);
 				++fmt;
 				break;
