@@ -13,6 +13,8 @@ LOADADDR = 0xffffffff80300000
 
 CROSS_COMPILE = mips64el-linux-
 
+MACH	= loongson3a5
+
 # Install destination, feel free to change this.
 DEST	= /srv/tftp/vmlinux-smp-4core
 
@@ -23,7 +25,8 @@ CPP		= $(CROSS_COMPILE)cpp
 LD		= $(CROSS_COMPILE)ld
 OBJDUMP 	= $(CROSS_COMPILE)objdump
 
-INCFLAG		=  -I./arch/mips/include -I./include
+INCFLAG		=  -I./arch/mips/include -I./include \
+		   -I./arch/mips/mach/$(MACH)/include
 CFLAGS		=  -O -G 0 -mno-abicalls -fno-pic -Wall -mabi=64 -fno-builtin
 CFLAGS		+= -nostdinc -nostdlib $(INCFLAG)
 

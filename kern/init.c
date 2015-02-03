@@ -12,6 +12,8 @@
 #include <printk.h>
 #include <drivers/uart16550.h>
 #include <asm/cp0regdef.h>
+#include <ht_regs.h>
+#include <memrw.h>
 
 int main(void)
 {
@@ -27,11 +29,7 @@ int main(void)
 	    -1);
 	printk("PRID: %08x\r\n", prid);
 
-	asm volatile (
-		"dli	$2, 0x90000efdfb000000;"
-		"lw	%0, 0x5c($2);"
-		".set	mips3;" :
-		"=r"(cputype_flag) : : "$2");
+	cputype_flag = read_mem_uint(HT_RX_BUFFER);
 	printk("FLAG: %016x\r\n", cputype_flag);
 	for (;;)
 		/* echo characters */
