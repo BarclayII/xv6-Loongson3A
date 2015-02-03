@@ -14,6 +14,7 @@
 #include <asm/cp0regdef.h>
 #include <ht_regs.h>
 #include <memrw.h>
+#include <bitmap.h>
 
 int main(void)
 {
@@ -31,6 +32,7 @@ int main(void)
 
 	cputype_flag = read_mem_uint(HT_RX_BUFFER);
 	printk("FLAG: %016x\r\n", cputype_flag);
+
 	for (;;)
 		/* echo characters */
 		Uart16550Put(Uart16550GetPoll());

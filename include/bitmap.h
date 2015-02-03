@@ -8,13 +8,15 @@
  *
  */
 
-#ifndef _STRING_H
-#define _STRING_H
+#ifndef _BITMAP_H
+#define _BITMAP_H
 
-#include <sys/types.h>
+#include <asm/bitops.h>
+#include <string.h>
 
-size_t strlcat(char *dst, const char *src, size_t dsize);
-size_t strlcpy(char *dst, const char *src, size_t dsize);
-void *memset(void *dst, int c, size_t n);
+#define DECLARE_BITMAP(name, bits) \
+	unsigned int name[BITS_TO_INTS(bits)]
+
+#define CLEAR_BITMAP(name)	memset(name, 0, sizeof(name))
 
 #endif

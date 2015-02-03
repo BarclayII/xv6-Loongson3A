@@ -33,7 +33,8 @@ CFLAGS		+= -nostdinc -nostdlib $(INCFLAG)
 LDSCRIPT	= kernel.lds
 LDFLAGS		= -N -T$(LDSCRIPT) -Ttext $(LOADADDR)
 
-KLIBC_OBJS	= klibc/snprintf.o
+KLIBC_OBJS	= klibc/snprintf.o \
+		  klibc/memset.o
 
 OBJS		= arch/mips/entry.o \
 		  drivers/serial/uart16550.o \
