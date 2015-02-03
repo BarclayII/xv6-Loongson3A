@@ -162,6 +162,23 @@
 #define PG_ELPA		0x20000000	/* Enable Large Page Address */
 
 /*
+ * Config register
+ */
+#define CONF_CM		0x80000000	/* Config1 register (FPU) */
+#define CONF_BE		0x00008000	/* Big-endianness */
+#define CONF_AT		0x00006000	/* MIPS Architecture */
+# define CONF_EM	0x00004000	/* MIPS64 with 64-bit address space */
+# define CONF_EB	0x00002000	/* MIPS64 with 32-bit address space */
+#define CONF_AR		0x00001c00	/* MIPS release version */
+# define CONF_R2	0x00000400	/* MIPSr2 */
+#define CONF_MT		0x00000380	/* MMU type */
+# define CONF_TLB	0x00000080	/* Standard TLB */
+#define CONF_VI		0x00000008	/* Virtual instruction cache */
+#define CONF_K0		0x00000007	/* KSEG0 cache consistency */
+# define CONF_CACHABLE	0x00000003	/* Cachable */
+# define CONF_UNCACHED	0x00000002	/* Uncached */
+
+/*
  * Macros to access the system control coprocessor
  */
 
@@ -426,14 +443,5 @@ do {									\
 
 #define read_c0_errorepc()	__read_ulong_c0_register($30, 0)
 #define write_c0_errorepc(val)	__write_ulong_c0_register($30, 0, val)
-
-static inline void __ehb(void)
-{
-	asm volatile (
-	    ".set	mips32r2;"
-	    "ehb;"
-	    ".set	mips0"
-	    );
-}
 
 #endif

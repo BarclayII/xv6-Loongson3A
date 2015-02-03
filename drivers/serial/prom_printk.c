@@ -32,3 +32,10 @@ int prom_printk(const char *fmt, ...)
 	return result;
 }
 
+int prom_vprintk(const char *fmt, va_list ap)
+{
+	int result;
+	result = vsnprintf(prom_printk_buf, BUFSIZ, fmt, ap);
+	prom_puts(prom_printk_buf);
+	return result;
+}

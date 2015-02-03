@@ -9,6 +9,12 @@ SECTIONS
 	*(.rodata)
         }
 
+  __ex_table : {
+	__begin___ex_table = .;
+	*(__ex_table);
+	__end___ex_table = .;
+  }
+
   .reginfo : { *(.reginfo) }
 
   .data : {

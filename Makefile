@@ -27,7 +27,7 @@ INCFLAG		=  -I./arch/mips/include -I./include
 CFLAGS		=  -O -G 0 -mno-abicalls -fno-pic -Wall -mabi=64 -fno-builtin
 CFLAGS		+= -nostdinc -nostdlib $(INCFLAG)
 
-LDSCRIPT	= barebone.lds
+LDSCRIPT	= kernel.lds
 LDFLAGS		= -N -T$(LDSCRIPT) -Ttext $(LOADADDR)
 
 KLIBC_OBJS	= klibc/snprintf.o
@@ -35,6 +35,7 @@ KLIBC_OBJS	= klibc/snprintf.o
 OBJS		= arch/mips/entry.o \
 		  drivers/serial/uart16550.o \
 		  drivers/serial/prom_printk.o \
+		  kern/printk.o \
 		  kern/init.o $(KLIBC_OBJS)
 
 OUTPUT		= hello

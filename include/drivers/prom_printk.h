@@ -11,7 +11,10 @@
 #ifndef _KERNEL_PRINTK_H
 #define _KERNEL_PRINTK_H
 
+#include <stdarg.h>
+
 int prom_printk(const char *fmt, ...);
+int prom_vprintk(const char *fmt, va_list ap);
 void prom_puts(const char *s);
 
 #endif

@@ -11,7 +11,7 @@
  *
  */
 
-
+#include <memrw.h>
 #include <drivers/uart16550.h>
 
 /* === CONFIG === */
@@ -41,8 +41,8 @@
 #define         OFS_DIVISOR_MSB         (1*REG_OFFSET)
 
 /* memory-mapped read/write of the port */
-#define         UART16550_READ(y)    (*((volatile unsigned char *)(BASE + y)))
-#define         UART16550_WRITE(y, z)  ((*((volatile unsigned char *)(BASE + y))) = z)
+#define         UART16550_READ(y)	read_mem_byte(BASE + y)
+#define         UART16550_WRITE(y, z)	write_mem_byte(BASE + y, z)
 
 void
 Uart16550Init(unsigned int baud, unsigned char data, unsigned char parity,
