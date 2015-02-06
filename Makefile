@@ -34,6 +34,8 @@ LDSCRIPT	= kernel.lds
 LDFLAGS		= -N -T$(LDSCRIPT) -Ttext $(LOADADDR)
 
 KLIBC_OBJS	= klibc/snprintf.o \
+		  klibc/strtoul.o \
+		  klibc/strcmp.o \
 		  klibc/strlen.o \
 		  klibc/memset.o
 

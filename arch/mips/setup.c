@@ -16,6 +16,10 @@
 
 #include <asm/bootinfo.h>
 #include <asm/cpu.h>
+#include <printk.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
 /*
  * fw_arg0 and fw_arg1 serves as argc and argv for kernel.
@@ -28,8 +32,32 @@ unsigned long fw_arg0, fw_arg1, fw_arg2, fw_arg3;
 
 unsigned long memsize, highmemsize, cpu_clock_freq, bus_clock_freq;
 
-void setup_arch(void)
+static inline void
+parse_ulong_option(const char *envs, const char *option, unsigned long *var)
+{
+	int len_option = strlen(option);
+	if ((strncmp(envs, option, len_option) == 0) &&
+	    (envs[len_option] == '=')) {
+		*var = strtoul(&envs[len_option + 1], NULL, 10);
+	}
+}
+
+void
+parse_env(void)
+{
+	signed int *envp = (signed int *)fw_arg2;
+	char *envs = (char *)(unsigned long)(*envp);
+	for ( ; *envs != '\0'; ) {
+		parse_ulong_option(envs, "memsize", &memsize);
+		envs += strlen(envs) + 1;
+	}
+	printk("Memory size = %u\r\n", memsize);
+}
+
+void
+setup_arch(void)
 {
 	cpu_probe();
+	parse_env();
 	return;
 }

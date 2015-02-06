@@ -13,6 +13,8 @@
 
 #include <sys/types.h>
 
+int strcmp(const char *s1, const char *s2);
+int strncmp(const char *s1, const char *s2, size_t n);
 size_t strlcat(char *dst, const char *src, size_t dsize);
 size_t strlcpy(char *dst, const char *src, size_t dsize);
 size_t strlen(const char *str);

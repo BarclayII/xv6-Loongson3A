@@ -62,6 +62,8 @@ int main(void)
 	setup_arch();
 	printk("Core number: %d\r\n", current_cpu_data.core);
 
+	printk("FW_ARG3: %016x\r\n", *(unsigned long *)fw_arg3);
+
 	for (;;)
 		/* echo characters */
 		Uart16550Put(Uart16550GetPoll());
