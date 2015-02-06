@@ -178,6 +178,8 @@
 # define CONF_CACHABLE	0x00000003	/* Cachable */
 # define CONF_UNCACHED	0x00000002	/* Uncached */
 
+#define EBASE_CPUNUM_MASK	0x3ff
+
 /*
  * Macros to access the system control coprocessor
  */

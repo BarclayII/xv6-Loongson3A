@@ -33,7 +33,6 @@ int vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
 {
 #define set_ch(ch) \
 	do { \
-		/*Uart16550Put(ch);*/ \
 		str[pos++] = ch; \
 		if (pos == size) { \
 			str[size - 1] = '\0'; \

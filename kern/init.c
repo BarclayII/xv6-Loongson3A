@@ -9,6 +9,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <printk.h>
 #include <drivers/uart16550.h>
 #include <asm/cp0regdef.h>
@@ -22,7 +23,7 @@ int main(void)
 	unsigned int prid = read_c0_prid();
 	unsigned long cputype_flag;
 	int i;
-	signed int *argv;
+	signed int *argv, *envp;
 	char *arg;
 
 	early_printk = 1;
@@ -45,8 +46,15 @@ int main(void)
 	argv = (signed int *)fw_arg1;
 	printk("ARGV: %p\r\n", argv);
 	for (i = 0; i < fw_arg0; ++i) {
-		arg = (char *)&(argv[i]);
-		printk("ARGV[%d]: %s\r\n", i, argv[i]);
+		printk("ARGV[%d]: %s\r\n", i, (char *)argv[i]);
+	}
+
+	envp = (signed int *)fw_arg2;
+	printk("ENVP: %p %08x\r\n", envp, *envp);
+	char *envs = (char *)*envp;
+	for ( ; *envs != '\0'; ) {
+		printk("\t%s\r\n", envs);
+		envs += strlen(envs) + 1;
 	}
 
 	for (;;)

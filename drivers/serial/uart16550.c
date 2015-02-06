@@ -12,11 +12,13 @@
  */
 
 #include <memrw.h>
+#include <io.h>
 #include <drivers/uart16550.h>
 
 /* === CONFIG === */
 
-#define         BASE                    0xffffffffbfe001e8
+#define		UART_OFFSET		0x1fe001e8
+#define		BASE			(IO_BASE + 0x1fe001e8)
 #define         MAX_BAUD                115200
 #define		REG_OFFSET		1
 
