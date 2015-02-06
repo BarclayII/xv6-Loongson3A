@@ -11,12 +11,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <printk.h>
-#include <drivers/uart16550.h>
-#include <asm/cp0regdef.h>
 #include <ht_regs.h>
 #include <memrw.h>
 #include <bitmap.h>
+#include <setup.h>
+#include <drivers/uart16550.h>
+#include <asm/cp0regdef.h>
 #include <asm/bootinfo.h>
+#include <asm/cpu.h>
 
 int main(void)
 {
@@ -56,6 +58,9 @@ int main(void)
 		printk("\t%s\r\n", envs);
 		envs += strlen(envs) + 1;
 	}
+
+	setup_arch();
+	printk("Core number: %d\r\n", current_cpu_data.core);
 
 	for (;;)
 		/* echo characters */

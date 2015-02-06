@@ -39,9 +39,11 @@ KLIBC_OBJS	= klibc/snprintf.o \
 
 OBJS		= arch/mips/entry.o \
 		  arch/mips/setup.o \
+		  arch/mips/cpu.o \
 		  drivers/serial/uart16550.o \
 		  drivers/serial/prom_printk.o \
 		  kern/printk.o \
+		  kern/panic.o \
 		  kern/init.o $(KLIBC_OBJS)
 
 OUTPUT		= hello

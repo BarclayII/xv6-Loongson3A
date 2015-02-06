@@ -15,20 +15,21 @@
  */
 
 #include <asm/bootinfo.h>
+#include <asm/cpu.h>
 
 /*
  * fw_arg0 and fw_arg1 serves as argc and argv for kernel.
  *
- * fw_arg2 stores a pointer to boot parameters.
- * It is a pointer to a structure if the system is booted from UEFI, which
- * is the case for Loongson 3A.
+ * fw_arg2 stores a pointer to environment strings.
  *
  * fw_arg3 is likely reserved(?)
  */
 unsigned long fw_arg0, fw_arg1, fw_arg2, fw_arg3;
 
+unsigned long memsize, highmemsize, cpu_clock_freq, bus_clock_freq;
+
 void setup_arch(void)
 {
-	/*cpu_probe();*/
+	cpu_probe();
 	return;
 }

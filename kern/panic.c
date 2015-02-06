@@ -8,35 +8,17 @@
  *
  */
 
+#include <panic.h>
 #include <stdarg.h>
 #include <printk.h>
-#include <drivers/prom_printk.h>
 
-int early_printk;
-
-int printk(const char *fmt, ...)
+void panic(const char *fmt, ...)
 {
 	va_list ap;
-	int result;
 	va_start(ap, fmt);
-	if (early_printk) {
-		result = prom_vprintk(fmt, ap);
-	} else {
-		/* Not implemented yet */
-		result = 0;
-	}
+	vprintk(fmt, ap);
 	va_end(ap);
-	return result;
-}
 
-int vprintk(const char *fmt, va_list ap)
-{
-	int result;
-	if (early_printk) {
-		result = prom_vprintk(fmt, ap);
-	} else {
-		/* Not implemented yet */
-		result = 0;
-	}
-	return result;
+	for (;;)
+		/* do nothing */;
 }
