@@ -30,8 +30,7 @@
 
 LEAF(_start)
 	
-	.set	mips64
-	.set	noreorder
+	.set	mips64r2
 
 	mfc0	t0, CP0_STATUS
 	or	t0, ST_KX|ST_CU0
@@ -57,6 +56,30 @@ LEAF(_start)
 	set_saved_sp sp, t0
 	/* Initialize stack pointer */
 	dsubu	sp, 32
+
+	/* TEST */
+	dli	s0, 0xfffffff0fffffff1
+	dli	s1, 0xeeeeeee0eeeeeee1
+	dli	s2, 0xddddddd0ddddddd1
+	dli	s3, 0xccccccc0ccccccc1
+	dli	s4, 0xbbbbbbb0bbbbbbb1
+	dli	s5, 0xaaaaaaa0aaaaaaa1
+	dli	s6, 0x9999999099999991
+	dli	s7, 0x8888888088888881
+
+	dli	t0, 0x100000011
+	dli	t1, 0x200000022
+	dli	t2, 0x300000033
+	dli	t3, 0x400000044
+	dli	t4, 0x500000055
+	dli	t5, 0x600000066
+	dli	t6, 0x700000077
+	dli	t7, 0x800000088
+
+	SAVE_ALL
+	dli	t0, 0x888888888
+	RESTORE_ALL
+	SAVE_ALL
 	
 	/* jump to main */
 	j	main

@@ -19,6 +19,7 @@
 #include <asm/cp0regdef.h>
 #include <asm/bootinfo.h>
 #include <asm/cpu.h>
+#include <asm/thread_info.h>
 
 int main(void)
 {
@@ -66,6 +67,10 @@ int main(void)
 	printk("Core number: %d\r\n", current_cpu_data.core);
 
 	printk("FW_ARG3: %016x\r\n", *(unsigned long *)fw_arg3);
+
+	for (i = THREAD_SIZE / sizeof(unsigned long) - 1; i >= 0; --i) {
+		printk("%016x\r\n", init_thread_union.stack[i]);
+	}
 
 	for (;;)
 		/* echo characters */

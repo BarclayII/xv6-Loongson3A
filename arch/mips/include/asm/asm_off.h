@@ -16,6 +16,7 @@
  */
 
 #define THREAD_SIZE	8192
+#define THREAD_MASK	(THREAD_SIZE - 1)
 
 #define TF_MEMBERS	38
 #define TF_SIZE		(TF_MEMBERS * 8)

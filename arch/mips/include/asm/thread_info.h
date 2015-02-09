@@ -17,4 +17,7 @@ union thread_stack_info {
  */
 extern union thread_stack_info init_thread_union;
 
+#define init_thread_info	(init_thread_union.current_thread_info)
+#define init_stack		(init_thread_union.stack)
+
 #endif
