@@ -37,11 +37,14 @@ KLIBC_OBJS	= klibc/snprintf.o \
 		  klibc/strtoul.o \
 		  klibc/strcmp.o \
 		  klibc/strlen.o \
-		  klibc/memset.o
+		  klibc/memset.o \
+		  klibc/memcpy.o
 
 OBJS		= arch/mips/entry.o \
 		  arch/mips/setup.o \
 		  arch/mips/cpu.o \
+		  arch/mips/traps.o \
+		  arch/mips/except.o \
 		  drivers/serial/uart16550.o \
 		  drivers/serial/prom_printk.o \
 		  kern/printk.o \
@@ -64,5 +67,3 @@ clean:
 
 .S.o:
 	$(CC) $(CFLAGS) -c $< -o $*.o
-
-

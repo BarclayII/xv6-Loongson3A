@@ -19,5 +19,6 @@ size_t strlcat(char *dst, const char *src, size_t dsize);
 size_t strlcpy(char *dst, const char *src, size_t dsize);
 size_t strlen(const char *str);
 void *memset(void *dst, int c, size_t n);
+void *memcpy(void *dst0, const void *src0, size_t length);
 
 #endif

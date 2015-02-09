@@ -21,8 +21,9 @@
 #include <asm/cpu.h>
 #include <asm/thread_info.h>
 #include <asm/ptrace.h>
+#include <asm/trap.h>
 
-int main(struct trapframe *tf)
+int main(void)
 {
 	unsigned int prid = read_c0_prid();
 	unsigned long cputype_flag;
@@ -69,8 +70,18 @@ int main(struct trapframe *tf)
 
 	printk("FW_ARG3: %016x\r\n", *(unsigned long *)fw_arg3);
 
-	printk("%016x\r\n", tf);
-	printk("%016x\r\n", tf->gpr[16]);
+	trap_init();
+
+	asm volatile (
+		"dli	$16, 0x100000001;"
+		"dli	$17, 0x200000002;"
+		"dli	$18, 0x300000003;"
+		"dli	$19, 0x400000004;"
+		"break 7"
+		: /* no output */
+		: /* no input */
+		: "$16", "$17", "$18", "$19"
+	);
 
 	for (;;)
 		/* echo characters */
