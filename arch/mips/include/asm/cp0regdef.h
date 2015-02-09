@@ -87,6 +87,8 @@
 #define ST_EXL	0x00000002	/* Exception Level */
 #define ST_IE	0x00000001	/* Global Interrupt Enable */
 
+#define NR_INTS	8		/* Number of Interrupt Mask Bits */
+
 /*
  * Cause register (CP0_CAUSE) bits, for handling exceptions
  */

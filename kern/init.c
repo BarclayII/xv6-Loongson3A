@@ -22,6 +22,7 @@
 #include <asm/thread_info.h>
 #include <asm/ptrace.h>
 #include <asm/trap.h>
+#include <asm/irq.h>
 
 int main(void)
 {
@@ -72,16 +73,7 @@ int main(void)
 
 	trap_init();
 
-	asm volatile (
-		"dli	$16, 0x100000001;"
-		"dli	$17, 0x200000002;"
-		"dli	$18, 0x300000003;"
-		"dli	$19, 0x400000004;"
-		"break 7"
-		: /* no output */
-		: /* no input */
-		: "$16", "$17", "$18", "$19"
-	);
+	local_irq_enable();
 
 	for (;;)
 		/* echo characters */

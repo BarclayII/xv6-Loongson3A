@@ -8,6 +8,7 @@
  *
  */
 
+#include <asm/irq.h>
 #include <panic.h>
 #include <stdarg.h>
 #include <printk.h>
@@ -15,9 +16,13 @@
 void panic(const char *fmt, ...)
 {
 	va_list ap;
+
+	local_irq_disable();
+
 	va_start(ap, fmt);
 	vprintk(fmt, ap);
 	va_end(ap);
+
 
 	for (;;)
 		/* do nothing */;

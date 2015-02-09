@@ -33,7 +33,7 @@ LEAF(_start)
 	.set	mips64r2
 
 	mfc0	t0, CP0_STATUS
-	or	t0, ST_KX|ST_CU0
+	or	t0, ST_KX|ST_CU0|ST_IM
 	mtc0	t0, CP0_STATUS
 
         /* Disable watch exception. */

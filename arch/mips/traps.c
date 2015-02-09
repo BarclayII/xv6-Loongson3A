@@ -11,6 +11,7 @@
 #include <asm/regdef.h>
 #include <asm/cp0regdef.h>
 #include <asm/trap.h>
+#include <stddef.h>
 #include <string.h>
 #include <printk.h>
 #include <panic.h>
@@ -32,6 +33,33 @@ static const char *regname[] = {
 	"t8", "t9", "k0", "k1", "gp", "sp", "s8", "ra"
 };
 
+static const char *ex_desc[] = {
+	[EC_int]	= "Interrupt Pending",
+	[EC_tlbm]	= "TLB Modified",
+	[EC_tlbl]	= "TLB Loading Miss",
+	[EC_tlbs]	= "TLB Storing Miss",
+	[EC_adel]	= "Address Error on Loading",
+	[EC_ades]	= "Address Error on Storing",
+	[EC_ibe]	= "Bus Error while Fetching Instruction",
+	[EC_dbe]	= "Bus Error while Loading/Storing Data",
+	[EC_sys]	= "System Call",
+	[EC_bp]		= "Breakpoint",
+	[EC_ri]		= "Reserved/Illegal Instruction",
+	[EC_cpu]	= "Coprocessor Unusable",
+	[EC_ov]		= "Arithmetic Overflow",
+	[EC_tr]		= "Trap Instruction",
+	[EC_fpe]	= "Floating-Point Exception",
+	[EC_is]		= "Stack Exception",
+	[EC_dib]	= "Debug Instruction Exception",
+	[EC_ddbs]	= "Debug Data Storing Exception",
+	[EC_ddbl]	= "Debug Data Loading Exception",
+	[EC_watch]	= "Referencing WatchHi/WatchLo",
+	[EC_dbp]	= "Debug Breakpoint",
+	[EC_dint]	= "Debug Interrupt",
+	[EC_dss]	= "Debug Step",
+	[EC_cacheerr]	= "Cache Error"
+};
+
 void dump_trapframe(struct trapframe *tf)
 {
 	int i;
@@ -43,10 +71,36 @@ void dump_trapframe(struct trapframe *tf)
 	printk("EPC\t= %08x\r\n", tf->cp0_epc);
 }
 
+static unsigned long long ticks = 0;
+static unsigned int compare = 0;
+
+static int handle_int(struct trapframe *tf)
+{
+	unsigned int cause = tf->cp0_cause;
+	if ((cause & CR_IPx(7)) && (cause & CR_TI)) {
+		compare += 0x10000000;
+		write_c0_compare(compare);
+		printk("ticks\t= %d\r\n", ticks);
+		++ticks;
+		return 0;
+	}
+	return -1;
+}
+
 void handle_exception(struct trapframe *tf)
 {
-	/* do nothing... */
-	printk("Caught exception!\r\n");
-	dump_trapframe(tf);
-	panic("SUSPENDING SYSTEM...\r\n");
+	int exccode = EXCCODE(tf->cp0_cause);
+	switch (exccode) {
+	case EC_int:
+		if (handle_int(tf) == 0)
+			break;
+		/* else fallthru */
+	default:
+		printk("Caught exception %s (%d)\r\n",
+		    (ex_desc[exccode] == NULL) ? "(unknown)" : ex_desc[exccode],
+		    exccode);
+		dump_trapframe(tf);
+		panic("SUSPENDING SYSTEM...\r\n");
+		break;
+	}
 }
