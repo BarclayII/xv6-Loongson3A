@@ -77,9 +77,7 @@ LEAF(_start)
 	dli	t7, 0x800000088
 
 	SAVE_ALL
-	dli	t0, 0x888888888
-	RESTORE_ALL
-	SAVE_ALL
+	move	a0, sp
 	
 	/* jump to main */
 	j	main

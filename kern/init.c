@@ -20,8 +20,9 @@
 #include <asm/bootinfo.h>
 #include <asm/cpu.h>
 #include <asm/thread_info.h>
+#include <asm/ptrace.h>
 
-int main(void)
+int main(struct trapframe *tf)
 {
 	unsigned int prid = read_c0_prid();
 	unsigned long cputype_flag;
@@ -68,9 +69,8 @@ int main(void)
 
 	printk("FW_ARG3: %016x\r\n", *(unsigned long *)fw_arg3);
 
-	for (i = THREAD_SIZE / sizeof(unsigned long) - 1; i >= 0; --i) {
-		printk("%016x\r\n", init_thread_union.stack[i]);
-	}
+	printk("%016x\r\n", tf);
+	printk("%016x\r\n", tf->gpr[16]);
 
 	for (;;)
 		/* echo characters */
