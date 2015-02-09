@@ -20,10 +20,11 @@
  * option) any later version.
  *
  */
-
 #include <asm/regdef.h>
 #include <asm/cp0regdef.h>
 #include <asm/asm.h>
+#include <asm/stackframe.h>
+#include <asm/asm_off.h>
 
 #define RAMSIZE	0x10000000
 
@@ -34,7 +35,6 @@ LEAF(_start)
 
 	mfc0	t0, CP0_STATUS
 	or	t0, ST_KX|ST_CU0
-	and	t0, ~(ST_IE)
 	mtc0	t0, CP0_STATUS
 
         /* Disable watch exception. */
@@ -47,11 +47,19 @@ LEAF(_start)
 	sd	a2, fw_arg2
 	sd	a3, fw_arg3
 
-	/* set up stack */
-	li	sp, 0xffffffff802c0000 + RAMSIZE - 16
+	/* Load thread stack into global pointer */
+	dla	gp, init_thread_union
+
+	/* Locate stack at the top of union, but after an empty trapframe */
+	li	sp, THREAD_SIZE - 32 - TF_SIZE
+	daddu	sp, gp
+	/* Save current sp */
+	set_saved_sp sp, t0
+	/* Initialize stack pointer */
+	dsubu	sp, 32
 	
 	/* jump to main */
-	jal	main
+	j	main
 			
 loop:
 	j	loop

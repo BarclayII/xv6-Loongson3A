@@ -16,6 +16,7 @@
 
 #include <asm/bootinfo.h>
 #include <asm/cpu.h>
+#include <asm/thread_info.h>
 #include <printk.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -30,7 +31,15 @@
  */
 unsigned long fw_arg0, fw_arg1, fw_arg2, fw_arg3;
 
+/*
+ * Boot parameters obtained from PMON environment strings
+ */
 unsigned long memsize, highmemsize, cpu_clock_freq, bus_clock_freq;
+
+/*
+ * Thread stack should be alighed to stack size.
+ */
+union thread_stack_info init_thread_union __attribute__((__aligned(THREAD_SIZE)));
 
 static inline void
 parse_ulong_option(const char *envs, const char *option, unsigned long *var)
@@ -49,9 +58,11 @@ parse_env(void)
 	char *envs = (char *)(unsigned long)(*envp);
 	for ( ; *envs != '\0'; ) {
 		parse_ulong_option(envs, "memsize", &memsize);
+		parse_ulong_option(envs, "highmemsize", &highmemsize);
+		parse_ulong_option(envs, "cpuclock", &cpu_clock_freq);
+		parse_ulong_option(envs, "busclock", &bus_clock_freq);
 		envs += strlen(envs) + 1;
 	}
-	printk("Memory size = %u\r\n", memsize);
 }
 
 void

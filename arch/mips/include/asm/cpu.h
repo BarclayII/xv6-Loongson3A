@@ -78,6 +78,8 @@ struct cpuinfo_mips {
 extern struct cpuinfo_mips cpu_data[];
 #define current_cpu_data (cpu_data[smp_processor_id()])
 
+extern unsigned long kernelsp[];
+
 void cpu_probe(void);
 
 /* Assigned Company values for bits 23:16 of the PRId Register

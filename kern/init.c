@@ -37,6 +37,9 @@ int main(void)
 	    -1,
 	    -1);
 	printk("PRID: %08x\r\n", prid);
+	printk("STATUS: %08x\r\n", read_c0_status());
+	printk("CAUSE: %08x\r\n", read_c0_cause());
+	printk("EBASE: %08x\r\n", read_c0_ebase());
 
 	cputype_flag = read_mem_uint(HT_RX_BUFFER);
 	printk("FLAG: %016x\r\n", cputype_flag);

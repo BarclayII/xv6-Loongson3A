@@ -4,6 +4,7 @@
  * for more details.
  *
  * Copyright (C) 1994, 1995 by Ralf Baechle
+ * Copyright (C) 2015 Gan Quan <coin2028@hotmail.com>
  */
 
 #ifndef __ASM_MIPS_REGDEF_H
@@ -46,5 +47,40 @@
 #define fp      $30     /* frame pointer */
 #define s8	$30	/* same like fp! */
 #define ra      $31     /* return address */
+
+#define _ZERO	0
+#define _AT	1
+#define _V0	2
+#define _V1	3
+#define _A0	4
+#define _A1	5
+#define _A2	6
+#define _A3	7
+#define _T0	8
+#define _T1	9
+#define _T2	10
+#define _T3	11
+#define _T4	12
+#define _T5	13
+#define _T6	14
+#define _T7	15
+#define _S0	16
+#define _S1	17
+#define _S2	18
+#define _S3	19
+#define _S4	20
+#define _S5	21
+#define _S6	22
+#define _S7	23
+#define _T8	24
+#define _T9	25
+#define _JP	25
+#define _K0	26
+#define _K1	27
+#define _GP	28
+#define _SP	29
+#define _FP	30
+#define _S8	30
+#define _RA	31
 
 #endif /* __ASM_MIPS_REGDEF_H */

@@ -17,7 +17,15 @@
 #include <asm/cp0regdef.h>
 #include <panic.h>
 
+/*
+ * CPU information array
+ */
 struct cpuinfo_mips cpu_data[NR_CPUS];
+
+/*
+ * Kernel SP per CPU
+ */
+unsigned long kernelsp[NR_CPUS];
 
 void cpu_probe(void)
 {
