@@ -1,3 +1,11 @@
+/* thread_info.h: MIPS low-level thread information
+ *
+ * Copyright (C) 2002  David Howells (dhowells@redhat.com)
+ * - Incorporating suggestions made by Linus Torvalds and Dave Miller
+ *
+ * Copyright (C) 2015 Gan Quan <coin2028@hotmail.com>
+ */
+
 #ifndef _ASM_THREAD_INFO_H
 #define _ASM_THREAD_INFO_H
 
@@ -8,7 +16,7 @@ struct thread_info {
 };
 
 union thread_stack_info {
-	struct thread_info current_thread_info;
+	struct thread_info thread_info;
 	unsigned long stack[THREAD_SIZE / sizeof(unsigned long)];
 };
 
@@ -17,7 +25,12 @@ union thread_stack_info {
  */
 extern union thread_stack_info init_thread_union;
 
-#define init_thread_info	(init_thread_union.current_thread_info)
+/*
+ * The pointer pointing current thread info is stored at GP.
+ */
+register struct thread_info *current_thread_info __asm__("$28");
+
+#define init_thread_info	(init_thread_union.thread_info)
 #define init_stack		(init_thread_union.stack)
 
 #endif

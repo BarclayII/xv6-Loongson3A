@@ -39,6 +39,8 @@ void cpu_probe(void)
 	c->cputype = CPU_LOONGSON3;
 	c->core = read_c0_ebase() & EBASE_CPUNUM_MASK;
 
+	smp_processor_id() = c->core;
+
 	c->tlbsize = 64;
 	c->isa_level = MIPS_CPU_ISA_III;
 	c->options = MIPS_CPU_TLB | MIPS_CPU_4KEX | MIPS_CPU_4K_CACHE |

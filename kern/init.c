@@ -67,7 +67,7 @@ int main(void)
 	}
 
 	setup_arch();
-	printk("Core number: %d\r\n", current_cpu_data.core);
+	printk("Core number: %d\r\n", smp_processor_id());
 
 	printk("FW_ARG3: %016x\r\n", *(unsigned long *)fw_arg3);
 
