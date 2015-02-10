@@ -26,7 +26,7 @@
  *
  */
 
-#include <asm/cp0regdef.h>
+#include <asm/mipsregs.h>
 #include <asm/smp.h>
 #include <asm/irq.h>
 #include <irqregs.h>

@@ -16,7 +16,7 @@
 #include <io.h>
 #include <bitmap.h>
 #include <setup.h>
-#include <asm/cp0regdef.h>
+#include <asm/mipsregs.h>
 #include <asm/bootinfo.h>
 #include <asm/cpu.h>
 #include <asm/thread_info.h>

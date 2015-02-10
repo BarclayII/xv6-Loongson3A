@@ -108,14 +108,14 @@
 	*(volatile unsigned char *)(IO_base_regs_addr + 0x141f)
 
 /* LS3 LPC regs */
-#define Local_IO_regs_Base			0xffffffffbfe00000
+#define Local_IO_regs_Base			0x900000001fe00000
 #define LS3_LPC_INT_regs_ctrl			(Local_IO_regs_Base + 0x0200)
 #define LS3_LPC_INT_regs_enable			(Local_IO_regs_Base + 0x0204)
 #define LS3_LPC_INT_regs_status			(Local_IO_regs_Base + 0x0208)
 #define LS3_LPC_INT_regs_clear			(Local_IO_regs_Base + 0x020c)
 
 /* 2H LPC regs */
-#define LS2H_LPC_REG_BASE0			0xffffffffbbf10000
+#define LS2H_LPC_REG_BASE0			0x900000001bf10000
 #define LS2H_LPC_INT_regs_ctrl			(LS2H_LPC_REG_BASE0 + 0x0)
 #define LS2H_LPC_INT_regs_enable		(LS2H_LPC_REG_BASE0 + 0x4)
 #define LS2H_LPC_INT_regs_status		(LS2H_LPC_REG_BASE0 + 0x8)

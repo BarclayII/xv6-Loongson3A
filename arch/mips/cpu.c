@@ -14,7 +14,7 @@
  */
 
 #include <asm/cpu.h>
-#include <asm/cp0regdef.h>
+#include <asm/mipsregs.h>
 #include <panic.h>
 
 /*

@@ -9,7 +9,7 @@
  */
 
 #include <asm/regdef.h>
-#include <asm/cp0regdef.h>
+#include <asm/mipsregs.h>
 #include <asm/trap.h>
 #include <stddef.h>
 #include <string.h>
