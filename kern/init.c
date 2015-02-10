@@ -71,6 +71,14 @@ int main(void)
 
 	printk("FW_ARG3: %016x\r\n", *(unsigned long *)fw_arg3);
 
+	unsigned int config0 = read_c0_config();
+	/*
+	 * Initial CONFIG = 0x80034483, which means both TLB and caches are
+	 * on, initialized by either hardware or BIOS.
+	 * Truly a relief on OS programmers...
+	 */
+	printk("CONFIG: %08x\r\n", config0);
+
 	trap_init();
 
 	local_irq_enable();
