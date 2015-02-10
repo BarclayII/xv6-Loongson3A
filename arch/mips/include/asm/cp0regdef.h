@@ -448,4 +448,62 @@ do {									\
 #define read_c0_errorepc()	__read_ulong_c0_register($30, 0)
 #define write_c0_errorepc(val)	__write_ulong_c0_register($30, 0, val)
 
+#define __BUILD_SET_C0(name)					\
+static inline unsigned int					\
+set_c0_##name(unsigned int set)					\
+{								\
+	unsigned int res, new;					\
+								\
+	res = read_c0_##name();					\
+	new = res | set;					\
+	write_c0_##name(new);					\
+								\
+	return res;						\
+}								\
+								\
+static inline unsigned int					\
+clear_c0_##name(unsigned int clear)				\
+{								\
+	unsigned int res, new;					\
+								\
+	res = read_c0_##name();					\
+	new = res & ~clear;					\
+	write_c0_##name(new);					\
+								\
+	return res;						\
+}								\
+								\
+static inline unsigned int					\
+change_c0_##name(unsigned int change, unsigned int val)		\
+{								\
+	unsigned int res, new;					\
+								\
+	res = read_c0_##name();					\
+	new = res & ~change;					\
+	new |= (val & change);					\
+	write_c0_##name(new);					\
+								\
+	return res;						\
+}
+
+__BUILD_SET_C0(status);
+__BUILD_SET_C0(cause);
+__BUILD_SET_C0(config);
+
+#if 0
+/*
+ * These are for tools like ctags and cscope to conveniently locate the symbols.
+ * See above for definition.
+ */
+#define set_c0_status
+#define set_c0_cause
+#define set_c0_config
+#define clear_c0_status
+#define clear_c0_cause
+#define clear_c0_config
+#define change_c0_status
+#define change_c0_cause
+#define change_c0_config
+#endif
+
 #endif

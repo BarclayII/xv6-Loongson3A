@@ -35,4 +35,22 @@
 #define HT_UNCACHE_EN_TRANS(i)	(HT_REGS_BASE + 0xf0 + ((i) << 3))
 #define HT_UNCACHE_BASE(i)	(HT_REGS_BASE + 0xf4 + ((i) << 3))
 
+#define HT_irq_vector_reg0	*(volatile unsigned int *)(HT_INTR_CASE(0))
+#define HT_irq_vector_reg1	*(volatile unsigned int *)(HT_INTR_CASE(1))
+#define HT_irq_vector_reg2	*(volatile unsigned int *)(HT_INTR_CASE(2))
+#define HT_irq_vector_reg3	*(volatile unsigned int *)(HT_INTR_CASE(3))
+#define HT_irq_vector_reg4	*(volatile unsigned int *)(HT_INTR_CASE(4))
+#define HT_irq_vector_reg5	*(volatile unsigned int *)(HT_INTR_CASE(5))
+#define HT_irq_vector_reg6	*(volatile unsigned int *)(HT_INTR_CASE(6))
+#define HT_irq_vector_reg7	*(volatile unsigned int *)(HT_INTR_CASE(7))
+
+#define HT_irq_enable_reg0	*(volatile unsigned int *)(HT_INTR_CASE(0))
+#define HT_irq_enable_reg1	*(volatile unsigned int *)(HT_INTR_CASE(1))
+#define HT_irq_enable_reg2	*(volatile unsigned int *)(HT_INTR_CASE(2))
+#define HT_irq_enable_reg3	*(volatile unsigned int *)(HT_INTR_CASE(3))
+#define HT_irq_enable_reg4	*(volatile unsigned int *)(HT_INTR_CASE(4))
+#define HT_irq_enable_reg5	*(volatile unsigned int *)(HT_INTR_CASE(5))
+#define HT_irq_enable_reg6	*(volatile unsigned int *)(HT_INTR_CASE(6))
+#define HT_irq_enable_reg7	*(volatile unsigned int *)(HT_INTR_CASE(7))
+
 #endif

@@ -13,9 +13,9 @@
 #include <printk.h>
 #include <ht_regs.h>
 #include <memrw.h>
+#include <io.h>
 #include <bitmap.h>
 #include <setup.h>
-#include <drivers/uart16550.h>
 #include <asm/cp0regdef.h>
 #include <asm/bootinfo.h>
 #include <asm/cpu.h>
@@ -79,13 +79,17 @@ int main(void)
 	 */
 	printk("CONFIG: %08x\r\n", config0);
 
+	unsigned char uart_intr = read_mem_byte(IO_BASE + 0x1fe001e9);
+	printk("UARTINTR: %02x\r\n", uart_intr);
+
 	trap_init();
+
+	mach_init_irq();
 
 	local_irq_enable();
 
 	for (;;)
-		/* echo characters */
-		Uart16550Put(Uart16550GetPoll());
+		/* do nothing */;
 
 	/* NOTREACHED */
 	return 0;

@@ -15,4 +15,6 @@
 
 #define local_irq_disable()	asm volatile ("di");
 
+void mach_init_irq(void);
+
 #endif
