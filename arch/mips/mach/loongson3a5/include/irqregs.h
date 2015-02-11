@@ -121,6 +121,11 @@
 #define LS2H_LPC_INT_regs_status		(LS2H_LPC_REG_BASE0 + 0x8)
 #define LS2H_LPC_INT_regs_clear			(LS2H_LPC_REG_BASE0 + 0xc)
 
+extern volatile int *lpc_int_regs_ctrl;
+extern volatile int *lpc_int_regs_enable;
+extern volatile int *lpc_int_regs_status;
+extern volatile int *lpc_int_regs_clear;
+
 #define LPC_INT_regs_ctrl			*lpc_int_regs_ctrl
 #define LPC_INT_regs_enable			*lpc_int_regs_enable
 #define LPC_INT_regs_status			*lpc_int_regs_status

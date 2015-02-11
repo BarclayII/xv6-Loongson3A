@@ -11,6 +11,8 @@
 #include <asm/regdef.h>
 #include <asm/mipsregs.h>
 #include <asm/trap.h>
+#include <drivers/uart16550.h>
+#include <irqregs.h>
 #include <stddef.h>
 #include <string.h>
 #include <printk.h>
@@ -83,6 +85,23 @@ static int handle_int(struct trapframe *tf)
 		printk("ticks\t= %d\r\n", ticks);
 		++ticks;
 		return 0;
+	} else if (cause & CR_IPx(2)) {
+		/* LPC Interrupts */
+		printk("Received LPC Interrupt\r\n");
+		printk("INTISR\t = %08x\r\n", IO_control_regs_Intisr);
+		printk("INTEN\t = %08x\r\n", IO_control_regs_Inten);
+		printk("INTENSET = %08x\r\n", IO_control_regs_Intenset);
+		printk("INTENCLR = %08x\r\n", IO_control_regs_Intenclr);
+		printk("INTEDGE\t = %08x\r\n", IO_control_regs_Intedge);
+		printk("CORE0\t = %08x\r\n", IO_control_regs_CORE0_INTISR);
+		printk("CORE1\t = %08x\r\n", IO_control_regs_CORE1_INTISR);
+		printk("CORE2\t = %08x\r\n", IO_control_regs_CORE2_INTISR);
+		printk("CORE3\t = %08x\r\n", IO_control_regs_CORE3_INTISR);
+		printk("LPCCTRL\t = %08x\r\n", LPC_INT_regs_ctrl);
+		printk("LPCEN\t = %08x\r\n", LPC_INT_regs_enable);
+		printk("LPCSTAT\t = %08x\r\n", LPC_INT_regs_status);
+		printk("LPCCLR\t = %08x\r\n", LPC_INT_regs_clear);
+		printk("INTRID\t = %02x\r\n", UART16550_READ(OFS_INTR_ID));
 	}
 	return -1;
 }

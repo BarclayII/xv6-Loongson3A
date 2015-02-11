@@ -12,10 +12,11 @@
 #include <string.h>
 #include <printk.h>
 #include <ht_regs.h>
-#include <memrw.h>
-#include <io.h>
 #include <bitmap.h>
 #include <setup.h>
+#include <drivers/uart16550.h>
+#include <asm/memrw.h>
+#include <asm/io.h>
 #include <asm/mipsregs.h>
 #include <asm/bootinfo.h>
 #include <asm/cpu.h>
@@ -79,8 +80,9 @@ int main(void)
 	 */
 	printk("CONFIG: %08x\r\n", config0);
 
-	unsigned char uart_intr = read_mem_byte(IO_BASE + 0x1fe001e9);
+	unsigned char uart_intr = UART16550_READ(OFS_INTR_ENABLE);
 	printk("UARTINTR: %02x\r\n", uart_intr);
+	UART16550_WRITE(OFS_INTR_ENABLE, 0x0f);
 
 	trap_init();
 

@@ -13,6 +13,8 @@
 #define _uart16550_h_
 
 #include <sys/types.h>
+#include <asm/memrw.h>
+#include <asm/io.h>
 
 #define         UART16550_BAUD_2400             2400
 #define         UART16550_BAUD_4800             4800
@@ -35,6 +37,37 @@
 
 #define         UART16550_STOP_1BIT             0x0
 #define         UART16550_STOP_2BIT             0x4
+
+/* === CONFIG === */
+
+#define		UART_OFFSET		0x1fe001e8
+#define		BASE			(IO_BASE + 0x1fe001e8)
+#define         MAX_BAUD                115200
+#define		REG_OFFSET		1
+
+/* === END OF CONFIG === */
+
+/* register offset */
+#define         OFS_RCV_BUFFER          (0*REG_OFFSET)
+#define         OFS_TRANS_HOLD          (0*REG_OFFSET)
+#define         OFS_SEND_BUFFER         (0*REG_OFFSET)
+#define         OFS_INTR_ENABLE         (1*REG_OFFSET)
+#define         OFS_INTR_ID             (2*REG_OFFSET)
+#define         OFS_DATA_FORMAT         (3*REG_OFFSET)
+#define         OFS_LINE_CONTROL        (3*REG_OFFSET)
+#define         OFS_MODEM_CONTROL       (4*REG_OFFSET)
+#define         OFS_RS232_OUTPUT        (4*REG_OFFSET)
+#define         OFS_LINE_STATUS         (5*REG_OFFSET)
+#define         OFS_MODEM_STATUS        (6*REG_OFFSET)
+#define         OFS_RS232_INPUT         (6*REG_OFFSET)
+#define         OFS_SCRATCH_PAD         (7*REG_OFFSET)
+
+#define         OFS_DIVISOR_LSB         (0*REG_OFFSET)
+#define         OFS_DIVISOR_MSB         (1*REG_OFFSET)
+
+/* memory-mapped read/write of the port */
+#define         UART16550_READ(y)	read_mem_byte(BASE + y)
+#define         UART16550_WRITE(y, z)	write_mem_byte(BASE + y, z)
 
 void Uart16550Init(uint32 baud, uint8 data, uint8 parity, uint8 stop);
 

@@ -34,10 +34,10 @@
 
 unsigned int nr_cpu_handle_int;
 
-volatile int * lpc_int_regs_ctrl;
-volatile int * lpc_int_regs_enable;
-volatile int * lpc_int_regs_status;
-volatile int * lpc_int_regs_clear;
+volatile int *lpc_int_regs_ctrl;
+volatile int *lpc_int_regs_enable;
+volatile int *lpc_int_regs_status;
+volatile int *lpc_int_regs_clear;
 
 void rs780e_init_irq(void)
 {
@@ -86,6 +86,8 @@ void mach_init_irq(void)
 	 */
 	clear_c0_status(ST_IM | ST_BEV);
 	local_irq_disable();
+	/* enable timer interrupt */
+	set_c0_status(ST_IMx(7));
 
 	rs780e_init_irq();
 	/* enable south chip irq */
@@ -110,9 +112,9 @@ void mach_init_irq(void)
 
 	/* Enable the LPC interrupt */
 	LPC_INT_regs_ctrl = 0x80000000;
-	/* set the 18-bit interrpt enable bit for keyboard and mouse */
+	/* set the 18-bit interrupt enable bit for keyboard and mouse */
 	LPC_INT_regs_enable = (0x1 << 0x1 | 0x1 << 12);
-	/* clear all 18-bit interrpt bit */
+	/* clear all 18-bit interrupt bit */
 	LPC_INT_regs_clear = 0x3ffff;
 
 	/* enable serial and lpc port irq */
