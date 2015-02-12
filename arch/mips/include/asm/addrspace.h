@@ -3,9 +3,6 @@
  * License.  See the file "COPYING" in the main directory of this archive
  * for more details.
  *
- * Copyright (C) 1996, 99 Ralf Baechle
- * Copyright (C) 2000, 2002  Maciej W. Rozycki
- * Copyright (C) 1990, 1999 by Silicon Graphics, Inc.
  * Copyright (C) 2015 Gan Quan <coin2028@hotmail.com>
  */
 
@@ -15,74 +12,135 @@
 #include <sys/types.h>
 
 /*
- * Returns the kernel segment base of a given address
+ * Virtual Address Space definitions
+ *
+ * On MIPS64 architectures, virtual addresses are 64-bit:
+ *
+ * 6666555555555544444444443333333333222222222211111111110000000000
+ * 3210987654321098765432109876543210987654321098765432109876543210
+ * ----------------------------------------------------------------
+ * 3333333333333333222222222222222211111111111111110000000000000000
+ * fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210
+ *
+ * The 63rd and 62nd bit matches current KSU mode.
  */
-#define KSEGX(a)		((a) & 0xe0000000)
 
 /*
- * Returns the physical address of a CKSEGx / XKPHYS address
+ * Meaning of Mapped section:
+ * Virtual addresses in Mapped section are first extended by ASID
+ * in CP0 EntryHi register.  The VPN part are then extracted and
+ * compared with TLB.  If VPN matches an entry in TLB, the global
+ * bit and ASID field are checked in order to determine whether
+ * a TLB hit or a TLB miss occur.
  */
-#define CPHYSADDR(a)		((a) & 0x1fffffff)
-#define XPHYSADDR(a)            ((a) & 0x000000ffffffffffLL)
 
 /*
- * Memory segments (64bit kernel mode addresses)
- * The compatibility segments use the full 64-bit sign extended value.  Note
- * the R8000 doesn't have them so don't reference these in generic MIPS code.
+ * User address space
+ * All access to virtual memory address outside XUSEG causes an
+ * address error.
  */
-#define XKUSEG			0x0000000000000000LL
-#define XKSSEG			0x4000000000000000LL
-#define XKPHYS			0x8000000000000000LL
-#define XKSEG			0xc000000000000000LL
-#define CKSEG0			0xffffffff80000000LL
-#define CKSEG1			0xffffffffa0000000LL
-#define CKSSEG			0xffffffffc0000000LL
-#define CKSEG3			0xffffffffe0000000LL
 
-#define CKSEG0ADDR(a)		(CPHYSADDR(a) | CKSEG0)
-#define CKSEG1ADDR(a)		(CPHYSADDR(a) | CKSEG1)
-#define CKSEG2ADDR(a)		(CPHYSADDR(a) | CKSEG2)
-#define CKSEG3ADDR(a)		(CPHYSADDR(a) | CKSEG3)
+/* Mapped */
+#define XUSEG_BEGIN	0x0000000000000000
+#define XUSEG_END	0x0000ffffffffffff
+
+#define XUSEG		XUSEG_BEGIN
 
 /*
- * Cache modes for XKPHYS address conversion macros
+ * Supervisor address space
+ * All access to virtual memory address outside XSUSEG and XSSEG
+ * causes an address error.
  */
-#define K_CALG_COH_EXCL1_NOL2	0
-#define K_CALG_COH_SHRL1_NOL2	1
-#define K_CALG_UNCACHED		2
-#define K_CALG_NONCOHERENT	3
-#define K_CALG_COH_EXCL		4
-#define K_CALG_COH_SHAREABLE	5
-#define K_CALG_NOTUSED		6
-#define K_CALG_UNCACHED_ACCEL	7
 
 /*
- * 64-bit address conversions
+ * User address space is available in supervisor mode.
  */
-#define PHYS_TO_XKSEG_UNCACHED(p)	PHYS_TO_XKPHYS(K_CALG_UNCACHED, (p))
-#define PHYS_TO_XKSEG_CACHED(p)		PHYS_TO_XKPHYS(K_CALG_COH_SHAREABLE, (p))
-#define XKPHYS_TO_PHYS(p)		((p) & TO_PHYS_MASK)
-#define PHYS_TO_XKPHYS(cm, a)		(0x8000000000000000LL | \
-					 ((cm) << 59) | (a))
+
+/* Mapped */
+#define XSUSEG_BEGIN	XUSEG_BEGIN
+#define XSUSEG_END	XUSEG_END
+#define XSSEG_BEGIN	0x4000000000000000
+#define XSSEG_END	0x4000ffffffffffff
+#define CSSEG_BEGIN	0xffffffffc0000000	/* compat */
+#define CSSEG_END	0xffffffffdfffffff	/* compat */
+
+#define XSUSEG		XSUSEG_BEGIN
+#define XSSEG		XSSEG_BEGIN
+#define CSSEG		CSSEG_BEGIN
 
 /*
- * The ultimate limited of the 64-bit MIPS architecture:  2 bits for selecting
- * the region, 3 bits for the CCA mode.  This leaves 59 bits of which the
- * R8000 implements most with its 48-bit physical address space.
+ * Kernel address space, more complicated
  */
-#define TO_PHYS_MASK	0x07ffffffffffffffLL	/* 2^^59 - 1 */
-
 
 /*
- * The R8000 doesn't have the 32-bit compat spaces so we don't define them
- * in order to catch bugs in the source code.
+ * User and supervisor address space are available in kernel mode.
  */
 
-#define COMPAT_K1BASE32		0xffffffffa0000000LL
-#define PHYS_TO_COMPATK1(x)	((x) | COMPAT_K1BASE32) /* 32-bit compat k1 */
+/* Mapped */
+#define XKUSEG_BEGIN	XUSEG_BEGIN
+#define XKUSEG_END	XUSEG_END
+#define XKSSEG_BEGIN	XSSEG_BEGIN
+#define XKSSEG_END	XSSEG_END
 
+/*
+ * Physical address space are unmapped.
+ * Low 48 bits are directly taken as physical address.
+ * 61st to 59th bit determine cache coherency.
+ */
 
-#define KDM_TO_PHYS(x)		(_ACAST64_ (x) & TO_PHYS_MASK)
-#define PHYS_TO_K0(x)		(_ACAST64_ (x) | CAC_BASE)
+/* Unmapped */
+#define XKPHY_BEGIN	0x8000000000000000
+#define XKPHY_END	0xbfffffffffffffff
+
+/*
+ * This section mainly maintains page tables because of its large
+ * space.
+ *
+ * I plan to maintain page tables in inverted form, since keeping
+ * hundreds of huge page tables seems unrealistic to me...
+ *
+ * Since this section is Mapped, maybe some TLB entries should be
+ * wired to keep the page table addresses staying there...
+ */
+
+/* Mapped */
+#define XKSEG_BEGIN	0xc000000000000000
+#define XKSEG_END	0xc00000ff7fffffff
+
+/*
+ * Finally some MIPS32 compatible kernel sections
+ */
+
+/* Unmapped, cached */
+#define CKSEG0_BEGIN	0xffffffff80000000	/* compat */
+#define CKSEG0_END	0xffffffff9fffffff	/* compat */
+/* Unmapped, uncached */
+#define CKSEG1_BEGIN	0xffffffffa0000000	/* compat */
+#define CKSEG1_END	0xffffffffbfffffff	/* compat */
+/* Mapped */
+#define CKSSEG_BEGIN	0xffffffffc0000000	/* compat, supervisor */
+#define CKSSEG_END	0xffffffffdfffffff	/* compat, supervisor */
+#define CKSEG3_BEGIN	0xffffffffe0000000	/* compat */
+#define CKSEG3_END	0xffffffffffffffff	/* compat */
+
+#define XKUSEG		XKUSEG_BEGIN
+#define XKSSEG		XKSSEG_BEGIN
+#define XKPHY		XKPHY_BEGIN
+#define XKSEG		XKSEG_BEGIN
+#define CKSEG0		CKSEG0_BEGIN
+#define CKSEG1		CKSEG1_BEGIN
+#define CKSSEG		CKSSEG_BEGIN
+#define CKSEG3		CKSEG3_BEGIN
+
+/*
+ * Old 32-bit section namings
+ */
+
+#define USEG		XUSEG
+#define SSEG		CSSEG
+#define KSEG0		CKSEG0
+#define KSEG1		CKSEG1
+#define KSSEG		CKSSEG
+#define KSEG3		CKSEG3
 
 #endif

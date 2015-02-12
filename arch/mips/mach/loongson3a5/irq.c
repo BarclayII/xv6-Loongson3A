@@ -113,10 +113,12 @@ void mach_init_irq(void)
 	/* Enable the LPC interrupt */
 	LPC_INT_regs_ctrl = 0x80000000;
 	/* set the 18-bit interrupt enable bit for keyboard and mouse */
-	LPC_INT_regs_enable = (0x1 << 0x1 | 0x1 << 12);
+	LPC_INT_regs_enable = 0x10;	/* enable serial */
 	/* clear all 18-bit interrupt bit */
 	LPC_INT_regs_clear = 0x3ffff;
 
 	/* enable serial and lpc port irq */
-	set_c0_status(ST_IMx(2));
+	/* EDIT: Temporarily disabled IM2, until I'm clear of how LPC interrupt
+	 * works */
+	/* set_c0_status(ST_IMx(2)); */
 }

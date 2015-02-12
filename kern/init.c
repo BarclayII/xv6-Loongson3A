@@ -82,7 +82,6 @@ int main(void)
 
 	unsigned char uart_intr = UART16550_READ(OFS_INTR_ENABLE);
 	printk("UARTINTR: %02x\r\n", uart_intr);
-	UART16550_WRITE(OFS_INTR_ENABLE, 0x0f);
 
 	trap_init();
 
