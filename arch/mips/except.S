@@ -26,6 +26,10 @@ NESTED(except_generic, TF_SIZE, sp)
 
 handle_exception_entry:
 	SAVE_ALL
+	mfc0	k0, CP0_STATUS
+	ori	k0, ST_EXCM
+	xori	k0, ST_EXCM
+	mtc0	k0, CP0_STATUS
 	move	a0, sp
 	jal	handle_exception
 	RESTORE_ALL_AND_RET

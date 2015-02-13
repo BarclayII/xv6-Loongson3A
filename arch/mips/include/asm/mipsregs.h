@@ -13,6 +13,7 @@
 #define _ASM_MIPSREGS_H
 
 #include <asm/cp0regdef.h>
+#include <asm/irq.h>
 
 /*
  * Macros to access the system control coprocessor

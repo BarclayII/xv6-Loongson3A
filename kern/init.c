@@ -85,15 +85,17 @@ int main(void)
 		"dmtc0	$26, $10;"
 		"dli	$27, 0x40001e;"
 		"dmtc0	$27, $2;"
+		"daddiu	$27, 0x40;"
 		"dmtc0	$27, $3;"
 		"tlbwr"
 	);
 
 	long *sample_va = (long *)0xc000000000000000;
-	*sample_va = 12345678;
-	printk("sample_va = %d\r\n", *sample_va);
+	memset(sample_va, '0', 4095);
+	memset((char *)sample_va + 4096, '1', 4095);
+	printk("sample_va = %016x\r\n", *sample_va);
 	long *sample_shared_va = (long *)0xc000000000001000;
-	printk("sample_shm= %d\r\n", *sample_shared_va);
+	printk("sample_shm= %016x\r\n", *sample_shared_va);
 
 	for (;;)
 		/* do nothing */;

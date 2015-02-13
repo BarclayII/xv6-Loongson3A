@@ -11,9 +11,29 @@
 #ifndef _ASM_IRQ_H
 #define _ASM_IRQ_H
 
-#define local_irq_enable()	asm volatile ("ei");
+#define local_irq_enable()	asm volatile ("ei")
 
-#define local_irq_disable()	asm volatile ("di");
+#define local_irq_disable()	asm volatile ("di")
+
+#define local_irq_save(flags) \
+	asm volatile ( \
+		"di	%0;" \
+		"andi	%0, 1" \
+		: "=r"(flags) \
+		: /* no input */ \
+		: "memory" \
+	)
+
+#define local_irq_restore(flags) \
+	asm volatile ( \
+		"	beqz	%0, 1f;" \
+		"	di;" \
+		"	ei;" \
+		"1f:" \
+		: "=r"(flags) \
+		: /* no input */ \
+		: "memory" \
+	)
 
 void mach_init_irq(void);
 

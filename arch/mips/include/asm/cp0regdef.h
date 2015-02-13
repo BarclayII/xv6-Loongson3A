@@ -78,6 +78,7 @@
 #define ST_KX	0x00000080	/* Kernel mode eXtended addressing */
 #define ST_SX	0x00000040	/* Supervisor mode eXtended addressing */
 #define ST_UX	0x00000020	/* User mode eXtended addressing */
+#define ST_EXCM	0x0000001f	/* Status Register EXception Clear Mask */
 /* Kernel/Supervisor/User mode switch */
 #define ST_KSU	0x00000018	/* KSU switch */
 # define KSU_USER	0x00000010	/* User mode */

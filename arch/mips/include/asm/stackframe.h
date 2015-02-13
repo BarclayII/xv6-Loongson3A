@@ -35,12 +35,11 @@
 	/*
 	 * Since in interrupts these code always run in kernel mode (KSU = 0),
 	 * we have to determine whether the routine is called *from* user mode,
-	 * by checking whether the CU0 bit is set.
-	 * See also: CLI and STI macros
+	 * by checking the KSU bits.
 	 */
 	mfc0	k0, CP0_STATUS
-	sll	k0, 3
-	bltz	k0, 8f
+	andi	k0, ST_KSU
+	beqz	k0, 8f
 	move	k1, sp
 	/* If it is called from user mode, kernel sp should be retrieved. */
 	get_saved_sp
@@ -63,6 +62,8 @@
 	sd	v1, TF_CAUSE(sp)
 	mfc0	v1, CP0_EPC
 	sd	v1, TF_EPC(sp)
+	dmfc0	v1, CP0_BADVADDR
+	sd	v1, TF_BADVADDR(sp)
 	sd	t0, TF_T0(sp)
 	sd	t1, TF_T1(sp)
 	sd	t9, TF_T9(sp)		/* t9 = jp */
@@ -162,11 +163,10 @@
 	 * current IMx and (K/S/U)X bit, combining them with saved Status
 	 * Register content thereafter.
 	 */
-#define STATMASK	0x1f
 	mfc0	a0, CP0_STATUS
 	li	v1, 0xff00
-	ori	a0, STATMASK
-	xori	a0, STATMASK		# Clear KSU, ERL, EXL and IE
+	ori	a0, ST_EXCM
+	xori	a0, ST_EXCM		# Clear KSU, ERL, EXL and IE
 	mtc0	a0, CP0_STATUS
 	and	a0, v1			# a0 now contains IMx and KX, SX, UX
 	ld	v0, TF_STATUS(sp)
