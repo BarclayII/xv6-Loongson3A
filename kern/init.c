@@ -35,12 +35,6 @@ int main(void)
 
 	early_printk = 1;
 	printk("Hello Loongson 3A!\r\n");
-	printk("Testing: %c %08x %016x %08x %u\r\n",
-	    'a',
-	    256,
-	    -1,
-	    -1,
-	    -1);
 	printk("PRID: %08x\r\n", prid);
 	printk("STATUS: %08x\r\n", read_c0_status());
 	printk("CAUSE: %08x\r\n", read_c0_cause());
@@ -80,14 +74,26 @@ int main(void)
 	 */
 	printk("CONFIG: %08x\r\n", config0);
 
-	unsigned char uart_intr = UART16550_READ(OFS_INTR_ENABLE);
-	printk("UARTINTR: %02x\r\n", uart_intr);
-
 	trap_init();
 
 	mach_init_irq();
 
 	local_irq_enable();
+
+	asm volatile (
+		"dli	$26, 0xc000000000000000;"
+		"dmtc0	$26, $10;"
+		"dli	$27, 0x40001e;"
+		"dmtc0	$27, $2;"
+		"dmtc0	$27, $3;"
+		"tlbwr"
+	);
+
+	long *sample_va = (long *)0xc000000000000000;
+	*sample_va = 12345678;
+	printk("sample_va = %d\r\n", *sample_va);
+	long *sample_shared_va = (long *)0xc000000000001000;
+	printk("sample_shm= %d\r\n", *sample_shared_va);
 
 	for (;;)
 		/* do nothing */;

@@ -26,6 +26,16 @@ void trap_init(void)
 	unsigned long ebase = read_c0_ebase();
 	ebase = (0xffffffff00000000) | ((ebase | 0x3ff) ^ 0x3ff);
 	memcpy((void *)(ebase + 0x180), &except_generic, 0x80);
+
+	/*
+	 * Temporarily we use generic routines for dealing TLB exceptions
+	 */
+	memcpy((void *)(ebase), &except_generic, 0x80);
+	memcpy((void *)(ebase + 0x80), &except_generic, 0x80);
+	/*
+	 * And also cache errors
+	 */
+	memcpy((void *)(ebase + 0x100), &except_generic, 0x80);
 }
 
 static const char *regname[] = {
@@ -71,6 +81,18 @@ void dump_trapframe(struct trapframe *tf)
 	printk("STATUS\t= %08x\r\n", tf->cp0_status);
 	printk("CAUSE\t= %08x\r\n", tf->cp0_cause);
 	printk("EPC\t= %08x\r\n", tf->cp0_epc);
+	printk("BADVADDR= %016x\r\n", tf->cp0_badvaddr);
+	switch (EXCCODE(tf->cp0_cause)) {
+	case EC_tlbm:
+	case EC_tlbl:
+	case EC_tlbs:
+		printk("ENTRYHI\t=%016x\r\n", read_c0_entryhi());
+		printk("ENTRYLO0=%016x\r\n", read_c0_entrylo0());
+		printk("ENTRYLO1=%016x\r\n", read_c0_entrylo1());
+		break;
+	default:
+		break;
+	}
 }
 
 static unsigned long long ticks = 0;
