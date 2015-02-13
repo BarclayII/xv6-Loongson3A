@@ -20,6 +20,9 @@ typedef signed int __s32;
 typedef unsigned long long uint64, __u64;
 typedef signed long long int64, __s64;
 
+/* unsigned long integers defined as ptr_t are only for manipulating addresses */
+typedef unsigned long genericptr_t, ptr_t;
+
 typedef unsigned long size_t;
 typedef signed long ssize_t;
 

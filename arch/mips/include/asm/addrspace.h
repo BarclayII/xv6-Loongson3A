@@ -133,7 +133,7 @@
  *
  * Loongson 3A user manual suggests that lower 256MB-512MB
  * should be reserved for I/O.  In terms of virtual address,
- * region from 0xffffffffb0000000-0xffffffffbfffffff
+ * address region 0xffffffffb0000000-0xffffffffbfffffff
  * (or 0x9000000010000000-0x900000001fffffff in extended addressing)
  * should be reserved.
  */
