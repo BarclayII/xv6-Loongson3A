@@ -111,12 +111,37 @@
  * Finally some MIPS32 compatible kernel sections
  */
 
+/*
+ * CKSEG0 is mapped to the lowest 512 MB physical memory directly
+ * by simply stripping off the higher bits (or by subtracting
+ * 0xffffffff80000000).  Memory there are typically cached.
+ * 
+ * It's assumed here that BIOS had already properly initialized
+ * caches and TLB.
+ */
+
 /* Unmapped, cached */
 #define CKSEG0_BEGIN	0xffffffff80000000	/* compat */
 #define CKSEG0_END	0xffffffff9fffffff	/* compat */
+
+/*
+ * CKSEG1 is also mapped to the lowest 512MB physical memory.
+ * The only difference is that accessing this address space
+ * does not go through caches.
+ *
+ * In most cases, this address is used for I/O and BIOS ROM.
+ *
+ * Loongson 3A user manual suggests that lower 256MB-512MB
+ * should be reserved for I/O.  In terms of virtual address,
+ * region from 0xffffffffb0000000-0xffffffffbfffffff
+ * (or 0x9000000010000000-0x900000001fffffff in extended addressing)
+ * should be reserved.
+ */
+
 /* Unmapped, uncached */
 #define CKSEG1_BEGIN	0xffffffffa0000000	/* compat */
 #define CKSEG1_END	0xffffffffbfffffff	/* compat */
+
 /* Mapped */
 #define CKSSEG_BEGIN	0xffffffffc0000000	/* compat, supervisor */
 #define CKSSEG_END	0xffffffffdfffffff	/* compat, supervisor */
