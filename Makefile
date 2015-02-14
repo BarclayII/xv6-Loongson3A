@@ -30,7 +30,7 @@ INCFLAG		=  -I./arch/mips/include -I./include \
 CFLAGS		=  -O -G 0 -mno-abicalls -fno-pic -Wall -mabi=64 -fno-builtin
 CFLAGS		+= -nostdinc -nostdlib -g -mips64r2 $(INCFLAG)
 
-LDSCRIPT	= kernel.lds
+LDSCRIPT	= kernel.ld
 LDFLAGS		= -N -T$(LDSCRIPT) -Ttext $(LOADADDR)
 
 KLIBC_OBJS	= klibc/snprintf.o \
