@@ -9,6 +9,7 @@
  */
 
 #include <asm/asm.h>
+#include <asm/ptrace.h>
 #include <asm/stackframe.h>
 
 NESTED(except_generic, TF_SIZE, sp)

@@ -24,7 +24,8 @@
 #include <asm/cp0regdef.h>
 #include <asm/asm.h>
 #include <asm/stackframe.h>
-#include <asm/asm_off.h>
+#include <asm/thread_info.h>
+#include <asm/ptrace.h>
 
 #define RAMSIZE	0x10000000
 

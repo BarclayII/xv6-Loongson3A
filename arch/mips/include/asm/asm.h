@@ -5,6 +5,9 @@
  * Copyright (C) 1998 Ralf Baechle
  */
 
+#ifndef _ASM_ASM_H
+#define _ASM_ASM_H
+
 #include "regdef.h"
 #include "cp0regdef.h"
 
@@ -36,4 +39,4 @@ symbol:         .frame  sp, framesize, rpc
                 .end    function;                       \
                 .size   function,.-function
 
-
+#endif

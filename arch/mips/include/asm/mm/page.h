@@ -14,18 +14,12 @@
 #include <sys/types.h>
 
 /*
- * I first thought about using inverted page tables to manage memory, but
- * maybe that's too difficult.  So I decided to continue use hierarchical
- * page table structure.
- *
  * Two-level page table is nice for 32-bit architectures, but for true 64-bit
  * addressing, as many as 6 levels are needed (like in UltraSPARC).  Luckily,
  * Loongson 3A, as well as many other 64-bit CPUs (like AMD64) only allows
  * 48-bit virtual addressing, which means that a 4-level one is sufficient.
  *
- * Page size is still 4KB since allocating 16MB for a process just for a global
- * address directory is a waste of space.  Besides, even in case of 16MB pages,
- * we still need a two-level hierarchy.
+ * Here I'm going to use classic 4KB-sized pages.
  *
  * In 64-bit architecture, the size of one page directory entry should be 9 bits
  * for fitting one page directory into a page, because 3 bits are needed for
@@ -43,16 +37,35 @@
  * 30th - 38th	: Page Upper Directory Index
  * 39th - 47th	: Page Global Directory Index
  * 48th - 63rd	: Unused
+ *
+ * Likewise, we can obtain hierarchy under other page sizes:
+ * Page size	Offset	Directory Entry Bits	Levels	Address Bits
+ * 4KB		12	9			4	48
+ * 16KB		14	11			3	47
+ * 64KB		16	13			2	42
+ * 256KB	18	15			2	48
+ * 1MB		20	17			1	37
+ * 4MB		22	19			1	41
+ * 16MB		24	21			1	45
+ *
+ * Looks like 4KB and 256KB pages fully utilize virtual address space bits, and
+ * 16KB pages, as well as 16MB pages nearly utilize all bits.  But note that
+ * each process have to preserve one page global directory as well as several other
+ * page directories.
  */
 
 typedef ptr_t pgd_t, pud_t, pmd_t, pte_t;
 
-#define PDE_MASK	0x1ffULL		/* Page directory entry bits */
+#define PGSHIFT		12
+#define PGSIZE		(1 << PTE_OFFSET)
 
-#define PGD_OFFSET	39
-#define PUD_OFFSET	30
-#define PMD_OFFSET	21
-#define PTE_OFFSET	12
+#define PDE_BITS	(PGSHIFT - 3)
+#define PDE_MASK	((1 << PDE_BITS) - 1)
+
+#define PGD_OFFSET	(PUD_OFFSET + PDE_BITS)
+#define PUD_OFFSET	(PMD_OFFSET + PDE_BITS)
+#define PMD_OFFSET	(PTE_OFFSET + PDE_BITS)
+#define PTE_OFFSET	PGSHIFT
 
 #define PGD_MASK	(PDE_MASK << PGD_OFFSET)
 #define PUD_MASK	(PDE_MASK << PUD_OFFSET)
@@ -65,5 +78,7 @@ typedef ptr_t pgd_t, pud_t, pmd_t, pte_t;
 #define PMD(vaddr)	(((vaddr) & PMD_MASK) >> PMD_OFFSET)
 #define PTE(vaddr)	(((vaddr) & PTE_MASK) >> PTE_OFFSET)
 #define PAGE_OFF(vaddr)	((vaddr) & PAGE_OFF_MASK)
+
+#define NR_PAGES(bytes)	((bytes) >> PGSHIFT)
 
 #endif

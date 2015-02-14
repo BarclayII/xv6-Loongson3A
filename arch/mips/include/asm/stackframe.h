@@ -12,7 +12,7 @@
 
 #include <asm/regdef.h>
 #include <asm/cp0regdef.h>
-#include <asm/asm_off.h>
+#include <asm/ptrace.h>
 
 	.macro	get_saved_sp
 	mfc0	k0, CP0_EBASE

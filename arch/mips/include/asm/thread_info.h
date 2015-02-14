@@ -9,7 +9,14 @@
 #ifndef _ASM_THREAD_INFO_H
 #define _ASM_THREAD_INFO_H
 
-#include <asm/asm_off.h>
+/*
+ * (Hardware) Thread info structure
+ */
+
+#define THREAD_SIZE	8192
+#define THREAD_MASK	(THREAD_SIZE - 1)
+
+#ifndef __ASSEMBLER__
 
 struct thread_info {
 	unsigned int cpu_number;
@@ -32,5 +39,7 @@ register struct thread_info *current_thread_info __asm__("$28");
 
 #define init_thread_info	(init_thread_union.thread_info)
 #define init_stack		(init_thread_union.stack)
+
+#endif	/* !__ASSEMBLER__ */
 
 #endif

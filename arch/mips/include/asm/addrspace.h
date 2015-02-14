@@ -168,4 +168,10 @@
 #define KSSEG		CKSSEG
 #define KSEG3		CKSEG3
 
+#ifndef __ASSEMBLER__
+extern unsigned long xkseg_top;	/* Lowest address of unused XKSEG address */
+
+void addrspace_init(void);
+#endif
+
 #endif

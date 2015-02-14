@@ -4,31 +4,31 @@ ENTRY(_start)
 
 SECTIONS
 {
+	. = 0xffffffff80300000;
+
 	.text : {
         	*(.text)
 		*(.rodata)
         }
 
-	__ex_table : {
-		__begin___ex_table = .;
-		*(__ex_table);
-		__end___ex_table = .;
-	}
+	PROVIDE(__etext__ = . );
 
 	.reginfo : { *(.reginfo) }
 
-	PROVIDE(__data__=.);
+	. = ALIGN(0x1000);
+
+	PROVIDE(__data__ = . );
 
 	.data : {
 		*(.data)
 	}
 
-	PROVIDE(__edata__=.);
+	PROVIDE(__edata__ = . );
 
 	.bss  : {
 		*(.dynbss)
 		*(.bss)
 	}
 
-	PROVIDE(__end__ = .);
+	PROVIDE(__end__ = . );
 }
