@@ -79,6 +79,4 @@ typedef ptr_t pgd_t, pud_t, pmd_t, pte_t;
 #define PTE(vaddr)	(((vaddr) & PTE_MASK) >> PTE_OFFSET)
 #define PAGE_OFF(vaddr)	((vaddr) & PAGE_OFF_MASK)
 
-#define NR_PAGES(bytes)	((bytes) >> PGSHIFT)
-
 #endif
