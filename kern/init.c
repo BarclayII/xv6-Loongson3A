@@ -64,6 +64,8 @@ int main(void)
 	setup_arch();
 	printk("Core number: %d\r\n", smp_processor_id());
 
+	printk("FW_ARG3: %016x\r\n", *(unsigned long *)fw_arg3);
+
 	unsigned int config0 = read_c0_config();
 	/*
 	 * Initial CONFIG = 0x80034483, which means both TLB and caches are
@@ -77,6 +79,23 @@ int main(void)
 	mach_init_irq();
 
 	local_irq_enable();
+
+	asm volatile (
+		"dli	$26, 0xc000000000000000;"
+		"dmtc0	$26, $10;"
+		"dli	$27, 0x40001e;"
+		"dmtc0	$27, $2;"
+		"daddiu	$27, 0x40;"
+		"dmtc0	$27, $3;"
+		"tlbwr"
+	);
+
+	long *sample_va = (long *)0xc000000000000000;
+	memset(sample_va, '0', 4095);
+	memset((char *)sample_va + 4096, '1', 4095);
+	printk("sample_va = %016x\r\n", *sample_va);
+	long *sample_shared_va = (long *)0xc000000000001000;
+	printk("sample_shm= %016x\r\n", *sample_shared_va);
 
 	for (;;)
 		/* do nothing */;

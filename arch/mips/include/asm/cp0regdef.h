@@ -78,14 +78,6 @@
 #define ST_KX	0x00000080	/* Kernel mode eXtended addressing */
 #define ST_SX	0x00000040	/* Supervisor mode eXtended addressing */
 #define ST_UX	0x00000020	/* User mode eXtended addressing */
-/*
- * I found defining this constant helpful when dealing with nested exceptions,
- * as clearing these bits ensures the processor:
- * 1. runs in kernel mode,
- * 2. be safe from interrupts,
- * 3. be able to rewrite EPC when a nested exception occur, so finishing the
- *    nested one could successfully return back to the previous one.
- */
 #define ST_EXCM	0x0000001f	/* Status Register EXception Clear Mask */
 /* Kernel/Supervisor/User mode switch */
 #define ST_KSU	0x00000018	/* KSU switch */
