@@ -72,6 +72,9 @@ fmt_loop:		switch (*fmt) {
 				} else
 					u64 = i64;
 				goto print_uint;
+			case 'o':
+				base = 8;
+				goto get_uint;
 			case 'x':
 			case 'p':
 				base = 16;
