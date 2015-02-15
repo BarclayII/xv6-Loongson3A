@@ -39,8 +39,10 @@ static void init_free_page_list(size_t nr_pages, size_t nr_occupied)
 	for (i = nr_occupied; i < nr_pages; ++i) {
 		list_add_before(free_page_list, &(page_array[i].list_node));
 	}
+
+	nr_free_pages = nr_pages - nr_occupied;
 	
-	printk("Built free page list of %d pages\r\n", nr_pages - nr_occupied);
+	printk("Built free page list of %d pages\r\n", nr_free_pages);
 }
 
 static void init_page_array(size_t nr_pages)
@@ -81,7 +83,8 @@ static void setup_page_array(void)
 	page_array = (struct page *)PFN_TO_KVADDR(highmem_base_pfn);
 	init_page_array(num_pages);
 
-	struct page *p = list_node_to_page(free_page_list->next);
+	printk("First free PFN: %d\r\n",
+	    PAGE_TO_PFN(list_node_to_page(free_page_list->next)));
 }
 
 void mm_init(void)
