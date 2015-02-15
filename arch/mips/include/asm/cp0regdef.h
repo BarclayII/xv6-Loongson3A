@@ -192,4 +192,7 @@
 
 #define EBASE_CPUNUM_MASK	0x3ff
 
+#define ENTHI_ASID_MASK	0xff
+#define ENTHI_KSU_MASK	0xc000000000000000ULL
+
 #endif

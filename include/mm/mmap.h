@@ -57,12 +57,14 @@ extern struct page *page_array;
 #define PADDR_TO_PAGE(addr)	PFN_TO_PAGE(PADDR_TO_PFN(addr))
 
 /*
- * I'm going to directly map every physical page to XKSEG
+ * Kernel can directly address physical pages via XKPHY
  */
-#define XKSEG_TO_PADDR(vaddr)	((vaddr) - XKSEG)
-#define PADDR_TO_XKSEG(paddr)	((paddr) + XKSEG)
-#define XKSEG_TO_PFN(vaddr)	PADDR_TO_PFN(XKSEG_TO_PADDR(vaddr))
-#define PFN_TO_XKSEG(n)		PADDR_TO_XKSEG(PFN_TO_PADDR(n))
+#define KVADDR_TO_PADDR(kvaddr)	((kvaddr) - KERNBASE)
+#define PADDR_TO_KVADDR(paddr)	((paddr) + KERNBASE)
+#define KVADDR_TO_PFN(kvaddr)	PADDR_TO_PFN(KVADDR_TO_PADDR(kvaddr))
+#define PFN_TO_KVADDR(n)	PADDR_TO_KVADDR(PFN_TO_PADDR(n))
+#define KVADDR_TO_PAGE(kvaddr)	PADDR_TO_PAGE(KVADDR_TO_PADDR(kvaddr))
+#define PAGE_TO_KVADDR(p)	PADDR_TO_KVADDR(PAGE_TO_PADDR(p))
 
 #ifdef CONFIG_INVERTED_PAGETABLE
 

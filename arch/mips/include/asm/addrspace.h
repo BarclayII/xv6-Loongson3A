@@ -112,9 +112,11 @@
  */
 
 /*
- * CKSEG0 is mapped to the lowest 512 MB physical memory directly
+ * CKSEG0 is mapped to the lowest 256 MB physical memory directly
  * by simply stripping off the higher bits (or by subtracting
  * 0xffffffff80000000).  Memory there are typically cached.
+ *
+ * Addresses greater than 0xffffffff90000000 correspond to I/O.
  * 
  * It's assumed here that BIOS had already properly initialized
  * caches and TLB.
@@ -125,7 +127,7 @@
 #define CKSEG0_END	0xffffffff9fffffff	/* compat */
 
 /*
- * CKSEG1 is also mapped to the lowest 512MB physical memory.
+ * CKSEG1 is also mapped to the lowest 256MB physical memory.
  * The only difference is that accessing this address space
  * does not go through caches.
  *
@@ -156,6 +158,8 @@
 #define CKSEG1		CKSEG1_BEGIN
 #define CKSSEG		CKSSEG_BEGIN
 #define CKSEG3		CKSEG3_BEGIN
+
+#define KERNBASE	(XKPHY + 0x1800000000000000ULL)
 
 /*
  * Old 32-bit section namings
