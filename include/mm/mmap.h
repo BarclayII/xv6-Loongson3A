@@ -3,11 +3,14 @@
 
 #include <asm/mm/page.h>
 #include <asm/addrspace.h>
+#include <asm/bitops.h>
 #include <sys/types.h>
 #include <ds/list.h>
 #include <mathop.h>
 
-#define NR_PAGES(bytes)		RSHIFT_ROUNDUP(bytes, PGSHIFT)
+#define NR_PAGES_NEEDED(bytes)	RSHIFT_ROUNDUP(bytes, PGSHIFT)
+#define NR_PAGES_AVAIL(bytes)	RSHIFT_ROUNDDOWN(bytes, PGSHIFT)
+#define PAGES_TO_BYTES(n)	((n) << PGSHIFT)
 
 #define BYTES_TO_KB(x)		RSHIFT_ROUNDUP(x, 10)
 #define KB_TO_BYTES(x)		((x) << 10)
@@ -24,11 +27,27 @@
 #define MAX_LOW_MEM_MB		256
 #define MAX_LOW_MEM		MB_TO_BYTES(MAX_LOW_MEM_MB)
 
+/*
+ * Physical page structure
+ */
 struct page {
-	size_t		ref_count;
-	unsigned int	reserved;
-	list_node_t	page_list_node;
+	size_t			ref_count;
+	unsigned int		flags;
+	union {
+		unsigned long	free_len;
+	};
+	list_node_t		page_list_node;
 };
+
+#define PAGE_RESERVED		0
+
+/*
+ * Macros below takes pointers to page structures, not the structure itself.
+ */
+
+#define is_page_reserved(p)	atomic_get_bit(PAGE_RESERVED, &((p)->flags))
+#define reserve_page(p)		atomic_set_bit(PAGE_RESERVED, &((p)->flags))
+#define release_page(p)		atomic_clear_bit(PAGE_RESERVED, &((p)->flags))
 
 struct page_list {
 	list_node_t	*head;

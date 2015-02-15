@@ -43,7 +43,6 @@ OBJS		= arch/mips/entry.o \
 		  arch/mips/cpu.o \
 		  arch/mips/traps.o \
 		  arch/mips/except.o \
-		  arch/mips/addrspace.o \
 		  arch/mips/mach/loongson3a5/irq.o \
 		  drivers/serial/uart16550.o \
 		  drivers/serial/prom_printk.o \

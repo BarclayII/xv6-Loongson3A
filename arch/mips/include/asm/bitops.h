@@ -11,10 +11,6 @@
 #ifndef _ASM_BITOPS_H
 #define _ASM_BITOPS_H
 
-#ifndef _BITMAP_H
-#error "include <bitmap.h> instead."
-#endif
-
 #define BITS_OF_BYTE		8
 #define BITS_OF_INT		(BITS_OF_BYTE * sizeof(int))
 #define LOG_BYTES_OF_INT	2
@@ -22,6 +18,14 @@
 #define LOG_BITS_OF_INT		(LOG_BITS_OF_BYTE + LOG_BYTES_OF_INT)
 
 #define BITS_TO_INTS(x)		(((x) + BITS_OF_INT - 1) / BITS_OF_INT)
+
+static inline unsigned int
+atomic_get_bit(unsigned int pos, volatile unsigned int *addr)
+{
+	volatile unsigned int *m = addr + (pos >> LOG_BITS_OF_INT);
+	unsigned short bit = pos & (BITS_OF_INT - 1);
+	return !!((*m) & (1 << bit));
+}
 
 /*
  * Atomically set the @pos-th bit from start of @addr.
