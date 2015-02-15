@@ -37,6 +37,13 @@ inline void list_del(list_node_t *node)
 	node->next->prev = node->prev;
 }
 
+inline void list_del_init(list_node_t *node)
+{
+	node->prev->next = node->next;
+	node->next->prev = node->prev;
+	node->prev = node->next = node;
+}
+
 inline list_node_t *list_prev(list_node_t *node)
 {
 	return node->prev;

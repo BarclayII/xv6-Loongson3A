@@ -21,6 +21,7 @@ inline void list_add_before(list_node_t *l, list_node_t *node);
 inline void list_add_after(list_node_t *l, list_node_t *node);
 #define list_add	list_add_after
 inline void list_del(list_node_t *node);
+inline void list_del_init(list_node_t *node);
 inline list_node_t *list_prev(list_node_t *node);
 inline list_node_t *list_next(list_node_t *node);
 
