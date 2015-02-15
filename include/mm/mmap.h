@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <ds/list.h>
 #include <mathop.h>
+#include <stddef.h>
 
 #define NR_PAGES_NEEDED(bytes)	RSHIFT_ROUNDUP(bytes, PGSHIFT)
 #define NR_PAGES_AVAIL(bytes)	RSHIFT_ROUNDDOWN(bytes, PGSHIFT)
@@ -33,10 +34,7 @@
 struct page {
 	size_t			ref_count;
 	unsigned int		flags;
-	union {
-		unsigned long	free_len;
-	};
-	list_node_t		page_list_node;
+	list_node_t		list_node;
 };
 
 #define PAGE_RESERVED		0
@@ -49,12 +47,15 @@ struct page {
 #define reserve_page(p)		atomic_set_bit(PAGE_RESERVED, &((p)->flags))
 #define release_page(p)		atomic_clear_bit(PAGE_RESERVED, &((p)->flags))
 
-struct page_list {
-	list_node_t	*head;
-	size_t		count;
-};
+#define list_node_to_page(node)	member_to_struct(node, struct page, list_node)
 
-extern struct page_list free_page_list;
+struct free_page_group {
+	list_node_t	head;
+	unsigned long	count;
+};
+extern struct free_page_group free_pages;
+#define free_page_list	(list_node_t *)(&(free_pages.head))
+#define nr_free_pages	(free_pages.count)
 
 extern size_t highmem_base_pfn;	/* The lowest PFN in high memory */
 
@@ -63,16 +64,17 @@ extern size_t highmem_base_pfn;	/* The lowest PFN in high memory */
  */
 extern struct page *page_array;
 
-#define PAGE_TO_PFN(p)		((p) - (page_array) + (highmem_base_pfn))
+#define PAGE_TO_PFN(p)	\
+	((unsigned long)((struct page *)(p) - (page_array)) + (highmem_base_pfn))
 #define PAGE_TO_PADDR(p)	(PAGE_TO_PFN(p) << PGSHIFT)
 #define PFN_TO_PADDR(n)		((n) << PGSHIFT)
 #define PADDR_TO_PFN(addr)	(PGADDR_ROUNDDOWN(addr) >> PGSHIFT)
 #define PFN_TO_PAGE(n)		({ \
-		if ((n) < highmem_base_pfn) { \
-			panic("Trying to access low memory through pages?\r\n"); \
-		} \
-		page_array[(n) - highmem_base_pfn]; \
-	})
+	if ((n) < highmem_base_pfn) { \
+		panic("Trying to access low memory through pages?\r\n"); \
+	} \
+	page_array[(n) - highmem_base_pfn]; \
+})
 #define PADDR_TO_PAGE(addr)	PFN_TO_PAGE(PADDR_TO_PFN(addr))
 
 /*
@@ -85,19 +87,25 @@ extern struct page *page_array;
 #define KVADDR_TO_PAGE(kvaddr)	PADDR_TO_PAGE(KVADDR_TO_PADDR(kvaddr))
 #define PAGE_TO_KVADDR(p)	PADDR_TO_KVADDR(PAGE_TO_PADDR(p))
 
+void mm_init(void);
+
 #ifdef CONFIG_INVERTED_PAGETABLE
 
-struct invert_pte {
-	unsigned short	pid;
+struct inv_pgtable_entry {
+	unsigned int	pid;
 	unsigned char	asid;
 	unsigned char	flags;
-	unsigned int	reserved;
-	uint64		vpn;
-	uint64		hash_next;
+	unsigned short	reserved;
+	unsigned long	vpn;
+	unsigned long	hash_next;	/* next index for the same hash */
 };
 
-#endif /* CONFIG_INVERTED_PAGETABLE */
+extern struct inv_pgtable_entry *inv_pgtable;
 
-void mm_init(void);
+#else	/* !CONFIG_INVERTED_PAGETABLE */
+
+extern pgd_t boot_pgd;		/* Bootstrap page global directory */
+
+#endif	/* CONFIG_INVERTED_PAGETABLE */
 
 #endif

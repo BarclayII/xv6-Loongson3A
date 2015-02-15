@@ -19,9 +19,10 @@
 #define BUFSIZ		8192
 #endif
 
-#define MEMBER_OFFSET(struct, member_name)	(&(((struct *)0)->(member_name)))
+#define MEMBER_OFFSET(struct, member_name) \
+	((unsigned long)&(((struct *)0)->member_name))
 
 #define member_to_struct(addr, struct, member_name) \
-	(struct *)((addr) - MEMBER_OFFSET(struct, member_name))
+	(struct *)((unsigned long)(addr) - MEMBER_OFFSET(struct, member_name))
 
 #endif

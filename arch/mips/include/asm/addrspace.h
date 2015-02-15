@@ -172,4 +172,6 @@
 #define KSSEG		CKSSEG
 #define KSEG3		CKSEG3
 
+#define ASID_KERNEL	0
+
 #endif

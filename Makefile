@@ -38,6 +38,8 @@ KLIBC_OBJS	= klibc/snprintf.o \
 		  klibc/memset.o \
 		  klibc/memcpy.o
 
+LIB_OBJS	= lib/list.o
+
 OBJS		= arch/mips/entry.o \
 		  arch/mips/setup.o \
 		  arch/mips/cpu.o \
@@ -49,7 +51,8 @@ OBJS		= arch/mips/entry.o \
 		  kern/mm/init.o \
 		  kern/printk.o \
 		  kern/panic.o \
-		  kern/init.o $(KLIBC_OBJS)
+		  kern/init.o $(KLIBC_OBJS) \
+		  $(LIB_OBJS)
 
 OUTPUT		= hello
 

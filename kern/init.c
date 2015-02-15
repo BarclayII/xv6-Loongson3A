@@ -79,9 +79,28 @@ int main(void)
 
 	mach_init_irq();
 
+	mm_init();
+
 	local_irq_enable();
 
-	mm_init();
+	asm volatile (
+		"dli	$26, 0xc000000000000000;"
+		"dmtc0	$26, $10;"
+		"dli	$27, 0x40001e;"
+		"dmtc0	$27, $2;"
+		"daddiu	$27, 0x40;"
+		"dmtc0	$27, $3;"
+		"tlbwr"
+	);
+
+	long *sample_va;
+	sample_va = (long *)0xc000000000000000;
+	memset(sample_va, '0', 4095);
+	memset((char *)sample_va + 4096, '1', 4095);
+	printk("sample_va = %016x\r\n", *sample_va);
+	long *sample_shared_va = (long *)0xc000000000001000;
+	printk("sample_shm= %016x\r\n", *sample_shared_va);
+	printk("phys = %016x\r\n", *(long *)(KERNBASE + 0x10000000));
 
 	for (;;)
 		/* do nothing */;
