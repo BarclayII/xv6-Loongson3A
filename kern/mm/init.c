@@ -13,6 +13,7 @@
 #include <asm/mipsregs.h>
 #include <asm/addrspace.h>
 #include <asm/mm/page.h>
+#include <asm/memrw.h>
 #include <mm/mmap.h>
 #include <ds/list.h>
 #include <printk.h>
@@ -126,21 +127,30 @@ static void test_mm(void)
 
 static void test2_mm(void)
 {
-	struct page *p = pgalloc();
-	unsigned long pfn = PAGE_TO_PFN(p);
-	printk("PFN = %d\r\n", pfn);
-	printk("KVADDR = %016x\r\n", PFN_TO_KVADDR(pfn));
+	struct page *p1 = pgalloc();
+	struct page *p2 = pgalloc();
+	unsigned long pfn1 = PAGE_TO_PFN(p1);
+	unsigned long pfn2 = PAGE_TO_PFN(p2);
+	printk("PFN = %d\r\n", pfn1);
+	printk("KVADDR = %016x\r\n", PFN_TO_KVADDR(pfn1));
+	printk("PFN = %d\r\n", pfn2);
+	printk("KVADDR = %016x\r\n", PFN_TO_KVADDR(pfn2));
 	asm volatile (
 		".set	mips64r2;"
-		"dli	$26, 0xc000000000000000;"
-		"dmtc0	$26, $10;"
-		"dli	$27, 0x447801e;"
-		"dmtc0	$27, $2;"
-		"dmtc0	$27, $3;"
+		"dli	$16, 0xc000000000000000;"
+		"dmtc0	$16, $10;"
+		"move	$17, %0;"
+		"move	$16, %1;"
+		"dsll	$17, 6;"
+		"dsll	$16, 6;"
+		"daddiu	$17, 0x1e;"
+		"daddiu	$16, 0x1e;"
+		"dmtc0	$17, $2;"
+		"dmtc0	$17, $3;"
 		"tlbwr"
 		: /* no output */
-		: "r"(pfn)
-		: "$26", "$27"
+		: "r"(pfn1), "r"(pfn2)
+		: "$16", "$17"
 	);
 	printk("ENTRYHI = %016x\r\n", read_c0_entryhi());
 	asm volatile (
@@ -148,18 +158,20 @@ static void test2_mm(void)
 	);
 	printk("ENTRYLO0 = %016x\r\n", read_c0_entrylo0());
 	printk("ENTRYLO1 = %016x\r\n", read_c0_entrylo1());
-	memset((char *)PFN_TO_KVADDR(pfn), '2', 4096);
-	printk("phys = %016x\r\n", *(long *)PFN_TO_KVADDR(pfn));
+	memset((char *)PFN_TO_KVADDR(pfn1), '2', 4096);
+	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
 	long *sample_va = (long *)0xc000000000000000;
-	memset(sample_va, '0', 4096);
+	write_mem_long(sample_va, 0x1111111111111111);
 	printk("sample_va = %016x\r\n", *sample_va);
-	printk("phys = %016x\r\n", *(long *)PFN_TO_KVADDR(pfn));
-	memset((char *)sample_va + 4096, '1', 4096);
+	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
+	sample_va = (long *)0xc000000000001000;
+	write_mem_long(sample_va, 0x2222222222222222);
 	/* FIXME: sample_shm should be equal to phys...? */
-	printk("sample_shm = %016x\r\n", *(long *)((char *)sample_va + 4096));
-	printk("phys = %016x\r\n", *(long *)PFN_TO_KVADDR(pfn));
-	pgfree(p);
-	printk("phys = %016x\r\n", *(long *)PFN_TO_KVADDR(pfn));
+	printk("sample_shm = %016x\r\n", *sample_va);
+	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
+	pgfree(p1);
+	pgfree(p2);
+	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
 }
 
 void mm_init(void)
