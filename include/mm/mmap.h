@@ -53,22 +53,6 @@ struct page {
  * Macros below takes pointers to page structures, not the structure itself.
  */
 
-#define is_page_reserved(p)	atomic_get_bit(PAGE_RESERVED, &((p)->flags))
-#define reserve_page(p)		atomic_set_bit(PAGE_RESERVED, &((p)->flags))
-#define release_page(p)		atomic_clear_bit(PAGE_RESERVED, &((p)->flags))
-
-#define list_node_to_page(node)	member_to_struct(node, struct page, list_node)
-
-struct free_page_group {
-	list_node_t	head;
-	unsigned long	count;
-};
-extern struct free_page_group free_pages;
-#define free_page_list	(list_node_t *)(&(free_pages.head))
-#define nr_free_pages	(free_pages.count)
-
-extern size_t highmem_base_pfn;	/* The lowest PFN in high memory */
-
 /*
  * The page array is sorted by physical address.
  */
@@ -89,6 +73,7 @@ extern struct page *page_array;
 
 /*
  * Kernel can directly address physical pages via XKPHY
+ * NOTE: These macros are only for high memory
  */
 #define KVADDR_TO_PADDR(kvaddr)	((kvaddr) - KERNBASE)
 #define PADDR_TO_KVADDR(paddr)	((paddr) + KERNBASE)
@@ -97,25 +82,36 @@ extern struct page *page_array;
 #define KVADDR_TO_PAGE(kvaddr)	PADDR_TO_PAGE(KVADDR_TO_PADDR(kvaddr))
 #define PAGE_TO_KVADDR(p)	PADDR_TO_KVADDR(PAGE_TO_PADDR(p))
 
-void mm_init(void);
+/*
+ * Physical page manipulation
+ */
+#define is_page_reserved(p)	atomic_get_bit(PAGE_RESERVED, &((p)->flags))
+#define reserve_page(p)		atomic_set_bit(PAGE_RESERVED, &((p)->flags))
+inline void shred_page(struct page *p);
+#define release_page(p)		atomic_clear_bit(PAGE_RESERVED, &((p)->flags))
+#define shred_and_release_page(p) \
+	do { \
+		shred_page(p); \
+		release_page(p); \
+	} while (0)
 
-#ifdef CONFIG_INVERTED_PAGETABLE
+#define list_node_to_page(node)	member_to_struct(node, struct page, list_node)
 
-struct inv_pgtable_entry {
-	unsigned int	pid;
-	unsigned char	asid;
-	unsigned char	flags;
-	unsigned short	reserved;
-	unsigned long	vpn;
-	unsigned long	hash_next;	/* next index for the same hash */
+struct free_page_group {
+	list_node_t	head;
+	unsigned long	count;
 };
+extern struct free_page_group free_page_group;
+#define free_page_list	(list_node_t *)(&(free_page_group.head))
+#define nr_free_pages	(free_page_group.count)
 
-extern struct inv_pgtable_entry *inv_pgtable;
+extern size_t highmem_base_pfn;	/* The lowest PFN in high memory */
 
-#else	/* !CONFIG_INVERTED_PAGETABLE */
-
-extern pgd_t boot_pgd;		/* Bootstrap page global directory */
-
-#endif	/* CONFIG_INVERTED_PAGETABLE */
+void mm_init(void);
+struct page *alloc_pages(size_t num);
+#define alloc_page()	alloc_pages(1)
+#define pgalloc()	alloc_page()
+void free_pages(struct page *freep);
+#define pgfree(p)	free_pages(p)
 
 #endif

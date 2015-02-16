@@ -24,8 +24,9 @@ inline void list_del(list_node_t *node);
 inline void list_del_init(list_node_t *node);
 inline list_node_t *list_prev(list_node_t *node);
 inline list_node_t *list_next(list_node_t *node);
-
-#define for_each_in(item, list)	\
-	for ((item) = (list)->next; (item) != (list); (item) = (item)->next)
+/* For lists with a head node */
+#define list_empty(l)	(((l) == (l)->next) && ((l) == (l)->prev))
+/* For lists without head node */
+#define list_single(l)	list_empty(l)
 
 #endif

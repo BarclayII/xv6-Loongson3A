@@ -14,5 +14,6 @@
 /* Parameters in register a0-a3 stored by PMON */
 extern unsigned long fw_arg0, fw_arg1, fw_arg2, fw_arg3;
 extern unsigned long memsize, highmemsize, cpu_clock_freq, bus_clock_freq;
+extern unsigned long memlimit;	/* total memory size rounded up to power of 2 */
 
 #endif

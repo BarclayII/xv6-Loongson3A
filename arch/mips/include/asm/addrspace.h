@@ -9,6 +9,7 @@
 #ifndef _ASM_ADDRSPACE_H
 #define _ASM_ADDRSPACE_H
 
+#include <asm/bootinfo.h>
 #include <sys/types.h>
 
 /*
@@ -159,7 +160,8 @@
 #define CKSSEG		CKSSEG_BEGIN
 #define CKSEG3		CKSEG3_BEGIN
 
-#define KERNBASE	(XKPHY + 0x1800000000000000ULL)
+#define IO_BASE_CACHED	(XKPHY + 0x1800000000000000ULL)
+#define KERNBASE	(IO_BASE_CACHED + memlimit)
 
 /*
  * Old 32-bit section namings

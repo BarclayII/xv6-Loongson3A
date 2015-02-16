@@ -16,4 +16,18 @@
 #define POW2_ROUNDDOWN(x, ord)		(((unsigned long)x) & ~LOWBITS(ord))
 #define POW2_ROUNDUP(x, ord)		POW2_ROUNDDOWN((x) + LOWBITS(ord), ord)
 
+#define ROUNDUP_TO_POW2(x)		__roundup_to_pow2(x)
+
+static inline unsigned long __roundup_to_pow2(unsigned long x)
+{
+	--x;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+	x |= x >> 32;
+	return (x ^ (x >> 1)) << 1;
+}
+
 #endif

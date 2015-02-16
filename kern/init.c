@@ -68,39 +68,31 @@ int main(void)
 	printk("FW_ARG3: %016x\r\n", *(unsigned long *)fw_arg3);
 
 	unsigned int config0 = read_c0_config();
+	unsigned int config1 = read_c0_config1();
+	unsigned int config2 = read_c0_config2();
+	unsigned int config3 = read_c0_config3();
 	/*
 	 * Initial CONFIG = 0x80034483, which means both TLB and caches are
 	 * on, initialized by either hardware or BIOS.
 	 * Truly a relief on OS programmers...
+	 * CONFIG1 = 0xfee37193
+	 * CONFIG2 = 0x80001743
+	 * CONFIG3 = 0x000000a0
 	 */
-	printk("CONFIG: %08x\r\n", config0);
+	printk("CONFIG0: %08x\r\n", config0);
+	printk("CONFIG1: %08x\r\n", config1);
+	printk("CONFIG2: %08x\r\n", config2);
+	printk("CONFIG3: %08x\r\n", config3);
 
 	trap_init();
 
 	mach_init_irq();
 
+	printk("STATUS: %08x\r\n", read_c0_status());
+
 	mm_init();
 
 	local_irq_enable();
-
-	asm volatile (
-		"dli	$26, 0xc000000000000000;"
-		"dmtc0	$26, $10;"
-		"dli	$27, 0x40001e;"
-		"dmtc0	$27, $2;"
-		"daddiu	$27, 0x40;"
-		"dmtc0	$27, $3;"
-		"tlbwr"
-	);
-
-	long *sample_va;
-	sample_va = (long *)0xc000000000000000;
-	memset(sample_va, '0', 4095);
-	memset((char *)sample_va + 4096, '1', 4095);
-	printk("sample_va = %016x\r\n", *sample_va);
-	long *sample_shared_va = (long *)0xc000000000001000;
-	printk("sample_shm= %016x\r\n", *sample_shared_va);
-	printk("phys = %016x\r\n", *(long *)(KERNBASE + 0x10000000));
 
 	for (;;)
 		/* do nothing */;

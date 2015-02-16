@@ -28,7 +28,7 @@ unsigned long base_pfn;
  */
 struct page *page_array;
 
-struct free_page_group free_pages;
+struct free_page_group free_page_group;
 
 static void init_free_page_list(size_t nr_pages, size_t nr_occupied)
 {
@@ -50,6 +50,7 @@ static void init_page_array(size_t nr_pages)
 	unsigned long page_array_bytes = nr_pages * sizeof(struct page);
 	unsigned long page_array_pages = NR_PAGES_NEEDED(page_array_bytes);
 
+	printk("PAGEARRAY: %016x\r\n", page_array);
 	memset(page_array, 0, page_array_bytes);
 	/*
 	 * Since the page array itself is inside high memory, we need to
@@ -58,11 +59,15 @@ static void init_page_array(size_t nr_pages)
 	 */
 	unsigned long i;
 
+	for (i = 0; i < nr_pages; ++i) {
+		list_init(&(page_array[i].list_node));
+	}
+	printk("%d pages initialized.\r\n", nr_pages);
+
 	for (i = 0; i < page_array_pages; ++i) {
 		reserve_page(&(page_array[i]));
 	}
 
-	printk("%d pages initialized.\r\n", nr_pages);
 	printk("%d pages reserved for page structures.\r\n", page_array_pages);
 
 	init_free_page_list(nr_pages, page_array_pages);
@@ -82,12 +87,44 @@ static void setup_page_array(void)
 
 	page_array = (struct page *)PFN_TO_KVADDR(highmem_base_pfn);
 	init_page_array(num_pages);
+}
 
-	printk("First free PFN: %d\r\n",
-	    PAGE_TO_PFN(list_node_to_page(free_page_list->next)));
+static void test_mm(void)
+{
+#define first_free_pfn \
+	PAGE_TO_PFN(list_node_to_page(list_next(free_page_list)))
+	struct page *p1, *p2, *p3, *q;
+	list_node_t *node;
+
+	printk("First free PFN: %d\r\n", first_free_pfn);
+	p1 = alloc_pages(3);
+	printk("First free PFN after alloc: %d\r\n", first_free_pfn);
+	node = &(p1->list_node);
+	printk("Allocated PFN: %d\r\n", PAGE_TO_PFN(p1));
+	node = list_next(node);
+	q = list_node_to_page(node);
+	printk("Allocated PFN: %d\r\n", PAGE_TO_PFN(q));
+	node = list_next(node);
+	q = list_node_to_page(node);
+	printk("Allocated PFN: %d\r\n", PAGE_TO_PFN(q));
+	node = list_next(node);
+	q = list_node_to_page(node);
+	printk("Allocated PFN: %d\r\n", PAGE_TO_PFN(q));
+	p2 = alloc_pages(3);
+	printk("First free PFN after 2nd alloc: %d\r\n", first_free_pfn);
+	free_pages(p1);
+	printk("First free PFN after 1st free: %d\r\n", first_free_pfn);
+	p3 = alloc_pages(5);
+	printk("First free PFN after 3rd alloc: %d\r\n", first_free_pfn);
+	free_pages(p2);
+	printk("First free PFN after 2nd free: %d\r\n", first_free_pfn);
+	free_pages(p3);
+	printk("First free PFN after 3rd free: %d\r\n", first_free_pfn);
+#undef first_free_pfn
 }
 
 void mm_init(void)
 {
 	setup_page_array();
+	test_mm();
 }

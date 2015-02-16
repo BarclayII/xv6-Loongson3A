@@ -14,6 +14,10 @@
 #include <asm/cp0regdef.h>
 #include <asm/ptrace.h>
 
+	/*
+	 * Get saved kernel sp.
+	 * Should be invoked when switching to kernel mode.
+	 */
 	.macro	get_saved_sp
 	mfc0	k0, CP0_EBASE
 	andi	k0, k0, 0x3ff
@@ -21,6 +25,10 @@
 	ld	k1, kernelsp(k0)
 	.endm
 
+	/*
+	 * Save current kernel sp.
+	 * Should be invoked when switching from kernel mode.
+	 */
 	.macro	set_saved_sp stackp temp
 	mfc0	\temp, CP0_EBASE
 	andi	\temp, \temp, 0x3ff

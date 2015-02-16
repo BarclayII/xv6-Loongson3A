@@ -21,6 +21,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <mathop.h>
 
 /*
  * fw_arg0 and fw_arg1 serves as argc and argv for kernel.
@@ -34,7 +35,7 @@ unsigned long fw_arg0, fw_arg1, fw_arg2, fw_arg3;
 /*
  * Boot parameters obtained from PMON environment strings
  */
-unsigned long memsize, highmemsize, cpu_clock_freq, bus_clock_freq;
+unsigned long memsize, highmemsize, cpu_clock_freq, bus_clock_freq, memlimit;
 
 /*
  * Thread stack should be alighed to stack size.
@@ -63,6 +64,8 @@ parse_env(void)
 		parse_ulong_option(envs, "busclock", &bus_clock_freq);
 		envs += strlen(envs) + 1;
 	}
+	memlimit = ROUNDUP_TO_POW2(highmemsize + memsize) << 20;
+	printk("MEMLIMIT: %016x\r\n", memlimit);
 }
 
 void

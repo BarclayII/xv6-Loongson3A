@@ -25,6 +25,10 @@ typedef unsigned long genericptr_t, ptr_t;
 
 typedef int pid_t;	/* PID, -1 = invalid, 0 = idle, 1 = init, -2 = kernel */
 
+typedef int bool;
+#define false		0
+#define true		1
+
 typedef unsigned long size_t;
 typedef signed long ssize_t;
 
