@@ -10,6 +10,7 @@
 
 #include <asm/ld.h>
 #include <asm/bootinfo.h>
+#include <asm/mipsregs.h>
 #include <asm/addrspace.h>
 #include <asm/mm/page.h>
 #include <mm/mmap.h>
@@ -141,6 +142,12 @@ static void test2_mm(void)
 		: "r"(pfn)
 		: "$26", "$27"
 	);
+	printk("ENTRYHI = %016x\r\n", read_c0_entryhi());
+	asm volatile (
+		"tlbp"
+	);
+	printk("ENTRYLO0 = %016x\r\n", read_c0_entrylo0());
+	printk("ENTRYLO1 = %016x\r\n", read_c0_entrylo1());
 	memset((char *)PFN_TO_KVADDR(pfn), '2', 4096);
 	printk("phys = %016x\r\n", *(long *)PFN_TO_KVADDR(pfn));
 	long *sample_va = (long *)0xc000000000000000;
