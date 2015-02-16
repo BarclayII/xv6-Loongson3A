@@ -161,7 +161,7 @@
 #define CKSEG3		CKSEG3_BEGIN
 
 #define IO_BASE_CACHED	(XKPHY + 0x1800000000000000ULL)
-#define KERNBASE	(IO_BASE_CACHED + memlimit)
+#define KERNBASE	IO_BASE_CACHED
 
 /*
  * Old 32-bit section namings

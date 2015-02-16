@@ -82,8 +82,8 @@ static void setup_page_array(void)
 	unsigned long num_pages = NR_PAGES_AVAIL(highmembytes);
 
 	/* The lowest physical frame should be just above the lower memory. */
-	highmem_base_pfn = NR_PAGES_NEEDED(lowmembytes);
-	printk("Highmem base PFN: %d\r\n", highmem_base_pfn);
+	highmem_base_pfn = NR_PAGES_NEEDED(memlimit + lowmembytes);
+	printk("Highmem base PFN: %016x\r\n", highmem_base_pfn);
 
 	page_array = (struct page *)PFN_TO_KVADDR(highmem_base_pfn);
 	init_page_array(num_pages);
@@ -123,8 +123,41 @@ static void test_mm(void)
 #undef first_free_pfn
 }
 
+static void test2_mm(void)
+{
+	struct page *p = pgalloc();
+	unsigned long pfn = PAGE_TO_PFN(p);
+	printk("PFN = %d\r\n", pfn);
+	printk("KVADDR = %016x\r\n", PFN_TO_KVADDR(pfn));
+	asm volatile (
+		".set	mips64r2;"
+		"dli	$26, 0xc000000000000000;"
+		"dmtc0	$26, $10;"
+		"dli	$27, 0x447801e;"
+		"dmtc0	$27, $2;"
+		"dmtc0	$27, $3;"
+		"tlbwr"
+		: /* no output */
+		: "r"(pfn)
+		: "$26", "$27"
+	);
+	memset((char *)PFN_TO_KVADDR(pfn), '2', 4096);
+	printk("phys = %016x\r\n", *(long *)PFN_TO_KVADDR(pfn));
+	long *sample_va = (long *)0xc000000000000000;
+	memset(sample_va, '0', 4096);
+	printk("sample_va = %016x\r\n", *sample_va);
+	printk("phys = %016x\r\n", *(long *)PFN_TO_KVADDR(pfn));
+	memset((char *)sample_va + 4096, '1', 4096);
+	/* FIXME: sample_shm should be equal to phys...? */
+	printk("sample_shm = %016x\r\n", *(long *)((char *)sample_va + 4096));
+	printk("phys = %016x\r\n", *(long *)PFN_TO_KVADDR(pfn));
+	pgfree(p);
+	printk("phys = %016x\r\n", *(long *)PFN_TO_KVADDR(pfn));
+}
+
 void mm_init(void)
 {
 	setup_page_array();
 	test_mm();
+	test2_mm();
 }

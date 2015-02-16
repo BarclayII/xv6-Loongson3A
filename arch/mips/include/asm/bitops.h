@@ -38,12 +38,14 @@ atomic_set_bit(unsigned int pos, volatile unsigned int *addr)
 	unsigned long tmp;
 
 	asm volatile (
+		"	.set	push;"
 		"	.set	mips3;"
 		"1:	ll	%0, %1;"
 		"	or	%0, %2;"
 		"	sc	%0, %1;"
 		"	beqz	%0, 1b;"
 		"	nop;"
+		"	.set	pop;"
 		: "=&r"(tmp), "=m"(*m)
 		: "ir"(1 << bit), "m"(*m)
 		);
@@ -60,12 +62,14 @@ atomic_clear_bit(unsigned int pos, volatile unsigned int *addr)
 	unsigned long tmp;
 
 	asm volatile (
+		"	.set	push;"
 		"	.set	mips3;"
 		"1:	ll	%0, %1;"
 		"	and	%0, %2;"
 		"	sc	%0, %1;"
 		"	beqz	%0, 1b;"
 		"	nop;"
+		"	.set	pop;"
 		: "=&r"(tmp), "=m"(*m)
 		: "ir"(~(1 << bit)), "m"(*m)
 		);
@@ -82,12 +86,14 @@ atomic_change_bit(unsigned int pos, volatile unsigned int *addr)
 	unsigned long tmp;
 
 	asm volatile (
+		"	.set	push;"
 		"	.set	mips3;"
 		"1:	ll	%0, %1;"
 		"	xor	%0, %2;"
 		"	sc	%0, %1;"
 		"	beqz	%0, 1b;"
 		"	nop;"
+		"	.set	pop;"
 		: "=&r"(tmp), "=m"(*m)
 		: "ir"(1 << bit), "m"(*m)
 		);
