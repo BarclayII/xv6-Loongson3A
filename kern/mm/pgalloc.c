@@ -59,6 +59,52 @@ struct page *alloc_pages(size_t num)
 	return pfirst;
 }
 
+/*
+ * Allocate @num contiguous pages
+ */
+struct page *alloc_cont_pages(size_t num)
+{
+	struct page *p = NULL, *np, *pfirst;
+	int i;
+	list_node_t *pgentry = NULL, *cur_entry;
+
+	if (nr_free_pages < num)
+		return NULL;
+
+	cur_entry = list_next(free_page_list);
+	pfirst = NULL;
+
+	for (i = num; (i > 0) || (cur_entry == free_page_list); ) {
+		pgentry = cur_entry;
+		cur_entry = list_next(cur_entry);
+		p = list_node_to_page(pgentry);
+		if (cur_entry != free_page_list)
+			np = list_node_to_page(cur_entry);
+		else
+			np = NULL;
+
+		if ((i > 1) && (p + 1 != np))
+			i = num;
+		else
+			--i;
+	}
+
+	if (i > 0)
+		return NULL;
+
+	/* p is now the last page of @num contiguous pages */
+	for (i = 0; i < num; ++i) {
+		reserve_page(p);
+		list_del_init(&(p->list_node));
+		if (pfirst != NULL)
+			list_add_before(&(pfirst->list_node), &(p->list_node));
+		pfirst = p;
+		--p;
+	}
+
+	return pfirst;
+}
+
 void free_pages(struct page *freep)
 {
 	/*

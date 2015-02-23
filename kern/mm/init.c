@@ -116,7 +116,8 @@ static void test_mm(void)
 	printk("First free PFN after 2nd alloc: %d\r\n", first_free_pfn);
 	free_pages(p1);
 	printk("First free PFN after 1st free: %d\r\n", first_free_pfn);
-	p3 = alloc_pages(5);
+	p3 = alloc_cont_pages(5);
+	printk("PFN for p3: %d\r\n", PAGE_TO_PFN(p3));
 	printk("First free PFN after 3rd alloc: %d\r\n", first_free_pfn);
 	free_pages(p2);
 	printk("First free PFN after 2nd free: %d\r\n", first_free_pfn);
@@ -147,26 +148,40 @@ static void test2_mm(void)
 		"daddiu	$16, 0x1e;"
 		"dmtc0	$17, $2;"
 		"dmtc0	$17, $3;"
-		"tlbwr"
+		"dmtc0	$0, $0;"
+		"tlbwi"
 		: /* no output */
 		: "r"(pfn1), "r"(pfn2)
 		: "$16", "$17"
 	);
-	printk("ENTRYHI = %016x\r\n", read_c0_entryhi());
-	asm volatile (
-		"tlbp"
-	);
-	printk("ENTRYLO0 = %016x\r\n", read_c0_entrylo0());
-	printk("ENTRYLO1 = %016x\r\n", read_c0_entrylo1());
 	memset((char *)PFN_TO_KVADDR(pfn1), '2', 4096);
 	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
 	long *sample_va = (long *)0xc000000000000000;
 	write_mem_long(sample_va, 0x1111111111111111);
 	printk("sample_va = %016x\r\n", *sample_va);
 	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
+	asm volatile (
+		".set	mips64r2;"
+		"dmtc0	$0, $2;"
+		"dmtc0	$0, $3;"
+		"tlbwi;"
+		"move	$17, %0;"
+		"move	$16, %1;"
+		"dsll	$17, 6;"
+		"dsll	$16, 6;"
+		"daddiu	$17, 0x1e;"
+		"daddiu	$16, 0x1e;"
+		"dmtc0	$17, $2;"
+		"dmtc0	$17, $3;"
+		"dmtc0	$0, $0;"
+		"tlbwi"
+		: /* no output */
+		: "r"(pfn1), "r"(pfn2)
+		: "$16", "$17"
+	);
+	/* FIXME: sample_shm should be equal to phys...? */
 	sample_va = (long *)0xc000000000001000;
 	write_mem_long(sample_va, 0x2222222222222222);
-	/* FIXME: sample_shm should be equal to phys...? */
 	printk("sample_shm = %016x\r\n", *sample_va);
 	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
 	pgfree(p1);

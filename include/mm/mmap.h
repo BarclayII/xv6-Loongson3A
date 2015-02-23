@@ -109,6 +109,7 @@ extern size_t highmem_base_pfn;	/* The lowest PFN in high memory */
 
 void mm_init(void);
 struct page *alloc_pages(size_t num);
+struct page *alloc_cont_pages(size_t num);
 #define alloc_page()	alloc_pages(1)
 #define pgalloc()	alloc_page()
 void free_pages(struct page *freep);
