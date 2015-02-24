@@ -11,6 +11,7 @@
 #ifndef _ASM_MM_PAGE_H
 #define _ASM_MM_PAGE_H
 
+#include <config.h>
 #include <sys/types.h>
 
 /*
@@ -54,13 +55,13 @@
  * page directories.
  */
 
-typedef ptr_t pgd_t, pud_t, pmd_t, pte_t;
-
 #define PGSHIFT		12
-#define PGSIZE		(1 << PTE_OFFSET)
+#define PGSIZE		(1ULL << PTE_OFFSET)
 
 #define PDE_BITS	(PGSHIFT - 3)
-#define PDE_MASK	((1 << PDE_BITS) - 1)
+#define PDE_MASK	((1ULL << PDE_BITS) - 1ULL)
+
+#ifdef CONFIG_HPT
 
 #define PGD_OFFSET	(PUD_OFFSET + PDE_BITS)
 #define PUD_OFFSET	(PMD_OFFSET + PDE_BITS)
@@ -73,10 +74,28 @@ typedef ptr_t pgd_t, pud_t, pmd_t, pte_t;
 #define PTE_MASK	(PDE_MASK << PTE_OFFSET)
 #define PAGE_OFF_MASK	((1ULL << PTE_OFFSET) - 1ULL)
 
-#define PGD(vaddr)	(((vaddr) & PGD_MASK) >> PGD_OFFSET)
-#define PUD(vaddr)	(((vaddr) & PUD_MASK) >> PUD_OFFSET)
-#define PMD(vaddr)	(((vaddr) & PMD_MASK) >> PMD_OFFSET)
-#define PTE(vaddr)	(((vaddr) & PTE_MASK) >> PTE_OFFSET)
+#define PGX(vaddr)	(((vaddr) & PGD_MASK) >> PGD_OFFSET)
+#define PUX(vaddr)	(((vaddr) & PUD_MASK) >> PUD_OFFSET)
+#define PMX(vaddr)	(((vaddr) & PMD_MASK) >> PMD_OFFSET)
+#define PTX(vaddr)	(((vaddr) & PTE_MASK) >> PTE_OFFSET)
 #define PAGE_OFF(vaddr)	((vaddr) & PAGE_OFF_MASK)
+
+#ifndef __ASSEMBLER__
+typedef ptr_t *pte_t;
+typedef pte_t *pmd_t;
+typedef pmd_t *pud_t;
+typedef pud_t *pgd_t;
+
+#define VADDR_SPLIT(vaddr, pgx, pux, pmx, ptx) \
+	do { \
+		pgx = PGX(vaddr); \
+		pux = PUX(vaddr); \
+		pmx = PMX(vaddr); \
+		ptx = PTX(vaddr); \
+	} while (0)
+
+#endif	/* !__ASSEMBLER__ */
+
+#endif	/* !CONFIG_HPT */
 
 #endif

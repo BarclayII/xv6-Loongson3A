@@ -18,6 +18,7 @@
 #include <ds/list.h>
 #include <mathop.h>
 #include <stddef.h>
+#include <panic.h>
 
 #define NR_PAGES_NEEDED(bytes)	RSHIFT_ROUNDUP(bytes, PGSHIFT)
 #define NR_PAGES_AVAIL(bytes)	RSHIFT_ROUNDDOWN(bytes, PGSHIFT)
@@ -42,12 +43,24 @@
  * Physical page structure
  */
 struct page {
-	size_t			ref_count;
+	unsigned int		ref_count;
 	unsigned int		flags;
-	list_node_t		list_node;
-};
-
+	/*
+	 * flags are represented by bit position index, and are manipulated by
+	 * atomic_bit_set/clear/change macros.
+	 */
 #define PAGE_RESERVED		0
+	list_node_t		list_node;
+	unsigned int		type;
+#define PGTYPE_GENERIC		0	/* generic */
+#define PGTYPE_PGSTRUCT		1	/* page structure storage */
+#define PGTYPE_PGDIR		2	/* page directory */
+#define PGTYPE_SLAB		3	/* kernel object slabs */
+	union {
+		/* For page directories */
+		unsigned short	entries;
+	};
+};
 
 /*
  * Macros below takes pointers to page structures, not the structure itself.
@@ -67,7 +80,7 @@ extern struct page *page_array;
 	if ((n) < highmem_base_pfn) { \
 		panic("Trying to access low memory through pages?\r\n"); \
 	} \
-	page_array[(n) - highmem_base_pfn]; \
+	&(page_array[(n) - highmem_base_pfn]); \
 })
 #define PADDR_TO_PAGE(addr)	PFN_TO_PAGE(PADDR_TO_PFN(addr))
 
@@ -79,8 +92,11 @@ extern struct page *page_array;
 #define PADDR_TO_KVADDR(paddr)	((paddr) + KERNBASE)
 #define KVADDR_TO_PFN(kvaddr)	PADDR_TO_PFN(KVADDR_TO_PADDR(kvaddr))
 #define PFN_TO_KVADDR(n)	PADDR_TO_KVADDR(PFN_TO_PADDR(n))
-#define KVADDR_TO_PAGE(kvaddr)	PADDR_TO_PAGE(KVADDR_TO_PADDR(kvaddr))
-#define PAGE_TO_KVADDR(p)	PADDR_TO_KVADDR(PAGE_TO_PADDR(p))
+#define KVADDR_TO_PAGE(kvaddr)	\
+	((!(kvaddr)) ? NULL : \
+	 PADDR_TO_PAGE(KVADDR_TO_PADDR(kvaddr)))
+#define PAGE_TO_KVADDR(p)	\
+	((!(p)) ? 0 : PADDR_TO_KVADDR(PAGE_TO_PADDR(p)))
 
 /*
  * Physical page manipulation
@@ -93,6 +109,15 @@ inline void shred_page(struct page *p);
 	do { \
 		shred_page(p); \
 		release_page(p); \
+	} while (0)
+
+#define inc_pageref(p)		(++((p)->ref_count))
+#define dec_pageref(p)		(--((p)->ref_count))
+#define page_unref(p)	\
+	do { \
+		dec_pageref(p); \
+		if ((p)->ref_count == 0) \
+			pgfree(p); \
 	} while (0)
 
 #define list_node_to_page(node)	member_to_struct(node, struct page, list_node)
@@ -114,5 +139,9 @@ struct page *alloc_cont_pages(size_t num);
 #define pgalloc()	alloc_page()
 void free_pages(struct page *freep);
 #define pgfree(p)	free_pages(p)
+
+/* Test routines */
+void test_mm(void);
+void test2_mm(void);
 
 #endif

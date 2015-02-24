@@ -50,6 +50,9 @@ OBJS		= arch/mips/entry.o \
 		  drivers/serial/prom_printk.o \
 		  kern/mm/init.o \
 		  kern/mm/pgalloc.o \
+		  kern/mm/test.o \
+		  kern/mm/hier/pgtable.o \
+		  kern/mm/hier/pgdir.o \
 		  kern/printk.o \
 		  kern/panic.o \
 		  kern/init.o $(KLIBC_OBJS) \

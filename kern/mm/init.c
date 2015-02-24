@@ -15,6 +15,7 @@
 #include <asm/mm/page.h>
 #include <asm/memrw.h>
 #include <mm/mmap.h>
+#include <mm/vmm.h>
 #include <ds/list.h>
 #include <printk.h>
 #include <string.h>
@@ -58,6 +59,8 @@ static void init_page_array(size_t nr_pages)
 	 * Since the page array itself is inside high memory, we need to
 	 * count and reserve the first not-so-few pages the page array
 	 * occupies.
+	 *
+	 * These pages will *NEVER* be inserted into free page list.
 	 */
 	unsigned long i;
 
@@ -68,6 +71,7 @@ static void init_page_array(size_t nr_pages)
 
 	for (i = 0; i < page_array_pages; ++i) {
 		reserve_page(&(page_array[i]));
+		page_array[i].type = PGTYPE_PGSTRUCT;
 	}
 
 	printk("%d pages reserved for page structures.\r\n", page_array_pages);
@@ -91,107 +95,12 @@ static void setup_page_array(void)
 	init_page_array(num_pages);
 }
 
-static void test_mm(void)
-{
-#define first_free_pfn \
-	PAGE_TO_PFN(list_node_to_page(list_next(free_page_list)))
-	struct page *p1, *p2, *p3, *q;
-	list_node_t *node;
-
-	printk("First free PFN: %d\r\n", first_free_pfn);
-	p1 = alloc_pages(3);
-	printk("First free PFN after alloc: %d\r\n", first_free_pfn);
-	node = &(p1->list_node);
-	printk("Allocated PFN: %d\r\n", PAGE_TO_PFN(p1));
-	node = list_next(node);
-	q = list_node_to_page(node);
-	printk("Allocated PFN: %d\r\n", PAGE_TO_PFN(q));
-	node = list_next(node);
-	q = list_node_to_page(node);
-	printk("Allocated PFN: %d\r\n", PAGE_TO_PFN(q));
-	node = list_next(node);
-	q = list_node_to_page(node);
-	printk("Allocated PFN: %d\r\n", PAGE_TO_PFN(q));
-	p2 = alloc_pages(3);
-	printk("First free PFN after 2nd alloc: %d\r\n", first_free_pfn);
-	free_pages(p1);
-	printk("First free PFN after 1st free: %d\r\n", first_free_pfn);
-	p3 = alloc_cont_pages(5);
-	printk("PFN for p3: %d\r\n", PAGE_TO_PFN(p3));
-	printk("First free PFN after 3rd alloc: %d\r\n", first_free_pfn);
-	free_pages(p2);
-	printk("First free PFN after 2nd free: %d\r\n", first_free_pfn);
-	free_pages(p3);
-	printk("First free PFN after 3rd free: %d\r\n", first_free_pfn);
-#undef first_free_pfn
-}
-
-static void test2_mm(void)
-{
-	struct page *p1 = pgalloc();
-	struct page *p2 = pgalloc();
-	unsigned long pfn1 = PAGE_TO_PFN(p1);
-	unsigned long pfn2 = PAGE_TO_PFN(p2);
-	printk("PFN = %d\r\n", pfn1);
-	printk("KVADDR = %016x\r\n", PFN_TO_KVADDR(pfn1));
-	printk("PFN = %d\r\n", pfn2);
-	printk("KVADDR = %016x\r\n", PFN_TO_KVADDR(pfn2));
-	asm volatile (
-		".set	mips64r2;"
-		"dli	$16, 0xc000000000000000;"
-		"dmtc0	$16, $10;"
-		"move	$17, %0;"
-		"move	$16, %1;"
-		"dsll	$17, 6;"
-		"dsll	$16, 6;"
-		"daddiu	$17, 0x1e;"
-		"daddiu	$16, 0x1e;"
-		"dmtc0	$17, $2;"
-		"dmtc0	$17, $3;"
-		"dmtc0	$0, $0;"
-		"tlbwi"
-		: /* no output */
-		: "r"(pfn1), "r"(pfn2)
-		: "$16", "$17"
-	);
-	memset((char *)PFN_TO_KVADDR(pfn1), '2', 4096);
-	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
-	long *sample_va = (long *)0xc000000000000000;
-	write_mem_long(sample_va, 0x1111111111111111);
-	printk("sample_va = %016x\r\n", *sample_va);
-	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
-	asm volatile (
-		".set	mips64r2;"
-		"dmtc0	$0, $2;"
-		"dmtc0	$0, $3;"
-		"tlbwi;"
-		"move	$17, %0;"
-		"move	$16, %1;"
-		"dsll	$17, 6;"
-		"dsll	$16, 6;"
-		"daddiu	$17, 0x1e;"
-		"daddiu	$16, 0x1e;"
-		"dmtc0	$17, $2;"
-		"dmtc0	$17, $3;"
-		"dmtc0	$0, $0;"
-		"tlbwi"
-		: /* no output */
-		: "r"(pfn1), "r"(pfn2)
-		: "$16", "$17"
-	);
-	/* FIXME: sample_shm should be equal to phys...? */
-	sample_va = (long *)0xc000000000001000;
-	write_mem_long(sample_va, 0x2222222222222222);
-	printk("sample_shm = %016x\r\n", *sample_va);
-	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
-	pgfree(p1);
-	pgfree(p2);
-	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
-}
-
 void mm_init(void)
 {
 	setup_page_array();
 	test_mm();
 	test2_mm();
+
+	pgtable_bootstrap();
+	test_pgtable();
 }
