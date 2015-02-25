@@ -12,17 +12,19 @@
 #define _MM_HIER_PGDIR_H
 
 #include <asm/mm/page.h>
+#include <asm/addrspace.h>
 #include <mm/mmap.h>
 #include <sys/types.h>
 
 typedef struct page pgdir_t;
 
-pgdir_t *pgdir_new();
+pgdir_t *pgdir_new(asid_t asid);
 void pgdir_delete(pgdir_t *pgdir);
 #define pgdir_load(addr)	\
 	((pgdir_t *)KVADDR_TO_PAGE((unsigned long)addr))
-#define pgdir_entries(pgdir)	((pgdir)->entries)
-#define pgdir_empty(pgdir)	(pgdir_entries(pgdir) == 0)
+#define pgdir_asid(pd)		((pd)->pgdir.asid)
+#define pgdir_entries(pd)	((pd)->pgdir.entries)
+#define pgdir_empty(pd)		(pgdir_entries(pd) == 0)
 ptr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p);
 ptr_t pgdir_add_page(pgdir_t *pgdir, unsigned short index);
 ptr_t pgdir_add_pgdir(pgdir_t *pgdir, unsigned short index);
@@ -48,5 +50,6 @@ void pgdir_remove_pgdir(pgdir_t *pgdir, unsigned short index);
 #define pde_empty(pde)		pgdir_empty(pgdir_load(pde))
 #define pde_delete(pde)		pgdir_delete(pgdir_load(pde))
 #define pde_entries(pde)	pgdir_entries(pgdir_load(pde))
+#define pde_asid(pde)		pgdir_asid(pgdir_load(pde))
 
 #endif

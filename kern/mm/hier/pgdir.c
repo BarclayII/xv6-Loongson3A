@@ -23,12 +23,13 @@ void pgdir_check(pgdir_t *pgdir)
 	assert(pgdir->type == PGTYPE_PGDIR);
 }
 
-pgdir_t *pgdir_new(void)
+pgdir_t *pgdir_new(asid_t asid)
 {
 	struct page *p = pgalloc();
 	memset((void *)PAGE_TO_KVADDR(p), 0, PGSIZE);
 	p->type = PGTYPE_PGDIR;
-	p->entries = 0;
+	p->pgdir.entries = 0;
+	p->pgdir.asid = asid;
 	return (pgdir_t *)p;
 }
 
@@ -55,7 +56,7 @@ ptr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p)
 		printk("content = %016x\r\n", dir[index]);
 		panic("Adding entry to the same position twice.\r\n");
 	}
-	++(pgdir->entries);
+	++(pgdir->pgdir.entries);
 	dir[index] = PAGE_TO_PFN(p);
 	return PFN_TO_KVADDR(dir[index]);
 }
@@ -79,7 +80,7 @@ ptr_t pgdir_add_page(pgdir_t *pgdir, unsigned short index)
 ptr_t pgdir_add_pgdir(pgdir_t *pgdir, unsigned short index)
 {
 	pgdir_check(pgdir);
-	pgdir_t *pd = pgdir_new();
+	pgdir_t *pd = pgdir_new(pgdir->pgdir.asid);
 	memset((void *)PAGE_TO_KVADDR(pd), 0, PGSIZE);
 	return pgdir_add_entry(pgdir, index, pd);
 }
@@ -93,7 +94,7 @@ ptr_t pgdir_remove_entry(pgdir_t *pgdir, unsigned short index)
 {
 	pgdir_check(pgdir);
 	ptr_t result;
-	--(pgdir->entries);
+	--(pgdir->pgdir.entries);
 	ptr_t *dir = (ptr_t *)PAGE_TO_KVADDR(pgdir);
 	result = dir[index];
 	dir[index] = 0;
@@ -115,6 +116,6 @@ void pgdir_remove_pgdir(pgdir_t *pgdir, unsigned short index)
 	pgdir_check(pgdir);
 	ptr_t result = pgdir_remove_entry(pgdir, index);
 	pgdir_t *pd = KVADDR_TO_PAGE(result);
-	if (pd->entries == 0)
+	if (pgdir_empty(pd) == 0)
 		pgdir_delete(pd);
 }

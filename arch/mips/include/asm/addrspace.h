@@ -10,7 +10,6 @@
 #define _ASM_ADDRSPACE_H
 
 #include <asm/bootinfo.h>
-#include <sys/types.h>
 
 /*
  * Virtual Address Space definitions
@@ -174,6 +173,8 @@
 #define KSSEG		CKSSEG
 #define KSEG3		CKSEG3
 
-#define ASID_KERNEL	0
+#define ASID_KERNEL		0x00	/* Kernel ASID */
+#define ASID_INVALID		0xff	/* Invalid ASID, needs relocation */
+#define ASID_MAX		0xff
 
 #endif

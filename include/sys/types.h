@@ -24,6 +24,7 @@ typedef signed long long int64, __s64;
 typedef unsigned long genericptr_t, ptr_t;
 
 typedef int pid_t;	/* PID, -1 = invalid, 0 = idle, 1 = init, -2 = kernel */
+typedef unsigned short asid_t;
 
 typedef int bool;
 #define false		0

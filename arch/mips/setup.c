@@ -17,6 +17,8 @@
 #include <asm/bootinfo.h>
 #include <asm/cpu.h>
 #include <asm/thread_info.h>
+#include <asm/addrspace.h>
+#include <asm/mm/page.h>
 #include <printk.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -40,7 +42,7 @@ unsigned long memsize, highmemsize, cpu_clock_freq, bus_clock_freq, memlimit;
 /*
  * Thread stack should be alighed to stack size.
  */
-union thread_stack_info init_thread_union __attribute__((__aligned(THREAD_SIZE)));
+union thread_stack_info init_thread_union;
 
 static inline void
 parse_ulong_option(const char *envs, const char *option, unsigned long *var)

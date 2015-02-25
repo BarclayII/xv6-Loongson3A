@@ -97,6 +97,7 @@ static void setup_page_array(void)
 
 void mm_init(void)
 {
+	printk("Size of page struct: %d\r\n", sizeof(struct page));
 	setup_page_array();
 	test_mm();
 	test2_mm();

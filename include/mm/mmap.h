@@ -58,7 +58,10 @@ struct page {
 #define PGTYPE_SLAB		3	/* kernel object slabs */
 	union {
 		/* For page directories */
-		unsigned short	entries;
+		struct {
+			unsigned short	entries;
+			unsigned short	asid;
+		} pgdir;
 	};
 };
 

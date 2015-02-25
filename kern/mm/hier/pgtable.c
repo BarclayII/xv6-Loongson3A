@@ -12,6 +12,7 @@
 
 #ifdef CONFIG_HPT
 
+#include <asm/mm/pgtable.h>
 #include <mm/hier/pgdir.h>
 #include <mm/mmap.h>
 #include <mm/vmm.h>
@@ -30,11 +31,12 @@ mm_t kern_low_mm;
  */
 void pgtable_bootstrap(void)
 {
-	kern_mm.asid = 0;
+	kern_mm.asid = ASID_KERNEL;
 	kern_mm.vma_head = NULL;
-	kern_mm.pgd = (pgd_t)PAGE_TO_KVADDR(pgdir_new());
+	kern_mm.pgd = (pgd_t)PAGE_TO_KVADDR(pgdir_new(ASID_KERNEL));
 	printk("Kernel page global directory initialized at %016x\r\n",
 	    kern_mm.pgd);
+	arch_pgtable_bootstrap(kern_mm.pgd);
 }
 
 static void dump_pagedesc(ptr_t vaddr, struct pagedesc *pdesc)
