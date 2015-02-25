@@ -101,8 +101,8 @@ int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page, bool replace,
 			printk("PGD = %016x, VADDR = %016x\r\n",
 			    pdesc.pgd, vaddr);
 			printk("OLD = %016x, NEW = %016x\r\n",
-			    pdesc.pte[pdesc.ptx], PAGE_TO_PFN(page));
-			p = PFN_TO_PAGE(pdesc.pte[pdesc.ptx]);
+			    pdesc.pte[pdesc.ptx], PAGE_TO_KVADDR(page));
+			p = KVADDR_TO_PAGE(pdesc.pte[pdesc.ptx]);
 			pde_remove_entry(pdesc.pte, pdesc.ptx);
 			if (replaced_page == NULL) {
 				printk("WARNING: replaced_page = NULL\r\n");
@@ -122,7 +122,7 @@ struct page *pgtable_remove(void *pgtable, ptr_t vaddr)
 	struct page *p;
 
 	pgtable_get(pgtable, vaddr, false, &pdesc);
-	p = PFN_TO_PAGE(pdesc.pte[pdesc.ptx]);
+	p = KVADDR_TO_PAGE(pdesc.pte[pdesc.ptx]);
 
 	if (pdesc.pte[pdesc.ptx])
 		pde_remove_entry(pdesc.pte, pdesc.ptx);

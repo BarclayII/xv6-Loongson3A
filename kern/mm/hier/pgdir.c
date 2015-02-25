@@ -57,8 +57,8 @@ ptr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p)
 		panic("Adding entry to the same position twice.\r\n");
 	}
 	++(pgdir->pgdir.entries);
-	dir[index] = PAGE_TO_PFN(p);
-	return PFN_TO_KVADDR(dir[index]);
+	dir[index] = PAGE_TO_KVADDR(p);
+	return dir[index];
 }
 
 /*
@@ -98,7 +98,7 @@ ptr_t pgdir_remove_entry(pgdir_t *pgdir, unsigned short index)
 	ptr_t *dir = (ptr_t *)PAGE_TO_KVADDR(pgdir);
 	result = dir[index];
 	dir[index] = 0;
-	return PFN_TO_KVADDR(result);
+	return result;
 }
 
 void pgdir_remove_page(pgdir_t *pgdir, unsigned short index)

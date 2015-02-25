@@ -37,7 +37,7 @@ typedef struct mm_struct {
 } mm_t;
 
 /*
- * Each directory stores a list of physical frame numbers corresponding to
+ * Each directory stores a list of virtual addresses corresponding to
  * pages (or next-level page directories).
  */
 

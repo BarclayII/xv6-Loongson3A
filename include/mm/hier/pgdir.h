@@ -46,7 +46,7 @@ void pgdir_remove_pgdir(pgdir_t *pgdir, unsigned short index);
 #define pde_remove_pgdir(pde, index) \
 	pgdir_remove_pgdir(pgdir_load(pde), index)
 #define pde_get_entry(pde, index) \
-	(((pde)[index]) == 0 ? NULL : (void *)PFN_TO_KVADDR((pde)[index]))
+	(((pde)[index]) == 0 ? NULL : (void *)((pde)[index]))
 #define pde_empty(pde)		pgdir_empty(pgdir_load(pde))
 #define pde_delete(pde)		pgdir_delete(pgdir_load(pde))
 #define pde_entries(pde)	pgdir_entries(pgdir_load(pde))

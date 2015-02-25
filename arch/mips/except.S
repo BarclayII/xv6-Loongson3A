@@ -13,19 +13,21 @@
 #include <asm/stackframe.h>
 
 NESTED(except_generic, TF_SIZE, sp)
-	.set push
-	.set noat
-	.set noreorder
+	.set	push
+	.set	noat
+	.set	noreorder
 	/*
 	 * I saved everything we need into a trapframe, then deal with the
 	 * exception in C code.
 	 */
 	j	handle_exception_entry
 	nop
-	.set pop
+	.set	pop
 	END(except_generic)
 
 handle_exception_entry:
+	.set	push
+	.set	noat
 	SAVE_ALL
 	mfc0	k0, CP0_STATUS
 	ori	k0, ST_EXCM
@@ -34,4 +36,5 @@ handle_exception_entry:
 	move	a0, sp
 	jal	handle_exception
 	RESTORE_ALL_AND_RET
+	.set	pop
 
