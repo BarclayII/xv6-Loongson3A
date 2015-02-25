@@ -40,6 +40,7 @@ void pgdir_delete(pgdir_t *pgdir)
 
 /*
  * Add a page @p into directory @pgdir with index @index.
+ * Returns the virtual address of newly added page.
  * NOTE: This function does *not* modify anything in @p.  Increasing
  *       reference counter or things like that should be done outside.
  */
@@ -55,8 +56,8 @@ ptr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p)
 		panic("Adding entry to the same position twice.\r\n");
 	}
 	++(pgdir->entries);
-	dir[index] = PAGE_TO_KVADDR(p);
-	return dir[index];
+	dir[index] = PAGE_TO_PFN(p);
+	return PFN_TO_KVADDR(dir[index]);
 }
 
 /*
@@ -96,7 +97,7 @@ ptr_t pgdir_remove_entry(pgdir_t *pgdir, unsigned short index)
 	ptr_t *dir = (ptr_t *)PAGE_TO_KVADDR(pgdir);
 	result = dir[index];
 	dir[index] = 0;
-	return result;
+	return PFN_TO_KVADDR(result);
 }
 
 void pgdir_remove_page(pgdir_t *pgdir, unsigned short index)

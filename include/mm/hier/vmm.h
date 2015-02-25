@@ -36,8 +36,15 @@ typedef struct mm_struct {
 	vm_area_t		*vma_head;
 } mm_t;
 
+/*
+ * Each directory stores a list of physical frame numbers corresponding to
+ * pages (or next-level page directories).
+ */
+
 /* Page table hierarchy path retrieved by pgtable_get() function */
 struct pagedesc {
+	/* NOTE: these directory members are kernel virtual addresses, not
+	 *       PFNs. */
 	pgd_t		pgd;
 	pud_t		pud;
 	pmd_t		pmd;

@@ -81,10 +81,7 @@
 #define PAGE_OFF(vaddr)	((vaddr) & PAGE_OFF_MASK)
 
 #ifndef __ASSEMBLER__
-typedef ptr_t *pte_t;
-typedef pte_t *pmd_t;
-typedef pmd_t *pud_t;
-typedef pud_t *pgd_t;
+typedef ptr_t *pte_t, *pmd_t, *pud_t, *pgd_t;
 
 #define VADDR_SPLIT(vaddr, pgx, pux, pmx, ptx) \
 	do { \
