@@ -25,18 +25,24 @@ void pgdir_delete(pgdir_t *pgdir);
 #define pgdir_empty(pgdir)	(pgdir_entries(pgdir) == 0)
 ptr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p);
 ptr_t pgdir_add_page(pgdir_t *pgdir, unsigned short index);
+ptr_t pgdir_add_pgdir(pgdir_t *pgdir, unsigned short index);
 ptr_t pgdir_remove_entry(pgdir_t *pgdir, unsigned short index);
 void pgdir_remove_page(pgdir_t *pgdir, unsigned short index);
+void pgdir_remove_pgdir(pgdir_t *pgdir, unsigned short index);
 
 /* Shortcuts */
 #define pde_add_entry(pde, index, p) \
 	pgdir_add_entry(pgdir_load(pde), index, p)
 #define pde_add_page(pde, index) \
 	pgdir_add_page(pgdir_load(pde), index)
+#define pde_add_pgdir(pde, index) \
+	pgdir_add_pgdir(pgdir_load(pde), index)
 #define pde_remove_entry(pde, index) \
 	pgdir_remove_entry(pgdir_load(pde), index)
 #define pde_remove_page(pde, index) \
 	pgdir_remove_page(pgdir_load(pde), index)
+#define pde_remove_pgdir(pde, index) \
+	pgdir_remove_pgdir(pgdir_load(pde), index)
 #define pde_empty(pde)		pgdir_empty(pgdir_load(pde))
 #define pde_delete(pde)		pgdir_delete(pgdir_load(pde))
 #define pde_entries(pde)	pgdir_entries(pgdir_load(pde))

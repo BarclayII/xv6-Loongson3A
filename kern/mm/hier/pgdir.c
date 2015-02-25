@@ -13,10 +13,16 @@
 #include <string.h>
 #include <printk.h>
 #include <panic.h>
+#include <assert.h>
 
 /*
  * Allocate a new page directory object
  */
+void pgdir_check(pgdir_t *pgdir)
+{
+	assert(pgdir->type == PGTYPE_PGDIR);
+}
+
 pgdir_t *pgdir_new(void)
 {
 	struct page *p = pgalloc();
@@ -28,6 +34,7 @@ pgdir_t *pgdir_new(void)
 
 void pgdir_delete(pgdir_t *pgdir)
 {
+	pgdir_check(pgdir);
 	pgfree((struct page *)pgdir);
 }
 
@@ -38,6 +45,7 @@ void pgdir_delete(pgdir_t *pgdir)
  */
 ptr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p)
 {
+	pgdir_check(pgdir);
 	ptr_t *dir = (ptr_t *)PAGE_TO_KVADDR(pgdir);
 	if (dir[index]) {
 		/* Shouldn't allow two different entries having same index */
@@ -56,10 +64,23 @@ ptr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p)
  */
 ptr_t pgdir_add_page(pgdir_t *pgdir, unsigned short index)
 {
+	pgdir_check(pgdir);
 	struct page *p = pgalloc();
 	memset((void *)PAGE_TO_KVADDR(p), 0, PGSIZE);
 	inc_pageref(p);
 	return pgdir_add_entry(pgdir, index, p);
+}
+
+/*
+ * Allocate a new page directory, usually an intermediate one, into
+ * the page directory.
+ */
+ptr_t pgdir_add_pgdir(pgdir_t *pgdir, unsigned short index)
+{
+	pgdir_check(pgdir);
+	pgdir_t *pd = pgdir_new();
+	memset((void *)PAGE_TO_KVADDR(pd), 0, PGSIZE);
+	return pgdir_add_entry(pgdir, index, pd);
 }
 
 /*
@@ -69,6 +90,7 @@ ptr_t pgdir_add_page(pgdir_t *pgdir, unsigned short index)
  */
 ptr_t pgdir_remove_entry(pgdir_t *pgdir, unsigned short index)
 {
+	pgdir_check(pgdir);
 	ptr_t result;
 	--(pgdir->entries);
 	ptr_t *dir = (ptr_t *)PAGE_TO_KVADDR(pgdir);
@@ -79,7 +101,19 @@ ptr_t pgdir_remove_entry(pgdir_t *pgdir, unsigned short index)
 
 void pgdir_remove_page(pgdir_t *pgdir, unsigned short index)
 {
+	pgdir_check(pgdir);
 	ptr_t result = pgdir_remove_entry(pgdir, index);
 	page_unref(KVADDR_TO_PAGE(result));
 }
 
+/*
+ * Remove an intermediate directory entry from the page directory.
+ */
+void pgdir_remove_pgdir(pgdir_t *pgdir, unsigned short index)
+{
+	pgdir_check(pgdir);
+	ptr_t result = pgdir_remove_entry(pgdir, index);
+	pgdir_t *pd = KVADDR_TO_PAGE(result);
+	if (pd->entries == 0)
+		pgdir_delete(pd);
+}

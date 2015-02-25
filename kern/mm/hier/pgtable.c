@@ -67,11 +67,11 @@ int pgtable_get(void *pgtable, ptr_t vaddr, bool create, void *result)
 			ret = -ENOENT;
 	} else {
 		if (!(pdesc.pud = pdesc.pgd[pdesc.pgx]))
-			pdesc.pud = (pud_t)pde_add_page(pdesc.pgd, pdesc.pgx);
+			pdesc.pud = (pud_t)pde_add_pgdir(pdesc.pgd, pdesc.pgx);
 		if (!(pdesc.pmd = pdesc.pud[pdesc.pux]))
-			pdesc.pmd = (pmd_t)pde_add_page(pdesc.pud, pdesc.pux);
+			pdesc.pmd = (pmd_t)pde_add_pgdir(pdesc.pud, pdesc.pux);
 		if (!(pdesc.pte = pdesc.pmd[pdesc.pmx]))
-			pdesc.pte = (pte_t)pde_add_page(pdesc.pmd, pdesc.pmx);
+			pdesc.pte = (pte_t)pde_add_pgdir(pdesc.pmd, pdesc.pmx);
 	}
 
 	printk("pgtable_get(%016x):\r\n", vaddr);
@@ -126,13 +126,13 @@ struct page *pgtable_remove(void *pgtable, ptr_t vaddr)
 		pde_remove_entry(pdesc.pte, pdesc.ptx);
 	
 	if (pde_empty(pdesc.pte))
-		pde_remove_page(pdesc.pmd, pdesc.pmx);
+		pde_remove_pgdir(pdesc.pmd, pdesc.pmx);
 
 	if (pde_empty(pdesc.pmd))
-		pde_remove_page(pdesc.pud, pdesc.pux);
+		pde_remove_pgdir(pdesc.pud, pdesc.pux);
 
 	if (pde_empty(pdesc.pud))
-		pde_remove_page(pdesc.pgd, pdesc.pgx);
+		pde_remove_pgdir(pdesc.pgd, pdesc.pgx);
 
 	return p;
 }
