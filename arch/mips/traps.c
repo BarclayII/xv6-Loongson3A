@@ -33,7 +33,7 @@ void trap_init(void)
 	 * Looks like TLB refilling happens in EBASE + 0x00
 	 */
 	memcpy((void *)(ebase), &except_tlb, 0x80);
-	memcpy((void *)(ebase + 0x80), &except_generic, 0x80);
+	memcpy((void *)(ebase + 0x80), &except_tlb, 0x80);
 	/*
 	 * And also cache errors
 	 */

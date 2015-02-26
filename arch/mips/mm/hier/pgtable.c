@@ -45,7 +45,7 @@ void pgtable_bootstrap(void)
 	    kern_mm.pgd, ASID_KERNEL);
 }
 
-static void dump_pagedesc(ptr_t vaddr, struct pagedesc *pdesc)
+void dump_pagedesc(ptr_t vaddr, struct pagedesc *pdesc)
 {
 	printk("VADDR\t%016x\r\n", vaddr);
 	printk("PGD\t%016x:%d\r\n", pdesc->pgd, pdesc->pgx);

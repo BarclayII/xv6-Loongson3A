@@ -25,6 +25,7 @@
 #include <asm/irq.h>
 #include <asm/addrspace.h>
 #include <mm/mmap.h>
+#include <mm/vmm.h>
 
 int main(void)
 {
@@ -94,8 +95,7 @@ int main(void)
 
 	local_irq_enable();
 
-	/* printk("TEST VADDR: %016x\r\n", read_mem_ulong(0x500000)); */
-
+	test_tlb();
 	for (;;)
 		/* do nothing */;
 

@@ -49,12 +49,11 @@
 #define PTE_VALID		0x080
 #define PTE_GLOBAL		0x040
 /* Extra page table entry flags not needed by hardware */
+#define PTE_SOFT_SHIFT		6
 #define PTE_PHYS		0x001	/* physical address marker */
 
 #ifndef __ASSEMBLER__
 extern pgd_t online_hpt[];
-
-void arch_pgtable_bootstrap(pgd_t kernel_pgd);
 #endif	/* !__ASSEMBLER__ */
 
 #endif	/* CONFIG_HPT */

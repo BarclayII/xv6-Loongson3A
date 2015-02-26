@@ -12,6 +12,7 @@
 #define _ASM_MM_HIER_VMM_H
 
 #include <asm/mm/page.h>
+#include <asm/mm/pgtable.h>
 #include <asm/mm/hier/pgdir.h>
 
 struct mm_struct;
@@ -53,5 +54,7 @@ struct pagedesc {
 extern mm_t kern_high_mm;		/* High memory manager */
 extern mm_t kern_low_mm;		/* Low memory manager */
 #define kern_mm	kern_high_mm
+
+void dump_pagedesc(ptr_t vaddr, struct pagedesc *pdesc);
 
 #endif

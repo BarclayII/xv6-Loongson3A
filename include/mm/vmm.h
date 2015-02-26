@@ -49,5 +49,6 @@ int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page,
 struct page *pgtable_remove(void *pgtable, ptr_t vaddr);
 
 void test_pgtable(void);
+void test_tlb(void);
 
 #endif

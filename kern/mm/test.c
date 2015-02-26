@@ -9,6 +9,7 @@
  */
 
 #include <asm/mm/pgtable.h>
+#include <asm/mipsregs.h>
 #include <mm/mmap.h>
 #include <mm/vmm.h>
 #include <printk.h>
@@ -78,12 +79,14 @@ void test2_mm(void)
 		"daddiu	$16, 0x1e;"
 		"dmtc0	$17, $2;"
 		"dmtc0	$16, $3;"
-		"dmtc0	$0, $0;"
-		"tlbwi"
+		"tlbwr"
 		: /* no output */
 		: "r"(pfn1), "r"(pfn2)
 		: "$16", "$17"
 	);
+	printk("ENTRYHI = %016x\r\n", read_c0_entryhi());
+	printk("ENTRYLO0 = %016x\r\n", read_c0_entrylo0());
+	printk("ENTRYLO1 = %016x\r\n", read_c0_entrylo1());
 	memset((char *)PFN_TO_KVADDR(pfn1), '2', 4096);
 	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
 	struct test *sample_va = (struct test *)0xc000000000000ff8;
@@ -122,3 +125,44 @@ void test_pgtable(void)
 	pgfree(p4);
 }
 
+void test_tlb(void)
+{
+	struct page *p1 = pgalloc(), *p2 = pgalloc();
+	unsigned long pfn1 = PAGE_TO_PFN(p1), pfn2 = PAGE_TO_PFN(p2);
+	struct pagedesc pdesc1, pdesc2;
+	unsigned long *a = (unsigned long *)0x500000;
+	unsigned long *b = (unsigned long *)0x501000;
+
+	printk("PFN1 = %016x\r\n, ENTRY = %016x\r\n",
+	    pfn1, (pfn1 << 6) + 0x1e);
+	printk("PFN2 = %016x\r\n, ENTRY = %016x\r\n",
+	    pfn2, (pfn2 << 6) + 0x1e);
+	pgtable_insert(&(kern_mm.pgd), (ptr_t)a, p1, PTE_VALID | PTE_DIRTY,
+	    false, NULL);
+	pgtable_insert(&(kern_mm.pgd), (ptr_t)b, p2, PTE_VALID | PTE_DIRTY,
+	    false, NULL);
+	pgtable_get(&(kern_mm.pgd), (ptr_t)a, false, &pdesc1);
+	pgtable_get(&(kern_mm.pgd), (ptr_t)b, false, &pdesc2);
+	dump_pagedesc((ptr_t)a, &pdesc1);
+	dump_pagedesc((ptr_t)b, &pdesc2);
+	printk("PTE1 = %016x\r\n", pdesc1.pte[pdesc1.ptx]);
+	printk("PTE2 = %016x\r\n", pdesc2.pte[pdesc2.ptx]);
+	*a = 0xabcdef;
+	*b = 0x123456;
+	printk("ENTRYHI = %016x\r\n", read_c0_entryhi());
+	printk("ENTRYLO0 = %016x\r\n", read_c0_entrylo0());
+	printk("ENTRYLO1 = %016x\r\n", read_c0_entrylo1());
+	printk("TEST VADDR: %016x\r\n", *a);
+	printk("TEST PHYS: %016x\r\n", read_mem_ulong(PAGE_TO_KVADDR(p1)));
+	printk("TEST VADDR: %016x\r\n", *b);
+	printk("TEST PHYS: %016x\r\n", read_mem_ulong(PAGE_TO_KVADDR(p2)));
+	write_mem_ulong(PAGE_TO_KVADDR(p1), 0x654321);
+	write_mem_ulong(PAGE_TO_KVADDR(p2), 0xfedcba);
+	printk("TEST VADDR: %016x\r\n", *a);
+	printk("TEST PHYS: %016x\r\n", read_mem_ulong(PAGE_TO_KVADDR(p1)));
+	printk("TEST VADDR: %016x\r\n", *b);
+	printk("TEST PHYS: %016x\r\n", read_mem_ulong(PAGE_TO_KVADDR(p2)));
+
+	pgfree(p1);
+	pgfree(p2);
+}
