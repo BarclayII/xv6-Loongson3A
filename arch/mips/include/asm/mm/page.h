@@ -55,11 +55,11 @@
  * page directories.
  */
 
-#define PGSHIFT		12
-#define PGSIZE		(1ULL << PTE_OFFSET)
+#define PGSHIFT		ULCAST(12)
+#define PGSIZE		(ULCAST(1) << PTE_OFFSET)
 
 #define PDE_BITS	(PGSHIFT - 3)
-#define PDE_MASK	((1ULL << PDE_BITS) - 1ULL)
+#define PDE_MASK	((ULCAST(1) << PDE_BITS) - 1)
 
 #ifdef CONFIG_HPT
 
@@ -72,7 +72,7 @@
 #define PUD_MASK	(PDE_MASK << PUD_OFFSET)
 #define PMD_MASK	(PDE_MASK << PMD_OFFSET)
 #define PTE_MASK	(PDE_MASK << PTE_OFFSET)
-#define PAGE_OFF_MASK	((1ULL << PTE_OFFSET) - 1ULL)
+#define PAGE_OFF_MASK	((ULCAST(1) << PTE_OFFSET) - 1)
 
 #define PGX(vaddr)	(((vaddr) & PGD_MASK) >> PGD_OFFSET)
 #define PUX(vaddr)	(((vaddr) & PUD_MASK) >> PUD_OFFSET)

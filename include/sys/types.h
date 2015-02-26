@@ -11,12 +11,14 @@
 #ifndef _SYS_TYPES_H
 #define _SYS_TYPES_H
 
+#ifndef __ASSEMBLER__
 typedef unsigned char uint8, uchar, __u8;
 typedef signed char __s8;
 typedef unsigned short uint16, ushort, __u16;
 typedef signed short __s16;
 typedef unsigned int uint32, uint, __u32;
 typedef signed int __s32;
+typedef unsigned long ulong;
 typedef unsigned long long uint64, __u64;
 typedef signed long long int64, __s64;
 
@@ -32,5 +34,16 @@ typedef int bool;
 
 typedef unsigned long size_t;
 typedef signed long ssize_t;
+
+/*
+ * This macro is a wrapper for casting integer constants to unsigned longs,
+ * freeing the code from compiler warnings and assembler errors (GCC
+ * warns about shift count if a "UL" suffix is not appended while GAS
+ * refuses to recognize the "UL" suffix).
+ */
+#define ULCAST(i)	(i##UL)
+#else	/* __ASSEMBLER__ */
+#define ULCAST(i)	i
+#endif	/* !__ASSEMBLER__ */
 
 #endif

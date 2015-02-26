@@ -94,6 +94,8 @@ int main(void)
 
 	local_irq_enable();
 
+	/* printk("TEST VADDR: %016x\r\n", read_mem_ulong(0x500000)); */
+
 	for (;;)
 		/* do nothing */;
 

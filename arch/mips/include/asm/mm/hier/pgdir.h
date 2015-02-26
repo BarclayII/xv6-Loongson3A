@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef _MM_HIER_PGDIR_H
-#define _MM_HIER_PGDIR_H
+#ifndef _ASM_MM_HIER_PGDIR_H
+#define _ASM_MM_HIER_PGDIR_H
 
 #include <asm/mm/page.h>
 #include <asm/addrspace.h>
@@ -25,24 +25,19 @@ void pgdir_delete(pgdir_t *pgdir);
 #define pgdir_asid(pd)		((pd)->pgdir.asid)
 #define pgdir_entries(pd)	((pd)->pgdir.entries)
 #define pgdir_empty(pd)		(pgdir_entries(pd) == 0)
-ptr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p);
-ptr_t pgdir_add_page(pgdir_t *pgdir, unsigned short index);
+ptr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p,
+    unsigned int flags);
 ptr_t pgdir_add_pgdir(pgdir_t *pgdir, unsigned short index);
 ptr_t pgdir_remove_entry(pgdir_t *pgdir, unsigned short index);
-void pgdir_remove_page(pgdir_t *pgdir, unsigned short index);
 void pgdir_remove_pgdir(pgdir_t *pgdir, unsigned short index);
 
 /* Shortcuts */
-#define pde_add_entry(pde, index, p) \
-	pgdir_add_entry(pgdir_load(pde), index, p)
-#define pde_add_page(pde, index) \
-	pgdir_add_page(pgdir_load(pde), index)
+#define pde_add_entry(pde, index, p, flags) \
+	pgdir_add_entry(pgdir_load(pde), index, p, flags)
 #define pde_add_pgdir(pde, index) \
 	pgdir_add_pgdir(pgdir_load(pde), index)
 #define pde_remove_entry(pde, index) \
 	pgdir_remove_entry(pgdir_load(pde), index)
-#define pde_remove_page(pde, index) \
-	pgdir_remove_page(pgdir_load(pde), index)
 #define pde_remove_pgdir(pde, index) \
 	pgdir_remove_pgdir(pgdir_load(pde), index)
 #define pde_get_entry(pde, index) \

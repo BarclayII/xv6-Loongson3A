@@ -187,7 +187,7 @@
 # define CONF_TLB	0x00000080	/* Standard TLB */
 #define CONF_VI		0x00000008	/* Virtual instruction cache */
 #define CONF_K0		0x00000007	/* KSEG0 cache consistency */
-# define CONF_CACHABLE	0x00000003	/* Cachable */
+# define CONF_CACHEABLE	0x00000003	/* Cacheable */
 # define CONF_UNCACHED	0x00000002	/* Uncached */
 
 #define EBASE_CPUNUM_MASK	0x3ff

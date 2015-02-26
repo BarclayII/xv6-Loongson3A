@@ -8,6 +8,7 @@
  *
  */
 
+#include <asm/mm/pgtable.h>
 #include <mm/mmap.h>
 #include <mm/vmm.h>
 #include <printk.h>
@@ -103,9 +104,9 @@ void test_pgtable(void)
 	struct page *p1 = pgalloc();
 	struct page *p2 = pgalloc();
 
-	if (pgtable_insert(&pgd, 0x100000, p1, false, NULL) != 0)
+	if (pgtable_insert(&pgd, 0x100000, p1, PTE_VALID, false, NULL) != 0)
 		panic("Inserting p1 failed\r\n");
-	if (pgtable_insert(&pgd, 0x200000, p2, false, NULL) != 0)
+	if (pgtable_insert(&pgd, 0x200000, p2, PTE_VALID, false, NULL) != 0)
 		panic("Inserting p2 failed\r\n");
 
 	struct page *p3 = pgtable_remove(&pgd, 0x100000);

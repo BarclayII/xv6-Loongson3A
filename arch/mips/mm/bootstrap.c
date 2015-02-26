@@ -16,14 +16,9 @@
 
 #ifdef CONFIG_HPT
 
-pgd_t online_hpt[ASID_MAX + 1];
 
 void arch_pgtable_bootstrap(pgd_t kernel_pgd)
 {
-	memset(online_hpt, 0, sizeof(online_hpt));
-	online_hpt[ASID_KERNEL] = kernel_pgd;
-	printk("Kernel PGD at %016x registered as ASID %d\r\n",
-	    kernel_pgd, ASID_KERNEL);
 }
 
 #endif	/* CONFIG_HPT */

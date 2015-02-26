@@ -13,7 +13,7 @@
 #ifdef CONFIG_HPT
 
 #include <asm/mm/pgtable.h>
-#include <mm/hier/pgdir.h>
+#include <asm/mm/hier/pgdir.h>
 #include <mm/mmap.h>
 #include <mm/vmm.h>
 #include <printk.h>
@@ -24,6 +24,8 @@
 
 mm_t kern_high_mm;
 mm_t kern_low_mm;
+
+pgd_t online_hpt[ASID_MAX + 1];
 
 /*
  * Allocate a page global directory for kernel, and initialize the memory
@@ -36,7 +38,11 @@ void pgtable_bootstrap(void)
 	kern_mm.pgd = (pgd_t)PAGE_TO_KVADDR(pgdir_new(ASID_KERNEL));
 	printk("Kernel page global directory initialized at %016x\r\n",
 	    kern_mm.pgd);
-	arch_pgtable_bootstrap(kern_mm.pgd);
+
+	memset(online_hpt, 0, sizeof(online_hpt));
+	online_hpt[ASID_KERNEL] = kern_mm.pgd;
+	printk("Kernel PGD at %016x registered as ASID %d\r\n",
+	    kern_mm.pgd, ASID_KERNEL);
 }
 
 static void dump_pagedesc(ptr_t vaddr, struct pagedesc *pdesc)
@@ -76,8 +82,6 @@ int pgtable_get(void *pgtable, ptr_t vaddr, bool create, void *result)
 			pdesc.pte = (pte_t)pde_add_pgdir(pdesc.pmd, pdesc.pmx);
 	}
 
-	printk("pgtable_get(%016x):\r\n", vaddr);
-	dump_pagedesc(vaddr, &pdesc);
 	memcpy(result, &pdesc, sizeof(struct pagedesc));
 	return ret;
 }
@@ -85,11 +89,15 @@ int pgtable_get(void *pgtable, ptr_t vaddr, bool create, void *result)
 /*
  * Fails only if the virtual address already exists and @replace is not set.
  */
-int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page, bool replace,
-    struct page **replaced_page)
+int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page,
+    unsigned int perm, bool replace, struct page **replaced_page)
 {
 	struct pagedesc pdesc;
 	struct page *p;
+
+	/* Filter NULL address */
+	if (vaddr == 0)
+		return -EINVAL;
 
 	pgtable_get(pgtable, vaddr, true, &pdesc);
 
@@ -98,12 +106,12 @@ int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page, bool replace,
 			return -EEXIST;
 		else {
 			printk("WARNING: replacing existing PT entry\r\n");
+			p = KVADDR_TO_PAGE(pde_remove_entry(pdesc.pte,
+			    pdesc.ptx));
 			printk("PGD = %016x, VADDR = %016x\r\n",
 			    pdesc.pgd, vaddr);
 			printk("OLD = %016x, NEW = %016x\r\n",
-			    pdesc.pte[pdesc.ptx], PAGE_TO_KVADDR(page));
-			p = KVADDR_TO_PAGE(pdesc.pte[pdesc.ptx]);
-			pde_remove_entry(pdesc.pte, pdesc.ptx);
+			    PAGE_TO_KVADDR(p), PAGE_TO_KVADDR(page));
 			if (replaced_page == NULL) {
 				printk("WARNING: replaced_page = NULL\r\n");
 			} else {
@@ -112,29 +120,34 @@ int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page, bool replace,
 		}
 	}
 
-	pde_add_entry(pdesc.pte, pdesc.ptx, page);
+	unsigned int flags = perm & (PTE_LOWMASK - PTE_CACHE_MASK);
+	flags |= PTE_CACHEABLE | PTE_PHYS;
+	pde_add_entry(pdesc.pte, pdesc.ptx, page, flags);
 	return 0;
 }
 
 struct page *pgtable_remove(void *pgtable, ptr_t vaddr)
 {
 	struct pagedesc pdesc;
-	struct page *p;
+	struct page *p = NULL;
 
 	pgtable_get(pgtable, vaddr, false, &pdesc);
-	p = KVADDR_TO_PAGE(pdesc.pte[pdesc.ptx]);
 
-	if (pdesc.pte[pdesc.ptx])
-		pde_remove_entry(pdesc.pte, pdesc.ptx);
+	if (pdesc.pte[pdesc.ptx]) {
+		p = KVADDR_TO_PAGE(pde_remove_entry(pdesc.pte, pdesc.ptx));
+	}
 	
-	if (pde_empty(pdesc.pte))
+	if (pde_empty(pdesc.pte)) {
 		pde_remove_pgdir(pdesc.pmd, pdesc.pmx);
+	}
 
-	if (pde_empty(pdesc.pmd))
+	if (pde_empty(pdesc.pmd)) {
 		pde_remove_pgdir(pdesc.pud, pdesc.pux);
+	}
 
-	if (pde_empty(pdesc.pud))
+	if (pde_empty(pdesc.pud)) {
 		pde_remove_pgdir(pdesc.pgd, pdesc.pgx);
+	}
 
 	return p;
 }

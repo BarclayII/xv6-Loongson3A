@@ -45,15 +45,15 @@ OBJS		= arch/mips/entry.o \
 		  arch/mips/cpu.o \
 		  arch/mips/traps.o \
 		  arch/mips/except.o \
+		  arch/mips/tlbex.o \
+		  arch/mips/mm/hier/pgtable.o \
+		  arch/mips/mm/hier/pgdir.o \
 		  arch/mips/mach/loongson3a5/irq.o \
-		  arch/mips/mm/bootstrap.o \
 		  drivers/serial/uart16550.o \
 		  drivers/serial/prom_printk.o \
 		  kern/mm/init.o \
 		  kern/mm/pgalloc.o \
 		  kern/mm/test.o \
-		  kern/mm/hier/pgtable.o \
-		  kern/mm/hier/pgdir.o \
 		  kern/printk.o \
 		  kern/panic.o \
 		  kern/init.o $(KLIBC_OBJS) \

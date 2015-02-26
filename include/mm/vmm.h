@@ -14,11 +14,11 @@
 #include <config.h>
 
 #ifdef CONFIG_HPT
-#include <mm/hier/vmm.h>
+#include <asm/mm/hier/vmm.h>
 #endif
 
 #ifdef CONFIG_IPT
-#include <mm/inv/vmm.h>
+#include <asm/mm/inv/vmm.h>
 #endif
 
 /*
@@ -43,8 +43,8 @@ int pgtable_get(void *pgtable, ptr_t vaddr, bool create, void *result);
  * page table @pgtable with virtual address @vaddr.  If a replacement
  * occur, the old page will be stored at @replaced_page.
  */
-int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page, bool replace,
-    struct page **replaced_page);
+int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page,
+    unsigned int perm, bool replace, struct page **replaced_page);
 /* Remove a virtual address. */
 struct page *pgtable_remove(void *pgtable, ptr_t vaddr);
 

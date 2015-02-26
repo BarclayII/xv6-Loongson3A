@@ -74,17 +74,25 @@ struct page {
  */
 extern struct page *page_array;
 
+extern size_t highmem_base_pfn;	/* The lowest PFN in high memory */
+
+/*
+ * Someday I'll wrap all these macros outside inline functions...
+ */
 #define PAGE_TO_PFN(p)	\
 	((unsigned long)((struct page *)(p) - (page_array)) + (highmem_base_pfn))
 #define PAGE_TO_PADDR(p)	(PAGE_TO_PFN(p) << PGSHIFT)
 #define PFN_TO_PADDR(n)		((n) << PGSHIFT)
 #define PADDR_TO_PFN(addr)	(PGADDR_ROUNDDOWN(addr) >> PGSHIFT)
-#define PFN_TO_PAGE(n)		({ \
-	if ((n) < highmem_base_pfn) { \
-		panic("Trying to access low memory through pages?\r\n"); \
-	} \
-	&(page_array[(n) - highmem_base_pfn]); \
-})
+
+static inline struct page *__pfn_to_page(unsigned long n)
+{
+	if ((n) < highmem_base_pfn)
+		panic("Trying to access PFN %d through pages?\r\n", n);
+	return &(page_array[n - highmem_base_pfn]);
+}
+
+#define PFN_TO_PAGE(n)		__pfn_to_page(n)
 #define PADDR_TO_PAGE(addr)	PFN_TO_PAGE(PADDR_TO_PFN(addr))
 
 /*
@@ -95,11 +103,19 @@ extern struct page *page_array;
 #define PADDR_TO_KVADDR(paddr)	((paddr) + KERNBASE)
 #define KVADDR_TO_PFN(kvaddr)	PADDR_TO_PFN(KVADDR_TO_PADDR(kvaddr))
 #define PFN_TO_KVADDR(n)	PADDR_TO_KVADDR(PFN_TO_PADDR(n))
-#define KVADDR_TO_PAGE(kvaddr)	\
-	((!(kvaddr)) ? NULL : \
-	 PADDR_TO_PAGE(KVADDR_TO_PADDR(kvaddr)))
-#define PAGE_TO_KVADDR(p)	\
-	((!(p)) ? 0 : PADDR_TO_KVADDR(PAGE_TO_PADDR(p)))
+
+static inline struct page *__kvaddr_to_page(ptr_t kvaddr)
+{
+	return !kvaddr ? NULL : PADDR_TO_PAGE(KVADDR_TO_PADDR(kvaddr));
+}
+
+static inline ptr_t __page_to_kvaddr(struct page *p)
+{
+	return !p ? 0 : PADDR_TO_KVADDR(PAGE_TO_PADDR(p));
+}
+
+#define KVADDR_TO_PAGE(kvaddr)	__kvaddr_to_page(kvaddr)
+#define PAGE_TO_KVADDR(p)	__page_to_kvaddr(p)
 
 /*
  * Physical page manipulation
@@ -132,8 +148,6 @@ struct free_page_group {
 extern struct free_page_group free_page_group;
 #define free_page_list	(list_node_t *)(&(free_page_group.head))
 #define nr_free_pages	(free_page_group.count)
-
-extern size_t highmem_base_pfn;	/* The lowest PFN in high memory */
 
 void mm_init(void);
 struct page *alloc_pages(size_t num);
