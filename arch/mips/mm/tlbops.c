@@ -10,8 +10,8 @@ void tlb_flush_all(void)
 	for (i = 0; i < NUM_TLB_ENTRIES; ++i) {
 		write_c0_index(i);
 		write_c0_entryhi(ENTRYHI_DUMMY(i));
-		write_c0_entrylo0(i);
-		write_c0_entrylo1(i);
+		write_c0_entrylo0(0);
+		write_c0_entrylo1(0);
 		tlbwi();
 	}
 }
