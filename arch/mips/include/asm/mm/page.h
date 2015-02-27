@@ -56,7 +56,7 @@
  */
 
 #define PGSHIFT		ULCAST(12)
-#define PGSIZE		(ULCAST(1) << PTE_OFFSET)
+#define PGSIZE		(ULCAST(1) << PGSHIFT)
 
 #define PDE_BITS	(PGSHIFT - 3)
 #define PDE_MASK	((ULCAST(1) << PDE_BITS) - 1)

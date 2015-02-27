@@ -8,13 +8,18 @@
  *
  */
 
-#ifndef _CONFIG_H
-#define _CONFIG_H
+#include <mm/vmm.h>
+#include <asm/mm/pgtable.h>
+#include <asm/mm/tlb.h>
+#include <asm/mipsregs.h>
 
-#define CONFIG_HPT		/* Hierarchical Page Table */
+static void init_tlb(void)
+{
+	tlb_flush_all();
+}
 
-/* #define CONFIG_IPT */	/* Inverted Page Table, NYI */
-
-/* #define DEBUG */		/* Enable pdebug() and vpdebug() printing */
-
-#endif
+void arch_mm_init(void)
+{
+	pgtable_bootstrap();
+	init_tlb();
+}

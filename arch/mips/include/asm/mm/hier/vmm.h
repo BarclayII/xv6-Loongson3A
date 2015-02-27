@@ -55,6 +55,7 @@ extern mm_t kern_high_mm;		/* High memory manager */
 extern mm_t kern_low_mm;		/* Low memory manager */
 #define kern_mm	kern_high_mm
 
+void arch_mm_init(void);
 void dump_pagedesc(ptr_t vaddr, struct pagedesc *pdesc);
 
 #endif

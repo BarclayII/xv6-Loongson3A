@@ -40,48 +40,56 @@ xtlb_refill:
 	dsll	k1, 3
 	daddu	k1, k0
 	dmfc0	k0, CP0_BADVADDR
-	beqz	k1, error
+	/*
+	 * Branch to generic handler if an entry is zero.
+	 * NOTE:
+	 * Looks like a memory load should not directly precede a dependent
+	 * branch.  Is it a hazard or something MIPS specific?
+	 */
 	ld	k1, (k1)			/* k1 = PGD */
+	beqz	k1, 1f
 	dsrl	k0, PGD_OFFSET
 	andi	k0, PDE_MASK			/* k0 = PGX */
 	dsll	k0, 3
 	daddu	k1, k0				/* k1 = &PGD[PGX] */
 	dmfc0	k0, CP0_BADVADDR
-	beqz	k1, error
 	ld	k1, (k1)			/* k1 = PGD[PGX] = PUD */
+	beqz	k1, 1f
 	dsrl	k0, PUD_OFFSET
 	andi	k0, PDE_MASK			/* k0 = PUX */
 	dsll	k0, 3
 	daddu	k1, k0				/* k1 = &PUD[PUX] */
 	dmfc0	k0, CP0_BADVADDR
-	beqz	k1, error
 	ld	k1, (k1)			/* k1 = PUD[PUX] = PMD */
+	beqz	k1, 1f
 	dsrl	k0, PMD_OFFSET
 	andi	k0, PDE_MASK			/* k0 = PMX */
 	dsll	k0, 3
 	daddu	k1, k0				/* k1 = &PMD[PMX] */
 	dmfc0	k0, CP0_BADVADDR
-	beqz	k1, error
 	ld	k1, (k1)			/* k1 = PMD[PMX] = PTE */
+	beqz	k1, 1f
 	dsrl	k0, PTE_OFFSET
 	andi	k0, PDE_MASK - 1		/* k0 = EVEN(PTX) */
 	dsll	k0, 3
 	daddu	k1, k0				/* k1 = &PTE[EVEN(PTX)] */
 	daddu	k0, k1, 8			/* k0 = &PTE[ODD(PTX)] */
-	beqz	k1, error
 	ld	k1, (k1)			/* k1 = PTE[EVEN(PTX)] */
-	beqz	k0, error
+	beqz	k1, 1f
 	ld	k0, (k0)			/* k0 = PTE[ODD(PTX)] */
+	beqz	k0, 1f
 	dsrl	k1, PTE_SOFT_SHIFT
 	dsrl	k0, PTE_SOFT_SHIFT
 	dmtc0	k1, CP0_ENTRYLO0
 	dmtc0	k0, CP0_ENTRYLO1
+	j	2f
 	tlbwr
-	j	success
-error:
-	/* Jumps into failsafe generic handler */
+1:
+	/* Jumps into failsafe generic handler.
+	 * This happens if a mapping from that virtual address is not
+	 * established (i.e. page faults). */
 	j	except_generic
 	nop
-success:
+2:
 	eret
 	.set	pop

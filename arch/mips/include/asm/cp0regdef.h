@@ -52,6 +52,7 @@
 #define CP0_TAGHI	$29
 # define CP0_DATAHI	$29, $1
 #define CP0_ERROREPC	$30
+#define CP0_DESAVE	$31
 
 /*
  * Status register (CP0_STATUS) mode bits

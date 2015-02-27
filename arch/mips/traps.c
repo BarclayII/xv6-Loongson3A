@@ -83,6 +83,7 @@ void dump_trapframe(struct trapframe *tf)
 	printk("STATUS\t= %08x\r\n", tf->cp0_status);
 	printk("CAUSE\t= %08x\r\n", tf->cp0_cause);
 	printk("EPC\t= %08x\r\n", tf->cp0_epc);
+	printk("BADVADDR= %016x\r\n", tf->cp0_badvaddr);
 	switch (EXCCODE(tf->cp0_cause)) {
 	case EC_tlbm:
 	case EC_tlbl:

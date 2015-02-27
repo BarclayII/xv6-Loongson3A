@@ -99,11 +99,12 @@ void mm_init(void)
 {
 	printk("Size of page struct: %d\r\n", sizeof(struct page));
 	setup_page_array();
-	pgtable_bootstrap();
+	arch_mm_init();
+	printk("Current free pages: %d\r\n", nr_free_pages);
 
 	test_mm();
-	test2_mm();
+	/*test2_mm();*/
 
-	/* test_pgtable(); */
-	/* test_tlb(); */
+	test_pgtable();
+	test_tlb();
 }

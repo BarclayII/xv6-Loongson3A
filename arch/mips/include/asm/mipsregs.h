@@ -261,6 +261,9 @@ do {									\
 #define read_c0_errorepc()	__read_ulong_c0_register($30, 0)
 #define write_c0_errorepc(val)	__write_ulong_c0_register($30, 0, val)
 
+#define read_c0_desave()	__read_ulong_c0_register($31, 0)
+#define write_c0_desave(val)	__write_ulong_c0_register($31, 0, val)
+
 #define __BUILD_SET_C0(name)					\
 static inline unsigned int					\
 set_c0_##name(unsigned int set)					\

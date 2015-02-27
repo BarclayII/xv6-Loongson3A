@@ -47,6 +47,7 @@ struct page *alloc_pages(size_t num)
 			else
 				list_add_before(&(pfirst->list_node), pgentry);
 			--num;
+			pdebug("Allocated PFN %d\r\n", PAGE_TO_PFN(p));
 			--nr_free_pages;
 		}
 	}
@@ -98,8 +99,10 @@ struct page *alloc_cont_pages(size_t num)
 		list_del_init(&(p->list_node));
 		if (pfirst != NULL)
 			list_add_before(&(pfirst->list_node), &(p->list_node));
+		pdebug("Allocated continual PFN %d\r\n", PAGE_TO_PFN(p));
 		pfirst = p;
 		--p;
+		--nr_free_pages;
 	}
 
 	return pfirst;
@@ -144,6 +147,7 @@ void free_pages(struct page *freep)
 		/* Free the page and add the page back to free list */
 		shred_and_release_page(p);
 		list_add_before(free_entry, cur_entry);
+		pdebug("Freed PFN %d\r\n", PAGE_TO_PFN(p));
 		++nr_free_pages;
 	}
 }

@@ -12,6 +12,7 @@
 
 #ifdef CONFIG_HPT
 
+#include <asm/mm/tlb.h>
 #include <asm/mm/pgtable.h>
 #include <asm/mm/hier/pgdir.h>
 #include <mm/mmap.h>
@@ -58,6 +59,9 @@ void dump_pagedesc(ptr_t vaddr, struct pagedesc *pdesc)
  * See include/mm/vmm.h for meanings of parameters.
  * @pgtable is a pointer of pgd_t, while @result is another pointer to
  * pagedesc structure.
+ *
+ * @vaddr needn't be aligned to page size; it is automatically rounded
+ * down to page size within the VADDR_SPLIT macro.
  */
 int pgtable_get(void *pgtable, ptr_t vaddr, bool create, void *result)
 {
@@ -148,6 +152,9 @@ struct page *pgtable_remove(void *pgtable, ptr_t vaddr)
 	if (pde_empty(pdesc.pud)) {
 		pde_remove_pgdir(pdesc.pgd, pdesc.pgx);
 	}
+
+	/* Blast TLB entries containing this virtual address away */
+	tlb_remove(vaddr);
 
 	return p;
 }
