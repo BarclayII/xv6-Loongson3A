@@ -32,6 +32,7 @@ END(except_tlb)
 xtlb_refill:
 	.set	push
 	.set	noat
+	.set	noreorder
 	.set	mips64r2
 	dmfc0	k0, CP0_ENTRYHI
 	andi	k1, k0, ENTHI_ASID_MASK		/* k1 = ASID */

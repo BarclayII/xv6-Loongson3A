@@ -19,7 +19,7 @@ typedef signed short __s16;
 typedef unsigned int uint32, uint, __u32;
 typedef signed int __s32;
 typedef unsigned long ulong;
-typedef unsigned long long uint64, __u64;
+typedef unsigned long long uint64, __u64, u64;
 typedef signed long long int64, __s64;
 
 /* unsigned long integers defined as ptr_t are only for manipulating addresses */

@@ -21,16 +21,28 @@
 #define PCI_BASE	io_remap(PCI_OFFSET)
 #define pci_remap(phys_off)	(PCI_BASE + (phys_off))
 
-#define inb(port)	(*((volatile uchar *)pci_remap(port)))
-#define outb(port, val)	(*((volatile uchar *)pci_remap(port)) = (val))
+#define inb(port)		(*((volatile uchar *)pci_remap(port)))
+#define outb(port, val)		(*((volatile uchar *)pci_remap(port)) = (val))
 
-#define inw(port)	(*((volatile ushort *)pci_remap(port)))
-#define outw(port, val)	(*((volatile ushort *)pci_remap(port)) = (val))
+#define inw(port)		(*((volatile ushort *)pci_remap(port)))
+#define outw(port, val)		(*((volatile ushort *)pci_remap(port)) = (val))
 
-#define ind(port)	(*((volatile uint *)pci_remap(port)))
-#define outd(port, val)	(*((volatile uint *)pci_remap(port)) = (val))
+#define ind(port)		(*((volatile uint *)pci_remap(port)))
+#define outd(port, val)		(*((volatile uint *)pci_remap(port)) = (val))
 
-#define inq(port)	(*((volatile u64 *)pci_remap(port)))
-#define outq(port, val)	(*((volatile u64 *)pci_remap(port)) = (val))
+#define inq(port)		(*((volatile u64 *)pci_remap(port)))
+#define outq(port, val)		(*((volatile u64 *)pci_remap(port)) = (val))
+
+#define read_io_b(addr)		(*((volatile uchar *)io_remap(addr)))
+#define write_io_b(addr, val)	(*((volatile uchar *)io_remap(addr)) = (val))
+
+#define read_io_w(addr)		(*((volatile ushort *)io_remap(addr)))
+#define write_io_w(addr, val)	(*((volatile ushort *)io_remap(addr)) = (val))
+
+#define read_io_d(addr)		(*((volatile uint *)io_remap(addr)))
+#define write_io_d(addr, val)	(*((volatile uint *)io_remap(addr)) = (val))
+
+#define read_io_q(addr)		(*((volatile u64 *)io_remap(addr)))
+#define write_io_q(addr, val)	(*((volatile u64 *)io_remap(addr)) = (val))
 
 #endif

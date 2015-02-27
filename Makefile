@@ -25,7 +25,7 @@ OBJDUMP 	= $(CROSS_COMPILE)objdump
 
 INCFLAG		=  -I./arch/mips/include -I./include \
 		   -I./arch/mips/mach/$(MACH)/include
-CFLAGS		=  -O3 -G 0 -mno-abicalls -fno-pic -Wall -mabi=64 -fno-builtin
+CFLAGS		=  -O2 -G 0 -mno-abicalls -fno-pic -Wall -mabi=64 -fno-builtin
 CFLAGS		+= -nostdinc -nostdlib -g -mips64r2 $(INCFLAG)
 
 LDSCRIPT	= kernel.ld
@@ -49,6 +49,7 @@ OBJS		= arch/mips/entry.o \
 		  arch/mips/mm/hier/pgtable.o \
 		  arch/mips/mm/hier/pgdir.o \
 		  arch/mips/mach/loongson3a5/irq.o \
+		  arch/mips/mach/loongson3a5/addrconf.o \
 		  drivers/serial/uart16550.o \
 		  drivers/serial/prom_printk.o \
 		  kern/mm/init.o \

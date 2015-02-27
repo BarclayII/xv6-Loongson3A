@@ -11,6 +11,11 @@
 #ifndef _ASSERT_H
 #define _ASSERT_H
 
-#include <asm/assert.h>
+#include <panic.h>
+
+#define assert(x)	do { \
+	if (!(x)) \
+		panic("Assertation failed: %s\r\n", #x); \
+} while (0)
 
 #endif

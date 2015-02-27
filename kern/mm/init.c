@@ -99,9 +99,11 @@ void mm_init(void)
 {
 	printk("Size of page struct: %d\r\n", sizeof(struct page));
 	setup_page_array();
+	pgtable_bootstrap();
+
 	test_mm();
 	test2_mm();
 
-	pgtable_bootstrap();
-	test_pgtable();
+	/* test_pgtable(); */
+	/* test_tlb(); */
 }
