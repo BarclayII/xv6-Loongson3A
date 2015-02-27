@@ -16,19 +16,8 @@
 #endif
 
 /*
- * Simply traps if assertation fails.
+ * Invoked by assert(), never call this :)
  */
-#define _assert(cond) \
-	asm volatile ( \
-		".set	mips64r2;" \
-		"teq	%0, $0" \
-		: /* no output */ \
-		: "r"(cond) \
-	)
-
-static inline void assert(int cond)
-{
-	_assert(cond);
-}
+#define __halt()	asm volatile ("teq $0, $0")
 
 #endif

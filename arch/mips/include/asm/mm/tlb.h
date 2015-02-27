@@ -31,8 +31,6 @@
  */
 #define ENTRYHI_DUMMY(idx) (CKSEG0 + ((idx) << (PGSHIFT + 1)))
 
-#define NUM_TLB_ENTRIES		64	/* should be probed dynamically */
-
 void tlb_flush_all(void);
 void tlb_remove(ptr_t vaddr);
 

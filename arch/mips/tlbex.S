@@ -30,6 +30,14 @@ LEAF(except_tlb)
 END(except_tlb)
 
 xtlb_refill:
+	/*
+	 * Goals:
+	 * 1. Refill the TLB if page table maintains a valid entry.
+	 * 2. Turn to generic handler for swapping if such an entry does not
+	 *    exist.  This requires the handler to maintain ENTRYHI and
+	 *    BADVADDR contents while switching context, which is achieved
+	 *    by a series of (inefficient) checks.
+	 */
 	.set	push
 	.set	noat
 	.set	noreorder
@@ -75,15 +83,10 @@ xtlb_refill:
 	daddu	k1, k0				/* k1 = &PTE[EVEN(PTX)] */
 	daddu	k0, k1, 8			/* k0 = &PTE[ODD(PTX)] */
 	ld	k1, (k1)			/* k1 = PTE[EVEN(PTX)] */
-	beqz	k1, 1f
+	bnez	k1, 2f
 	ld	k0, (k0)			/* k0 = PTE[ODD(PTX)] */
-	beqz	k0, 1f
-	dsrl	k1, PTE_SOFT_SHIFT
-	dsrl	k0, PTE_SOFT_SHIFT
-	dmtc0	k1, CP0_ENTRYLO0
-	dmtc0	k0, CP0_ENTRYLO1
-	j	2f
-	tlbwr
+	bnez	k0, 2f
+	nop
 1:
 	/* Jumps into failsafe generic handler.
 	 * This happens if a mapping from that virtual address is not
@@ -91,5 +94,11 @@ xtlb_refill:
 	j	except_generic
 	nop
 2:
+	/* Successfully found at least one mapped entry.  Write both. */
+	dsrl	k1, PTE_SOFT_SHIFT
+	dsrl	k0, PTE_SOFT_SHIFT
+	dmtc0	k1, CP0_ENTRYLO0
+	dmtc0	k0, CP0_ENTRYLO1
+	tlbwr
 	eret
 	.set	pop

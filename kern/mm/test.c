@@ -188,11 +188,15 @@ void test_tlb(void)
 	printk("TEST: %016x\r\n", *a);	/* should panic */
 	printk("TEST: %016x\r\n", *b);	/* should panic */
 #endif
+	printk("Inserting back...\r\n");
 	pgtable_insert(&(kern_mm.pgd), (ptr_t)a, p1, PTE_VALID | PTE_DIRTY,
 	    false, NULL);
-	assert(*a == pa);
 	pgtable_get(&(kern_mm.pgd), (ptr_t)a, false, &pdesc1);
 	dump_pagedesc((ptr_t)a, &pdesc1);
+	assert(*a == pa);
+#if 0
+	printk("TEST: %016x\r\n", *b);	/* should panic */
+#endif
 	assert(pgtable_remove(&(kern_mm.pgd), (ptr_t)a) == p1);
 
 #undef first_free_pfn

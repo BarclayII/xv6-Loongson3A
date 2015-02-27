@@ -27,6 +27,7 @@
 #include <asm/addrspace.h>
 #include <mm/mmap.h>
 #include <mm/vmm.h>
+#include <assert.h>
 
 int main(void)
 {

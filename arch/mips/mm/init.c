@@ -9,12 +9,15 @@
  */
 
 #include <mm/vmm.h>
+#include <asm/cpu.h>
 #include <asm/mm/pgtable.h>
 #include <asm/mm/tlb.h>
 #include <asm/mipsregs.h>
+#include <printk.h>
 
 static void init_tlb(void)
 {
+	printk("TLB entries: %d (pairs)\r\n", current_cpu_data.tlbsize);
 	tlb_flush_all();
 }
 

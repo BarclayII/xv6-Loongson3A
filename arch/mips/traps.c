@@ -11,12 +11,14 @@
 #include <asm/regdef.h>
 #include <asm/mipsregs.h>
 #include <asm/trap.h>
+#include <asm/mm/tlb.h>
 #include <drivers/uart16550.h>
 #include <irqregs.h>
 #include <stddef.h>
 #include <string.h>
 #include <printk.h>
 #include <panic.h>
+#include <assert.h>
 
 unsigned long except_handlers[32];
 extern unsigned long except_generic, except_tlb;
@@ -89,8 +91,13 @@ void dump_trapframe(struct trapframe *tf)
 	case EC_tlbl:
 	case EC_tlbs:
 		printk("ENTRYHI\t=%016x\r\n", read_c0_entryhi());
-		printk("ENTRYLO0=%016x\r\n", read_c0_entrylo0());
-		printk("ENTRYLO1=%016x\r\n", read_c0_entrylo1());
+		/* Read current ENTRYLO0 and ENTRYLO1 contents */
+		tlbp();
+		if (read_c0_index() >= 0) {
+			tlbr();
+			printk("ENTRYLO0=%016x\r\n", read_c0_entrylo0());
+			printk("ENTRYLO1=%016x\r\n", read_c0_entrylo1());
+		}
 		break;
 	default:
 		break;

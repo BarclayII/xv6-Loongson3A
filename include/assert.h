@@ -11,11 +11,17 @@
 #ifndef _ASSERT_H
 #define _ASSERT_H
 
-#include <panic.h>
+#include <asm/assert.h>
+#include <printk.h>
 
+/*
+ * Print an assertation failed message and throw a hardware exception.
+ */
 #define assert(x)	do { \
-	if (!(x)) \
-		panic("Assertation failed: %s\r\n", #x); \
+	if (!(x)) { \
+		printk("Assertation failed: %s\r\n", #x); \
+		__halt(); \
+	} \
 } while (0)
 
 #endif

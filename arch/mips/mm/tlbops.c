@@ -8,6 +8,7 @@
  *
  */
 
+#include <asm/cpu.h>
 #include <asm/mm/tlb.h>
 #include <asm/mm/page.h>
 #include <asm/mipsregs.h>
@@ -15,8 +16,8 @@
 
 void tlb_flush_all(void)
 {
-	unsigned int i;
-	for (i = 0; i < NUM_TLB_ENTRIES; ++i) {
+	int i;
+	for (i = 0; i < current_cpu_data.tlbsize; ++i) {
 		write_c0_index(i);
 		write_c0_entryhi(ENTRYHI_DUMMY(i));
 		write_c0_entrylo0(0);
