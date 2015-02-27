@@ -47,7 +47,7 @@ int main(void)
 	cputype_flag = read_mem_uint(HT_RX_BUFFER);
 	printk("FLAG: %016x\r\n", cputype_flag);
 
-	dump_addrconf();
+	/* dump_addrconf(); */
 
 	/*
 	 * Here comes death trap from PMON where pointer is 32-bit long.
