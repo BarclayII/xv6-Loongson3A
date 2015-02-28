@@ -16,6 +16,7 @@
 
 #include <asm/bootinfo.h>
 #include <asm/cpu.h>
+#include <asm/cache.h>
 #include <asm/thread_info.h>
 #include <asm/addrspace.h>
 #include <asm/mm/page.h>
@@ -74,6 +75,8 @@ void
 setup_arch(void)
 {
 	cpu_probe();
+	probe_pcache();
+	setup_scache();
 	parse_env();
 	return;
 }

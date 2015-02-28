@@ -17,6 +17,7 @@
 #include <asm/asm.h>
 #include <asm/cache/cacheops.h>
 #include <asm/addrspace.h>
+#include <asm/cpu.h>
 #include <asm/mm/page.h>
 
 #define INDEX_BASE	CKSEG0
@@ -108,10 +109,6 @@ static inline void protected_writeback_scache_line(unsigned long addr)
 	protected_cache_op(Hit_Writeback_Inv_SD, addr);
 }
 
-/*
- * Temporarily disabled because cache probing & setup is NYI.
- */
-#if 0
 #define cache16_unroll32(base,op)					\
 	__asm__ __volatile__(						\
 	"	.set push					\n"	\
@@ -301,7 +298,5 @@ __BUILD_BLAST_CACHE_RANGE(s, scache, Hit_Writeback_Inv_SD, )
 /* blast_inv_dcache_range */
 __BUILD_BLAST_CACHE_RANGE(inv_d, dcache, Hit_Invalidate_D, )
 __BUILD_BLAST_CACHE_RANGE(inv_s, scache, Hit_Invalidate_SD, )
-
-#endif	/* 0 */
 
 #endif

@@ -8,16 +8,12 @@
  *
  */
 
-#ifndef _CONFIG_H
-#define _CONFIG_H
+#ifndef _ASM_CACHE_H
+#define _ASM_CACHE_H
 
-/* Hierarchical Page Table */
-#define CONFIG_HPT
+#define NR_SCACHE	4
 
-/* Inverted Page Table, NYI */
-/* #define CONFIG_IPT */
-
-/* Enable pdebug() and vpdebug() printing */
-/* #define DEBUG */
+void probe_pcache(void);
+void setup_scache(void);
 
 #endif

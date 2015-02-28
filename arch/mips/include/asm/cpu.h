@@ -78,6 +78,10 @@ struct cpuinfo_mips {
 extern struct cpuinfo_mips cpu_data[];
 #define current_cpu_data (cpu_data[smp_processor_id()])
 
+#define cpu_dcache_line_size()	(current_cpu_data.dcache.linesz)
+#define cpu_icache_line_size()	(current_cpu_data.icache.linesz)
+#define cpu_scache_line_size()	(current_cpu_data.scache.linesz)
+
 extern unsigned long kernelsp[];
 
 void cpu_probe(void);

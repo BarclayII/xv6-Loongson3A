@@ -208,9 +208,9 @@ void test_tlb(void)
 	pgfree(p3);
 
 	/* MIPS cache sucks. */
-	flush_dcache_line(PAGE_TO_KVADDR(p1));
-	flush_dcache_line(PAGE_TO_KVADDR(p2));
-	flush_dcache_line(PAGE_TO_KVADDR(p3));
+	blast_dcache32_page(PAGE_TO_KVADDR(p1));
+	blast_dcache32_page(PAGE_TO_KVADDR(p2));
+	blast_dcache32_page(PAGE_TO_KVADDR(p3));
 
 	printk("After freeing: %016x %016x\r\n",
 	    read_mem_ulong(PAGE_TO_KVADDR(p1)),
@@ -224,7 +224,7 @@ void test_shm(void)
 	pgd_t *pgd = &(kern_mm.pgd);
 	struct page *p = pgalloc();
 	/* MIPS cache really sucks. */
-	flush_dcache_line(PAGE_TO_KVADDR(p));
+	blast_dcache32_page(PAGE_TO_KVADDR(p));
 	unsigned long vaddr1 = 0x800000, vaddr2 = 0x1000000;
 	struct pagedesc pd1, pd2;
 
@@ -237,8 +237,8 @@ void test_shm(void)
 	dump_pagedesc(vaddr2, &pd2);
 
 	/* MIPS cache undoubtedly sucks. */
-	invalidate_dcache_line(vaddr1);
-	invalidate_dcache_line(vaddr2);
+	blast_dcache32_page(vaddr1);
+	blast_dcache32_page(vaddr2);
 	unsigned long value = 0x12345678;
 	write_mem_ulong(PAGE_TO_KVADDR(p), value);
 

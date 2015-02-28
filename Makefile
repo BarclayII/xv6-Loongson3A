@@ -46,6 +46,7 @@ OBJS		= arch/mips/entry.o \
 		  arch/mips/traps.o \
 		  arch/mips/except.o \
 		  arch/mips/tlbex.o \
+		  arch/mips/cache.o \
 		  arch/mips/mm/init.o \
 		  arch/mips/mm/tlbops.o \
 		  arch/mips/mm/hier/pgtable.o \
