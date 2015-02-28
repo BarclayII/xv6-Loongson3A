@@ -10,11 +10,11 @@ int printk(const char *fmt, ...);
 int vprintk(const char *fmt, va_list ap);
 
 #ifdef DEBUG
-#define pdebug(fmt, ...)	printk(fmt, ...)
-#define vpdebug(fmt, ap)	vprintk(fmt, ap)
+#define pdebug(fmt, args...)	do { printk(fmt, args); } while (0)
+#define vpdebug(fmt, ap)	do { vprintk(fmt, ap); } while (0)
 #else
-#define pdebug(fmt, ...)
-#define vpdebug(fmt, ap)
+#define pdebug(fmt, args...)	do { } while (0)
+#define vpdebug(fmt, ap)	do { } while (0)
 #endif
 
 #endif

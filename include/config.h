@@ -11,10 +11,13 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
-#define CONFIG_HPT		/* Hierarchical Page Table */
+/* Hierarchical Page Table */
+#define CONFIG_HPT
 
-/* #define CONFIG_IPT */	/* Inverted Page Table, NYI */
+/* Inverted Page Table, NYI */
+/* #define CONFIG_IPT */
 
-/* #define DEBUG */		/* Enable pdebug() and vpdebug() printing */
+/* Enable pdebug() and vpdebug() printing */
+#define DEBUG
 
 #endif

@@ -8,6 +8,7 @@
  *
  */
 
+#include <asm/cache/r4k.h>
 #include <asm/mm/pgtable.h>
 #include <asm/mipsregs.h>
 #include <mm/mmap.h>
@@ -147,7 +148,7 @@ void test_pgtable(void)
 void test_tlb(void)
 {
 	printk("**********test_tlb**********\r\n");
-	struct page *p1 = pgalloc(), *p2 = pgalloc();
+	struct page *p1 = pgalloc(), *p2 = pgalloc(), *p3 = pgalloc();
 	unsigned long pfn1 = PAGE_TO_PFN(p1), pfn2 = PAGE_TO_PFN(p2);
 	struct pagedesc pdesc1, pdesc2;
 	volatile unsigned long *a = (volatile unsigned long *)0x500000;
@@ -173,6 +174,7 @@ void test_tlb(void)
 	 * data by means of virtual addresses. */
 	write_mem_ulong(PAGE_TO_KVADDR(p1), 0x654321);
 	write_mem_ulong(PAGE_TO_KVADDR(p2), 0xfedcba);
+	write_mem_ulong(PAGE_TO_KVADDR(p3), 0xeeeeee);
 	unsigned long pa = read_mem_ulong(PAGE_TO_KVADDR(p1));
 	unsigned long pb = read_mem_ulong(PAGE_TO_KVADDR(p2));
 	assert(*a == pa);
@@ -203,5 +205,51 @@ void test_tlb(void)
 
 	pgfree(p1);
 	pgfree(p2);
-	printk("Number of free pages are now: %d\r\n", nr_free_pages);
+	pgfree(p3);
+
+	/* MIPS cache sucks. */
+	flush_dcache_line(PAGE_TO_KVADDR(p1));
+	flush_dcache_line(PAGE_TO_KVADDR(p2));
+	flush_dcache_line(PAGE_TO_KVADDR(p3));
+
+	printk("After freeing: %016x %016x\r\n",
+	    read_mem_ulong(PAGE_TO_KVADDR(p1)),
+	    read_mem_ulong(PAGE_TO_KVADDR(p2)));
+}
+
+void test_shm(void)
+{
+	printk("**********test_shm**********\r\n");
+
+	pgd_t *pgd = &(kern_mm.pgd);
+	struct page *p = pgalloc();
+	/* MIPS cache really sucks. */
+	flush_dcache_line(PAGE_TO_KVADDR(p));
+	unsigned long vaddr1 = 0x800000, vaddr2 = 0x1000000;
+	struct pagedesc pd1, pd2;
+
+	assert(!pgtable_insert(pgd, vaddr1, p, PTE_VALID, false, NULL));
+	assert(!pgtable_insert(pgd, vaddr2, p, PTE_VALID, false, NULL));
+
+	pgtable_get(pgd, vaddr1, false, &pd1);
+	pgtable_get(pgd, vaddr2, false, &pd2);
+	dump_pagedesc(vaddr1, &pd1);
+	dump_pagedesc(vaddr2, &pd2);
+
+	/* MIPS cache undoubtedly sucks. */
+	invalidate_dcache_line(vaddr1);
+	invalidate_dcache_line(vaddr2);
+	unsigned long value = 0x12345678;
+	write_mem_ulong(PAGE_TO_KVADDR(p), value);
+
+	printk("TEST: %016x\r\n", read_mem_ulong(PAGE_TO_KVADDR(p)));
+	printk("TEST: %016x\r\n", read_mem_ulong(vaddr1));
+	printk("TEST: %016x\r\n", read_mem_ulong(vaddr2));
+
+	assert(read_mem_ulong(vaddr1) == value);
+	assert(read_mem_ulong(vaddr2) == value);
+
+	assert(pgtable_remove(pgd, vaddr1) == p);
+	assert(pgtable_remove(pgd, vaddr2) == p);
+	pgfree(p);
 }

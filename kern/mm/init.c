@@ -107,4 +107,5 @@ void mm_init(void)
 
 	test_pgtable();
 	test_tlb();
+	test_shm();
 }

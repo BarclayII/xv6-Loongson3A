@@ -50,5 +50,6 @@ struct page *pgtable_remove(void *pgtable, ptr_t vaddr);
 
 void test_pgtable(void);
 void test_tlb(void);
+void test_shm(void);
 
 #endif
