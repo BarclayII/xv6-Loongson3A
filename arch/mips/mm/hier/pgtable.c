@@ -116,9 +116,10 @@ int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page,
 	if (vaddr == 0)
 		return -EINVAL;
 
+	vaddr = PGADDR_ROUNDDOWN(vaddr);
 	pgtable_get(pgtable, vaddr, true, &pdesc);
 
-	if (pdesc.pte[pdesc.ptx]) {
+	if (pdesc.pte[pdesc.ptx] && (pdesc.pte[pdesc.ptx] != vaddr)) {
 		if (!replace)
 			return -EEXIST;
 		else {

@@ -162,13 +162,11 @@ void test_tlb(void)
 	volatile unsigned long *a = (volatile unsigned long *)0x500000;
 	volatile unsigned long *b = (volatile unsigned long *)0x504000;
 
-	printk("PFN1 = %016x, ENTRY = %016x\r\n",
-	    pfn1, (pfn1 << 6) + 0x1e);
-	printk("PFN2 = %016x, ENTRY = %016x\r\n",
-	    pfn2, (pfn2 << 6) + 0x1e);
-	pgtable_insert(&(kern_mm.pgd), (ptr_t)a, p1, PTE_VALID,
+	printk("PFN1 = %016x\r\n", pfn1);
+	printk("PFN2 = %016x\r\n", pfn2);
+	pgtable_insert(&(kern_mm.pgd), (ptr_t)a, p1, PTE_VALID | PTE_DIRTY,
 	    false, NULL);
-	pgtable_insert(&(kern_mm.pgd), (ptr_t)b, p2, PTE_VALID,
+	pgtable_insert(&(kern_mm.pgd), (ptr_t)b, p2, PTE_VALID | PTE_DIRTY,
 	    false, NULL);
 	pgtable_get(&(kern_mm.pgd), (ptr_t)a, false, &pdesc1);
 	pgtable_get(&(kern_mm.pgd), (ptr_t)b, false, &pdesc2);
@@ -185,6 +183,13 @@ void test_tlb(void)
 	write_mem_ulong(PAGE_TO_KVADDR(p3), 0xeeeeee);
 	unsigned long pa = read_mem_ulong(PAGE_TO_KVADDR(p1));
 	unsigned long pb = read_mem_ulong(PAGE_TO_KVADDR(p2));
+	assert(*a == pa);
+	assert(*b == pb);
+
+	*a = 0x123456;
+	*b = 0xabcdef;
+	pa = read_mem_ulong(PAGE_TO_KVADDR(p1));
+	pb = read_mem_ulong(PAGE_TO_KVADDR(p2));
 	assert(*a == pa);
 	assert(*b == pb);
 
