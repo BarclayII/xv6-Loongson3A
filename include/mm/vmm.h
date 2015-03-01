@@ -52,4 +52,22 @@ void test_pgtable(void);
 void test_tlb(void);
 void test_shm(void);
 
+/*
+ * Virtual memory area structure which maintains a segment of virtual
+ * address space.
+ */
+typedef struct vm_area_struct {
+	ptr_t		vma_start;	/* starting address (inclusive) */
+	ptr_t		vma_end;	/* ending address (exclusive) */
+	unsigned long	flags;		/* various flags... */
+#define VMA_FREE	0x01
+#define VMA_READ	0x02
+#define VMA_WRITE	0x04
+#define VMA_EXEC	0x08
+#define VMA_VALID	0x10
+#define VMA_DIRTY	0x20
+	mm_t		*mm;	/* memory management structure */
+	list_node_t	node;	/* list node */
+} vm_area_t;
+
 #endif

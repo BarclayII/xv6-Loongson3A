@@ -15,26 +15,12 @@
 #include <asm/mm/pgtable.h>
 #include <asm/mm/hier/pgdir.h>
 
-struct mm_struct;
-
-typedef struct vm_area_struct {
-	ptr_t			start;	/* starting address (inclusive) */
-	size_t			size;	/* area size (in bytes) */
-	unsigned long		flags;	/* various flags... */
-#define VMA_FREE	0x01
-#define VMA_READ	0x02
-#define VMA_WRITE	0x04
-#define VMA_EXEC	0x08
-#define VMA_VALID	0x10
-#define VMA_DIRTY	0x20
-	struct mm_struct 	*mm;	/* memory management structure */
-	list_node_t		node;	/* list node */
-} vm_area_t;
+struct vm_area_struct;
 
 typedef struct mm_struct {
 	pgd_t			pgd;		/* PGD */
 	unsigned short		asid;
-	vm_area_t		*vma_head;
+	struct vm_area_struct	*vma_head;
 } mm_t;
 
 /* Page table hierarchy path retrieved by pgtable_get() function */
