@@ -146,9 +146,11 @@ void test_pgtable(void)
 	printk("Current free pages: %d\r\n", nr_free_pages);
 	
 	/* MIPS cache is not transparent.  It sucks. */
+	/*
 	blast_dcache32();
 	blast_icache32();
 	blast_scache32();
+	*/
 }
 
 void test_tlb(void)
@@ -158,7 +160,7 @@ void test_tlb(void)
 	unsigned long pfn1 = PAGE_TO_PFN(p1), pfn2 = PAGE_TO_PFN(p2);
 	struct pagedesc pdesc1, pdesc2;
 	volatile unsigned long *a = (volatile unsigned long *)0x500000;
-	volatile unsigned long *b = (volatile unsigned long *)0x501000;
+	volatile unsigned long *b = (volatile unsigned long *)0x504000;
 
 	printk("PFN1 = %016x, ENTRY = %016x\r\n",
 	    pfn1, (pfn1 << 6) + 0x1e);
@@ -218,9 +220,11 @@ void test_tlb(void)
 	    PAGE_TO_PFN(p2), read_mem_ulong(PAGE_TO_KVADDR(p2)));
 
 	/* MIPS cache really sucks. */
+	/*
 	blast_dcache32();
 	blast_icache32();
 	blast_scache32();
+	*/
 }
 
 void test_shm(void)
@@ -281,7 +285,9 @@ void test_shm(void)
 	pgfree(p);
 
 	/* MIPS cache undoubtedly sucks. */
+	/*
 	blast_dcache32();
 	blast_icache32();
 	blast_scache32();
+	*/
 }

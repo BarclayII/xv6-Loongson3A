@@ -23,6 +23,9 @@ static void init_tlb(void)
 
 void arch_mm_init(void)
 {
+#ifdef CONFIG_16KPAGES
+	write_c0_pagemask(3 << 13);
+#endif
 	pgtable_bootstrap();
 	init_tlb();
 }

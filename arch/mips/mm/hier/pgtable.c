@@ -51,7 +51,9 @@ void dump_pagedesc(ptr_t vaddr, struct pagedesc *pdesc)
 {
 	printk("VADDR\t%016x\r\n", vaddr);
 	printk("PGD\t%016x:%d\r\n", pdesc->pgd, pdesc->pgx);
+#ifndef CONFIG_3LEVEL_PT
 	printk("PUD\t%016x:%d\r\n", pdesc->pud, pdesc->pux);
+#endif
 	printk("PMD\t%016x:%d\r\n", pdesc->pmd, pdesc->pmx);
 	printk("PTE\t%016x:%d\r\n", pdesc->pte, pdesc->ptx);
 }
@@ -71,18 +73,28 @@ int pgtable_get(void *pgtable, ptr_t vaddr, bool create, void *result)
 	memset(&pdesc, 0, sizeof(struct pagedesc));
 	pdesc.pgd = *(pgd_t *)pgtable;
 
-	VADDR_SPLIT(vaddr, pdesc.pgx, pdesc.pux, pdesc.pmx, pdesc.ptx);
+	VADDR_SPLIT(vaddr, pdesc);
 
 	if (!create) {
-		if (!(pdesc.pud = pde_get_entry(pdesc.pgd, pdesc.pgx)) ||
+		if (
+#ifdef CONFIG_3LEVEL_PT
+		    !(pdesc.pmd = pde_get_entry(pdesc.pgd, pdesc.pgx)) ||
+#else
+		    !(pdesc.pud = pde_get_entry(pdesc.pgd, pdesc.pgx)) ||
 		    !(pdesc.pmd = pde_get_entry(pdesc.pud, pdesc.pux)) ||
+#endif
 		    !(pdesc.pte = pde_get_entry(pdesc.pmd, pdesc.pmx)))
 			ret = -ENOENT;
 	} else {
+#ifdef CONFIG_3LEVEL_PT
+		if (!(pdesc.pmd = pde_get_entry(pdesc.pgd, pdesc.pgx)))
+			pdesc.pmd = (pmd_t)pde_add_pgdir(pdesc.pgd, pdesc.pgx);
+#else
 		if (!(pdesc.pud = pde_get_entry(pdesc.pgd, pdesc.pgx)))
 			pdesc.pud = (pud_t)pde_add_pgdir(pdesc.pgd, pdesc.pgx);
 		if (!(pdesc.pmd = pde_get_entry(pdesc.pud, pdesc.pux)))
 			pdesc.pmd = (pmd_t)pde_add_pgdir(pdesc.pud, pdesc.pux);
+#endif
 		if (!(pdesc.pte = pde_get_entry(pdesc.pmd, pdesc.pmx)))
 			pdesc.pte = (pte_t)pde_add_pgdir(pdesc.pmd, pdesc.pmx);
 	}
@@ -148,6 +160,11 @@ struct page *pgtable_remove(void *pgtable, ptr_t vaddr)
 		pde_remove_pgdir(pdesc.pmd, pdesc.pmx);
 	}
 
+#ifdef CONFIG_3LEVEL_PT
+	if (pde_empty(pdesc.pmd)) {
+		pde_remove_pgdir(pdesc.pgd, pdesc.pgx);
+	}
+#else
 	if (pde_empty(pdesc.pmd)) {
 		pde_remove_pgdir(pdesc.pud, pdesc.pux);
 	}
@@ -155,6 +172,7 @@ struct page *pgtable_remove(void *pgtable, ptr_t vaddr)
 	if (pde_empty(pdesc.pud)) {
 		pde_remove_pgdir(pdesc.pgd, pdesc.pgx);
 	}
+#endif
 
 	/* Blast TLB entries containing this virtual address away */
 	tlb_remove(vaddr);

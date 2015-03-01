@@ -20,4 +20,11 @@
 /* Enable pdebug() and vpdebug() printing */
 /* #define DEBUG */
 
+/* Enable 16K pages */
+#define CONFIG_16KPAGES
+
+#ifdef CONFIG_16KPAGES
+#define CONFIG_3LEVEL_PT
+#endif
+
 #endif

@@ -50,46 +50,81 @@
  * 16MB		24	21			1	45
  *
  * Looks like 4KB and 256KB pages fully utilize virtual address space bits, and
- * 16KB pages, as well as 16MB pages nearly utilize all bits.  But note that
+ * 16KB pages, as well as 16KB pages nearly utilize all bits.  But note that
  * each process have to preserve one page global directory as well as several other
  * page directories.
+ *
+ * [EDIT]
+ * 4KB pages have an issue called "cache aliasing" which is quite annoying.
+ * Furthermore, 16KB pages eliminates the (likely existing) problem on
+ * Loongson 3A.
  */
 
+#ifdef CONFIG_4KPAGES
 #define PGSHIFT		ULCAST(12)
+#endif
+
+#ifdef CONFIG_16KPAGES
+#define PGSHIFT		ULCAST(14)
+#endif
+
 #define PGSIZE		(ULCAST(1) << PGSHIFT)
+
+#ifdef CONFIG_HPT
 
 #define PDE_BITS	(PGSHIFT - 3)
 #define PDE_MASK	((ULCAST(1) << PDE_BITS) - 1)
 
-#ifdef CONFIG_HPT
-
+#ifndef CONFIG_3LEVEL_PT
 #define PGD_OFFSET	(PUD_OFFSET + PDE_BITS)
 #define PUD_OFFSET	(PMD_OFFSET + PDE_BITS)
+#else
+#define PGD_OFFSET	(PMD_OFFSET + PDE_BITS)
+#endif
 #define PMD_OFFSET	(PTE_OFFSET + PDE_BITS)
 #define PTE_OFFSET	PGSHIFT
 
 #define PGD_MASK	(PDE_MASK << PGD_OFFSET)
+#ifndef CONFIG_3LEVEL_PT
 #define PUD_MASK	(PDE_MASK << PUD_OFFSET)
+#endif
 #define PMD_MASK	(PDE_MASK << PMD_OFFSET)
 #define PTE_MASK	(PDE_MASK << PTE_OFFSET)
 #define PAGE_OFF_MASK	((ULCAST(1) << PTE_OFFSET) - 1)
 
 #define PGX(vaddr)	(((vaddr) & PGD_MASK) >> PGD_OFFSET)
+#ifndef CONFIG_3LEVEL_PT
 #define PUX(vaddr)	(((vaddr) & PUD_MASK) >> PUD_OFFSET)
+#endif
 #define PMX(vaddr)	(((vaddr) & PMD_MASK) >> PMD_OFFSET)
 #define PTX(vaddr)	(((vaddr) & PTE_MASK) >> PTE_OFFSET)
 #define PAGE_OFF(vaddr)	((vaddr) & PAGE_OFF_MASK)
 
 #ifndef __ASSEMBLER__
-typedef ptr_t *pte_t, *pmd_t, *pud_t, *pgd_t;
+typedef ptr_t *pte_t;
+typedef ptr_t *pmd_t;
+#ifndef CONFIG_3LEVEL_PT
+typedef ptr_t *pud_t;
+#endif
+typedef ptr_t *pgd_t;
 
-#define VADDR_SPLIT(vaddr, pgx, pux, pmx, ptx) \
+/* NOTE that pdesc is not a pointer */
+#ifdef CONFIG_3LEVEL_PT
+#define VADDR_SPLIT(vaddr, pdesc) \
 	do { \
-		pgx = PGX(vaddr); \
-		pux = PUX(vaddr); \
-		pmx = PMX(vaddr); \
-		ptx = PTX(vaddr); \
+		pdesc.pgx = PGX(vaddr); \
+		pdesc.pmx = PMX(vaddr); \
+		pdesc.ptx = PTX(vaddr); \
 	} while (0)
+#else
+#define VADDR_SPLIT(vaddr, pdesc) \
+	do { \
+		pdesc.pgx = PGX(vaddr); \
+		pdesc.pux = PUX(vaddr); \
+		pdesc.pmx = PMX(vaddr); \
+		pdesc.ptx = PTX(vaddr); \
+	} while (0)
+#endif
 
 #endif	/* !__ASSEMBLER__ */
 

@@ -8,6 +8,7 @@
  *
  */
 
+#include <config.h>
 #include <asm/asm.h>
 #include <asm/addrspace.h>
 #include <asm/ptrace.h>
@@ -61,8 +62,9 @@ xtlb_refill:
 	dsll	k0, 3
 	daddu	k1, k0				/* k1 = &PGD[PGX] */
 	dmfc0	k0, CP0_BADVADDR
-	ld	k1, (k1)			/* k1 = PGD[PGX] = PUD */
+	ld	k1, (k1)			/* k1 = PGD[PGX] = PUD/PMD */
 	beqz	k1, 1f
+#ifndef CONFIG_3LEVEL_PT
 	dsrl	k0, PUD_OFFSET
 	andi	k0, PDE_MASK			/* k0 = PUX */
 	dsll	k0, 3
@@ -70,6 +72,7 @@ xtlb_refill:
 	dmfc0	k0, CP0_BADVADDR
 	ld	k1, (k1)			/* k1 = PUD[PUX] = PMD */
 	beqz	k1, 1f
+#endif
 	dsrl	k0, PMD_OFFSET
 	andi	k0, PDE_MASK			/* k0 = PMX */
 	dsll	k0, 3

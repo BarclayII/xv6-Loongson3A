@@ -42,11 +42,15 @@ struct pagedesc {
 	/* NOTE: these directory members are kernel virtual addresses, not
 	 *       PFNs. */
 	pgd_t		pgd;
+#ifndef CONFIG_3LEVEL_PT
 	pud_t		pud;
+#endif
 	pmd_t		pmd;
 	pte_t		pte;
 	unsigned short	pgx;
+#ifndef CONFIG_3LEVEL_PT
 	unsigned short	pux;
+#endif
 	unsigned short	pmx;
 	unsigned short	ptx;
 };

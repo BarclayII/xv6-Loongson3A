@@ -10,7 +10,7 @@ Hardware: [Loongson Multi Techboard](http://www.loongson.cn/multi_techboard.php)
 OS first, introducing SMP after that, and I'm not considering having CC-NUMA implemented.  Maybe I'll add CC-NUMA some day...  Besides, I fail to start up
 the board in CC-NUMA mode, and I have no idea why it fails.
 
-CPU: Loongson 3A, MIPS64r2 instruction set, cache coherency maintained by hardware, no hazards, no cache aliasing, really great for a MIPS.
+CPU: Loongson 3A, MIPS64r2 instruction set, cache coherency maintained by hardware, no hazards, no cache aliasing for (slightly) larger pages, really great for a MIPS.
 
 BIOS: PMON2000, with caches and TLB initialization already done.
 
