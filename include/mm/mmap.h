@@ -43,19 +43,23 @@
  * Physical page structure
  */
 struct page {
-	unsigned int		ref_count;
-	unsigned int		flags;
+	unsigned int	ref_count;
+	/* This field should be aligned to 4 bytes, or an address error might
+	 * occur. */
+	unsigned short	flags;
 	/*
 	 * flags are represented by bit position index, and are manipulated by
 	 * atomic_bit_set/clear/change macros.
 	 */
-#define PAGE_RESERVED		0
-	list_node_t		list_node;
-	unsigned int		type;
-#define PGTYPE_GENERIC		0	/* generic */
-#define PGTYPE_PGSTRUCT		1	/* page structure storage */
-#define PGTYPE_PGDIR		2	/* page directory */
-#define PGTYPE_SLAB		3	/* kernel object slabs */
+#define PAGE_RESERVED	0
+	unsigned short	type;
+#define PGTYPE_GENERIC	0	/* generic */
+#define PGTYPE_PGSTRUCT	1	/* page structure storage */
+#define PGTYPE_PGDIR	2	/* page directory */
+#define PGTYPE_SLAB	3	/* kernel object slabs */
+	list_node_t	list_node;
+	/* number of pages belong to the same allocated page set */
+	unsigned int	page_count;
 	union {
 		/* For page directories */
 		struct {
@@ -120,10 +124,13 @@ static inline ptr_t __page_to_kvaddr(struct page *p)
 /*
  * Physical page manipulation
  */
-#define is_page_reserved(p)	atomic_get_bit(PAGE_RESERVED, &((p)->flags))
-#define reserve_page(p)		atomic_set_bit(PAGE_RESERVED, &((p)->flags))
+#define is_page_reserved(p) \
+	atomic_get_bit(PAGE_RESERVED, (unsigned int *)&((p)->flags))
+#define reserve_page(p)	\
+	atomic_set_bit(PAGE_RESERVED, (unsigned int *)&((p)->flags))
 inline void shred_page(struct page *p);
-#define release_page(p)		atomic_clear_bit(PAGE_RESERVED, &((p)->flags))
+#define release_page(p)	\
+	atomic_clear_bit(PAGE_RESERVED, (unsigned int *)&((p)->flags))
 #define shred_and_release_page(p) \
 	do { \
 		shred_page(p); \

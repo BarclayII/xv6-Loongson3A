@@ -25,31 +25,40 @@ void test_mm(void)
 	printk("**********test_mm**********\r\n");
 #define first_free_pfn \
 	PAGE_TO_PFN(list_node_to_page(list_next(free_page_list)))
-	struct page *p1, *p2, *p3, *q;
+	struct page *p1, *p2, *p3;
 	list_node_t *node;
+	int i;
 
 	printk("First free PFN: %d\r\n", first_free_pfn);
 	p1 = alloc_pages(3);
+	for (i = 0, node = &(p1->list_node);
+	    i < p1->page_count;
+	    ++i, node = list_next(node)) {
+		printk("\tAllocated PFN: %d\r\n",
+		    PAGE_TO_PFN(list_node_to_page(node)));
+		assert(list_node_to_page(node)->page_count == 3);
+	}
 	printk("First free PFN after alloc: %d\r\n", first_free_pfn);
 	p2 = alloc_pages(3);
+	for (i = 0, node = &(p2->list_node);
+	    i < p2->page_count;
+	    ++i, node = list_next(node)) {
+		printk("\tAllocated PFN: %d\r\n",
+		    PAGE_TO_PFN(list_node_to_page(node)));
+		assert(list_node_to_page(node)->page_count == 3);
+	}
 	printk("First free PFN after 2nd alloc: %d\r\n", first_free_pfn);
 	free_pages(p1);
 	printk("First free PFN after 1st free: %d\r\n", first_free_pfn);
-	p3 = alloc_cont_pages(5);
+	p3 = alloc_pages(5);
 	printk("PFN for p3: %d\r\n", PAGE_TO_PFN(p3));
-	node = &(p3->list_node);
-	node = list_next(node);
-	q = list_node_to_page(node);
-	printk("Allocated PFN: %d\r\n", PAGE_TO_PFN(q));
-	node = list_next(node);
-	q = list_node_to_page(node);
-	printk("Allocated PFN: %d\r\n", PAGE_TO_PFN(q));
-	node = list_next(node);
-	q = list_node_to_page(node);
-	printk("Allocated PFN: %d\r\n", PAGE_TO_PFN(q));
-	node = list_next(node);
-	q = list_node_to_page(node);
-	printk("Allocated PFN: %d\r\n", PAGE_TO_PFN(q));
+	for (i = 0, node = &(p3->list_node);
+	    i < p3->page_count;
+	    ++i, node = list_next(node)) {
+		printk("\tAllocated PFN: %d\r\n",
+		    PAGE_TO_PFN(list_node_to_page(node)));
+		assert(list_node_to_page(node)->page_count == 5);
+	}
 	printk("First free PFN after 3rd alloc: %d\r\n", first_free_pfn);
 	free_pages(p2);
 	printk("First free PFN after 2nd free: %d\r\n", first_free_pfn);
@@ -144,13 +153,6 @@ void test_pgtable(void)
 	pgfree(p3);
 	pgfree(p4);
 	printk("Current free pages: %d\r\n", nr_free_pages);
-	
-	/* MIPS cache is not transparent.  It sucks. */
-	/*
-	blast_dcache32();
-	blast_icache32();
-	blast_scache32();
-	*/
 }
 
 void test_tlb(void)
@@ -223,13 +225,6 @@ void test_tlb(void)
 	printk("After freeing: %d %016x  %d %016x\r\n",
 	    PAGE_TO_PFN(p1), read_mem_ulong(PAGE_TO_KVADDR(p1)),
 	    PAGE_TO_PFN(p2), read_mem_ulong(PAGE_TO_KVADDR(p2)));
-
-	/* MIPS cache really sucks. */
-	/*
-	blast_dcache32();
-	blast_icache32();
-	blast_scache32();
-	*/
 }
 
 void test_shm(void)
@@ -288,11 +283,4 @@ void test_shm(void)
 	assert(pgtable_remove(pgd, vaddr1) == p);
 	assert(pgtable_remove(pgd, vaddr2) == p);
 	pgfree(p);
-
-	/* MIPS cache undoubtedly sucks. */
-	/*
-	blast_dcache32();
-	blast_icache32();
-	blast_scache32();
-	*/
 }

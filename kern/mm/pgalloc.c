@@ -28,6 +28,7 @@ inline void shred_page(struct page *p)
 struct page *alloc_pages(size_t num)
 {
 	struct page *p, *pfirst = NULL;
+	size_t i;
 	list_node_t *pgentry, *cur_entry = list_next(free_page_list);
 
 	if (nr_free_pages < num)
@@ -35,7 +36,7 @@ struct page *alloc_pages(size_t num)
 
 	/* Concatenate desired number of free pages into a list, in
 	 * ascending order. */
-	for ( ; num > 0; ) {
+	for (i = num; i > 0; ) {
 		pgentry = cur_entry;
 		cur_entry = list_next(cur_entry);
 
@@ -47,9 +48,10 @@ struct page *alloc_pages(size_t num)
 				pfirst = p;
 			else
 				list_add_before(&(pfirst->list_node), pgentry);
-			--num;
+			--i;
 			pdebug("Allocated PFN %d\r\n", PAGE_TO_PFN(p));
 			--nr_free_pages;
+			p->page_count = num;
 		}
 	}
 
@@ -102,6 +104,7 @@ struct page *alloc_cont_pages(size_t num)
 			list_add_before(&(pfirst->list_node), &(p->list_node));
 		pdebug("Allocated continual PFN %d\r\n", PAGE_TO_PFN(p));
 		pfirst = p;
+		p->page_count = num;
 		--p;
 		--nr_free_pages;
 	}
