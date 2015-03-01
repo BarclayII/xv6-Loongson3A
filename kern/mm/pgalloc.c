@@ -40,7 +40,7 @@ struct page *alloc_pages(size_t num)
 		pgentry = cur_entry;
 		cur_entry = list_next(cur_entry);
 
-		p = list_node_to_page(pgentry);
+		p = node_to_page(pgentry);
 		if (!is_page_reserved(p)) {
 			reserve_page(p);
 			list_del_init(pgentry);
@@ -81,9 +81,9 @@ struct page *alloc_cont_pages(size_t num)
 	for (i = num; (i > 0) || (cur_entry == free_page_list); ) {
 		pgentry = cur_entry;
 		cur_entry = list_next(cur_entry);
-		p = list_node_to_page(pgentry);
+		p = node_to_page(pgentry);
 		if (cur_entry != free_page_list)
-			np = list_node_to_page(cur_entry);
+			np = node_to_page(cur_entry);
 		else
 			np = NULL;
 
@@ -140,7 +140,7 @@ void free_pages(struct page *freep)
 		/* Locate suitable location for current allocated page */
 		while (free_entry != free_page_list && free_entry < cur_entry)
 			free_entry = list_next(free_entry);
-		p = list_node_to_page(cur_entry);
+		p = node_to_page(cur_entry);
 		/* Checks */
 		if (free_entry == cur_entry)
 			panic("Page %d is both allocated and free?\r\n",

@@ -24,7 +24,7 @@ void test_mm(void)
 {
 	printk("**********test_mm**********\r\n");
 #define first_free_pfn \
-	PAGE_TO_PFN(list_node_to_page(list_next(free_page_list)))
+	PAGE_TO_PFN(node_to_page(list_next(free_page_list)))
 	struct page *p1, *p2, *p3;
 	list_node_t *node;
 	int i;
@@ -35,8 +35,8 @@ void test_mm(void)
 	    i < p1->page_count;
 	    ++i, node = list_next(node)) {
 		printk("\tAllocated PFN: %d\r\n",
-		    PAGE_TO_PFN(list_node_to_page(node)));
-		assert(list_node_to_page(node)->page_count == 3);
+		    PAGE_TO_PFN(node_to_page(node)));
+		assert(node_to_page(node)->page_count == 3);
 	}
 	printk("First free PFN after alloc: %d\r\n", first_free_pfn);
 	p2 = alloc_pages(3);
@@ -44,8 +44,8 @@ void test_mm(void)
 	    i < p2->page_count;
 	    ++i, node = list_next(node)) {
 		printk("\tAllocated PFN: %d\r\n",
-		    PAGE_TO_PFN(list_node_to_page(node)));
-		assert(list_node_to_page(node)->page_count == 3);
+		    PAGE_TO_PFN(node_to_page(node)));
+		assert(node_to_page(node)->page_count == 3);
 	}
 	printk("First free PFN after 2nd alloc: %d\r\n", first_free_pfn);
 	free_pages(p1);
@@ -56,8 +56,8 @@ void test_mm(void)
 	    i < p3->page_count;
 	    ++i, node = list_next(node)) {
 		printk("\tAllocated PFN: %d\r\n",
-		    PAGE_TO_PFN(list_node_to_page(node)));
-		assert(list_node_to_page(node)->page_count == 5);
+		    PAGE_TO_PFN(node_to_page(node)));
+		assert(node_to_page(node)->page_count == 5);
 	}
 	printk("First free PFN after 3rd alloc: %d\r\n", first_free_pfn);
 	free_pages(p2);

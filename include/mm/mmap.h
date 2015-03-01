@@ -146,7 +146,7 @@ inline void shred_page(struct page *p);
 			pgfree(p); \
 	} while (0)
 
-#define list_node_to_page(node)	member_to_struct(node, struct page, list_node)
+#define node_to_page(node)	member_to_struct(node, struct page, list_node)
 
 struct free_page_group {
 	list_node_t	head;
