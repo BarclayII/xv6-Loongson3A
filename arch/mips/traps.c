@@ -12,6 +12,7 @@
 #include <asm/mipsregs.h>
 #include <asm/trap.h>
 #include <asm/mm/tlb.h>
+#include <asm/thread_info.h>
 #include <drivers/uart16550.h>
 #include <irqregs.h>
 #include <stddef.h>
@@ -104,17 +105,16 @@ void dump_trapframe(struct trapframe *tf)
 	}
 }
 
-static unsigned long long ticks = 0;
-static unsigned int compare = 0;
-
 static int handle_int(struct trapframe *tf)
 {
 	unsigned int cause = tf->cp0_cause;
 	if ((cause & CR_IPx(7)) && (cause & CR_TI)) {
-		compare += 0x10000000;
-		write_c0_compare(compare);
-		printk("ticks\t= %d\r\n", ticks);
-		++ticks;
+		current_thread_info->compare += 0x10000000;
+		write_c0_compare(current_thread_info->compare);
+		printk("CPUID %d\tticks\t= %d\r\n",
+		    current_thread_info->cpu_number,
+		    current_thread_info->ticks);
+		++(current_thread_info->ticks);
 		return 0;
 	} else if (cause & CR_IPx(2)) {
 		/* LPC Interrupts */

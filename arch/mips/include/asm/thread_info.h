@@ -20,6 +20,8 @@
 
 struct thread_info {
 	unsigned int cpu_number;
+	unsigned int ticks;		/* for clock interrupt */
+	unsigned int compare;		/* for clock interrupt */
 };
 
 union thread_stack_info {

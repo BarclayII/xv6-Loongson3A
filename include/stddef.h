@@ -16,7 +16,7 @@
 #endif
 
 #ifndef BUFSIZ
-#define BUFSIZ		8192
+#define BUFSIZ		1024
 #endif
 
 #define MEMBER_OFFSET(struct, member_name) \

@@ -18,7 +18,7 @@
 #define local_irq_save(flags) \
 	asm volatile ( \
 		"di	%0;" \
-		"andi	%0, 1" \
+		"andi	%0, 1;" \
 		: "=r"(flags) \
 		: /* no input */ \
 		: "memory" \
@@ -29,7 +29,7 @@
 		"	beqz	%0, 1f;" \
 		"	di;" \
 		"	ei;" \
-		"1f:" \
+		"1:" \
 		: "=r"(flags) \
 		: /* no input */ \
 		: "memory" \
