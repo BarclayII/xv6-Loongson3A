@@ -11,6 +11,8 @@
 #ifndef _ASM_CACHE_H
 #define _ASM_CACHE_H
 
+#include <asm/cache/r4k.h>
+
 #define NR_SCACHE	4
 
 void probe_pcache(void);

@@ -25,7 +25,7 @@ OBJDUMP 	= $(CROSS_COMPILE)objdump
 
 INCFLAG		=  -I./arch/mips/include -I./include \
 		   -I./arch/mips/mach/$(MACH)/include
-CFLAGS		=  -O2 -G 0 -mno-abicalls -fno-pic -Wall -mabi=64 -fno-builtin
+CFLAGS		=  -O0 -G 0 -mno-abicalls -fno-pic -Wall -mabi=64 -fno-builtin
 CFLAGS		+= -nostdinc -nostdlib -g -mips64r2 $(INCFLAG)
 
 LDSCRIPT	= kernel.ld

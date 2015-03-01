@@ -8,6 +8,7 @@
  *
  */
 
+#include <asm/cache.h>
 #include <stddef.h>
 #include <string.h>
 #include <printk.h>
@@ -148,6 +149,7 @@ void free_pages(struct page *freep)
 		shred_and_release_page(p);
 		list_add_before(free_entry, cur_entry);
 		pdebug("Freed PFN %d\r\n", PAGE_TO_PFN(p));
+		
 		++nr_free_pages;
 	}
 }

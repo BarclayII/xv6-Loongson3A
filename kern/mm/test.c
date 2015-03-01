@@ -8,8 +8,9 @@
  *
  */
 
-#include <asm/cache/r4k.h>
+#include <asm/cache.h>
 #include <asm/mm/pgtable.h>
+#include <asm/mm/tlb.h>
 #include <asm/mipsregs.h>
 #include <mm/mmap.h>
 #include <mm/vmm.h>
@@ -143,6 +144,11 @@ void test_pgtable(void)
 	pgfree(p3);
 	pgfree(p4);
 	printk("Current free pages: %d\r\n", nr_free_pages);
+	
+	/* MIPS cache is not transparent.  It sucks. */
+	blast_dcache32();
+	blast_icache32();
+	blast_scache32();
 }
 
 void test_tlb(void)
@@ -158,9 +164,9 @@ void test_tlb(void)
 	    pfn1, (pfn1 << 6) + 0x1e);
 	printk("PFN2 = %016x, ENTRY = %016x\r\n",
 	    pfn2, (pfn2 << 6) + 0x1e);
-	pgtable_insert(&(kern_mm.pgd), (ptr_t)a, p1, PTE_VALID | PTE_DIRTY,
+	pgtable_insert(&(kern_mm.pgd), (ptr_t)a, p1, PTE_VALID,
 	    false, NULL);
-	pgtable_insert(&(kern_mm.pgd), (ptr_t)b, p2, PTE_VALID | PTE_DIRTY,
+	pgtable_insert(&(kern_mm.pgd), (ptr_t)b, p2, PTE_VALID,
 	    false, NULL);
 	pgtable_get(&(kern_mm.pgd), (ptr_t)a, false, &pdesc1);
 	pgtable_get(&(kern_mm.pgd), (ptr_t)b, false, &pdesc2);
@@ -191,7 +197,7 @@ void test_tlb(void)
 	printk("TEST: %016x\r\n", *b);	/* should panic */
 #endif
 	printk("Inserting back...\r\n");
-	pgtable_insert(&(kern_mm.pgd), (ptr_t)a, p1, PTE_VALID | PTE_DIRTY,
+	pgtable_insert(&(kern_mm.pgd), (ptr_t)a, p1, PTE_VALID,
 	    false, NULL);
 	pgtable_get(&(kern_mm.pgd), (ptr_t)a, false, &pdesc1);
 	dump_pagedesc((ptr_t)a, &pdesc1);
@@ -207,14 +213,14 @@ void test_tlb(void)
 	pgfree(p2);
 	pgfree(p3);
 
-	/* MIPS cache sucks. */
-	blast_dcache32_page(PAGE_TO_KVADDR(p1));
-	blast_dcache32_page(PAGE_TO_KVADDR(p2));
-	blast_dcache32_page(PAGE_TO_KVADDR(p3));
+	printk("After freeing: %d %016x  %d %016x\r\n",
+	    PAGE_TO_PFN(p1), read_mem_ulong(PAGE_TO_KVADDR(p1)),
+	    PAGE_TO_PFN(p2), read_mem_ulong(PAGE_TO_KVADDR(p2)));
 
-	printk("After freeing: %016x %016x\r\n",
-	    read_mem_ulong(PAGE_TO_KVADDR(p1)),
-	    read_mem_ulong(PAGE_TO_KVADDR(p2)));
+	/* MIPS cache really sucks. */
+	blast_dcache32();
+	blast_icache32();
+	blast_scache32();
 }
 
 void test_shm(void)
@@ -223,22 +229,22 @@ void test_shm(void)
 
 	pgd_t *pgd = &(kern_mm.pgd);
 	struct page *p = pgalloc();
-	/* MIPS cache really sucks. */
-	blast_dcache32_page(PAGE_TO_KVADDR(p));
+	printk("PFN = %d\r\n", PAGE_TO_PFN(p));
 	unsigned long vaddr1 = 0x800000, vaddr2 = 0x1000000;
 	struct pagedesc pd1, pd2;
 
-	assert(!pgtable_insert(pgd, vaddr1, p, PTE_VALID, false, NULL));
-	assert(!pgtable_insert(pgd, vaddr2, p, PTE_VALID, false, NULL));
+	assert(!pgtable_insert(pgd, vaddr1, p, PTE_VALID, 
+	    false, NULL));
+	assert(!pgtable_insert(pgd, vaddr2, p, PTE_VALID,
+	    false, NULL));
 
 	pgtable_get(pgd, vaddr1, false, &pd1);
 	pgtable_get(pgd, vaddr2, false, &pd2);
 	dump_pagedesc(vaddr1, &pd1);
+	printk("PFN1 ENTRY: %016x\r\n", pd1.pte[pd1.ptx]);
 	dump_pagedesc(vaddr2, &pd2);
+	printk("PFN2 ENTRY: %016x\r\n", pd2.pte[pd2.ptx]);
 
-	/* MIPS cache undoubtedly sucks. */
-	blast_dcache32_page(vaddr1);
-	blast_dcache32_page(vaddr2);
 	unsigned long value = 0x12345678;
 	write_mem_ulong(PAGE_TO_KVADDR(p), value);
 
@@ -246,10 +252,36 @@ void test_shm(void)
 	printk("TEST: %016x\r\n", read_mem_ulong(vaddr1));
 	printk("TEST: %016x\r\n", read_mem_ulong(vaddr2));
 
+	write_c0_entryhi(vaddr1);
+	tlbp();
+	unsigned int index = read_c0_index();
+	printk("INDEX = %d, ", index);
+	if (index >= 0) {
+		tlbr();
+		printk("LO0 = %016x, LO1 = %016x\r\n",
+		    read_c0_entrylo0(),
+		    read_c0_entrylo1());
+	}
+	write_c0_entryhi(vaddr2);
+	tlbp();
+	index = read_c0_index();
+	printk("INDEX = %d, ", index);
+	if (index >= 0) {
+		tlbr();
+		printk("LO0 = %016x, LO1 = %016x\r\n",
+		    read_c0_entrylo0(),
+		    read_c0_entrylo1());
+	}
+
 	assert(read_mem_ulong(vaddr1) == value);
 	assert(read_mem_ulong(vaddr2) == value);
 
 	assert(pgtable_remove(pgd, vaddr1) == p);
 	assert(pgtable_remove(pgd, vaddr2) == p);
 	pgfree(p);
+
+	/* MIPS cache undoubtedly sucks. */
+	blast_dcache32();
+	blast_icache32();
+	blast_scache32();
 }

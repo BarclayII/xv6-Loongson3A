@@ -8,6 +8,7 @@
  *
  */
 
+#include <asm/cache.h>
 #include <asm/mm/pgtable.h>
 #include <asm/mm/hier/pgdir.h>
 #include <mm/mmap.h>
@@ -28,6 +29,7 @@ pgdir_t *pgdir_new(asid_t asid)
 {
 	struct page *p = pgalloc();
 	memset((void *)PAGE_TO_KVADDR(p), 0, PGSIZE);
+	
 	p->type = PGTYPE_PGDIR;
 	p->pgdir.entries = 0;
 	p->pgdir.asid = asid;
@@ -79,7 +81,6 @@ ptr_t pgdir_add_pgdir(pgdir_t *pgdir, unsigned short index)
 {
 	pgdir_check(pgdir);
 	pgdir_t *pd = pgdir_new(pgdir->pgdir.asid);
-	memset((void *)PAGE_TO_KVADDR(pd), 0, PGSIZE);
 	return pgdir_add_entry(pgdir, index, pd, 0);
 }
 

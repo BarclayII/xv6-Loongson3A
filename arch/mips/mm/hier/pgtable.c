@@ -12,6 +12,7 @@
 
 #ifdef CONFIG_HPT
 
+#include <asm/cache.h>
 #include <asm/mm/tlb.h>
 #include <asm/mm/pgtable.h>
 #include <asm/mm/hier/pgdir.h>
@@ -137,6 +138,8 @@ struct page *pgtable_remove(void *pgtable, ptr_t vaddr)
 
 	pgtable_get(pgtable, vaddr, false, &pdesc);
 
+	/*pdebug("Removing PTE for %016x\r\n", vaddr);*/
+	
 	if (pdesc.pte[pdesc.ptx]) {
 		p = KVADDR_TO_PAGE(pde_remove_entry(pdesc.pte, pdesc.ptx));
 	}
