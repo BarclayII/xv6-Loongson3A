@@ -58,6 +58,8 @@ struct page {
 #define PGTYPE_PGDIR	2	/* page directory */
 #define PGTYPE_SLAB	3	/* kernel object slabs */
 	list_node_t	list_node;
+	/* shortcut to first page of the allocated set */
+	struct page	*first_page;
 	/* number of pages belong to the same allocated page set */
 	unsigned int	page_count;
 	union {
@@ -147,6 +149,17 @@ inline void shred_page(struct page *p);
 	} while (0)
 
 #define node_to_page(node)	member_to_struct(node, struct page, list_node)
+#define next_page(p)		node_to_page(list_next(&((p)->list_node)))
+#define prev_page(p)		node_to_page(list_prev(&((p)->list_node)))
+#define first_free_page()	node_to_page(list_next(free_page_list))
+/* Actually not a valid page.  It's just a hack. */
+#define end_free_page()		node_to_page(free_page_list)
+#define page_add_before(p, newp) \
+	list_add_before(&((p)->list_node), &((newp)->list_node))
+#define page_add_after(p, np) \
+	list_add_after(&((p)->list_node), &((newp)->list_node))
+#define page_delete(p)		list_del_init(&((p)->list_node))
+#define single_page(p)		((p) == next_page(p))
 
 struct free_page_group {
 	list_node_t	head;

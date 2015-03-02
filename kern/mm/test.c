@@ -50,7 +50,7 @@ void test_mm(void)
 	printk("First free PFN after 2nd alloc: %d\r\n", first_free_pfn);
 	free_pages(p1);
 	printk("First free PFN after 1st free: %d\r\n", first_free_pfn);
-	p3 = alloc_pages(5);
+	p3 = alloc_cont_pages(5);
 	printk("PFN for p3: %d\r\n", PAGE_TO_PFN(p3));
 	for (i = 0, node = &(p3->list_node);
 	    i < p3->page_count;

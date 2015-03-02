@@ -29,39 +29,39 @@ inline void shred_page(struct page *p)
  */
 struct page *alloc_pages(size_t num)
 {
-	struct page *p, *pfirst = NULL;
+	struct page *p, *pfirst = NULL, *np;
 	size_t i;
 	intr_flag_t flag;
 
 	/* TODO: acquire free_page_list lock */
 	ENTER_CRITICAL_SECTION(NULL, flag);
 
-	list_node_t *pgentry, *cur_entry = list_next(free_page_list);
-
 	if (nr_free_pages < num) {
 		EXIT_CRITICAL_SECTION(NULL, flag);
 		return NULL;
 	}
+	p = first_free_page();
 
 	/* Concatenate desired number of free pages into a list, in
 	 * ascending order. */
 	for (i = num; i > 0; ) {
-		pgentry = cur_entry;
-		cur_entry = list_next(cur_entry);
-
-		p = node_to_page(pgentry);
+		np = next_page(p);
 		if (!is_page_reserved(p)) {
 			reserve_page(p);
-			list_del_init(pgentry);
+			page_delete(p);
 			if (pfirst == NULL)
 				pfirst = p;
 			else
-				list_add_before(&(pfirst->list_node), pgentry);
+				page_add_before(pfirst, p);
 			--i;
 			pdebug("Allocated PFN %d\r\n", PAGE_TO_PFN(p));
 			--nr_free_pages;
 			p->page_count = num;
-		}
+			p->first_page = pfirst;
+		} else
+			panic("Allocated page %d inside free list\r\n",
+			    PAGE_TO_PFN(p));
+		p = np;
 	}
 
 	/*
@@ -79,9 +79,8 @@ struct page *alloc_pages(size_t num)
 struct page *alloc_cont_pages(size_t num)
 {
 	struct page *p = NULL, *np, *pfirst;
-	int i;
+	size_t i;
 	intr_flag_t flag;
-	list_node_t *pgentry = NULL, *cur_entry;
 
 	/* TODO: acquire free_page_list lock */
 	ENTER_CRITICAL_SECTION(NULL, flag);
@@ -91,19 +90,14 @@ struct page *alloc_cont_pages(size_t num)
 		return NULL;
 	}
 
-	cur_entry = list_next(free_page_list);
+	np = first_free_page();
 	pfirst = NULL;
 
-	for (i = num; (i > 0) || (cur_entry == free_page_list); ) {
-		pgentry = cur_entry;
-		cur_entry = list_next(cur_entry);
-		p = node_to_page(pgentry);
-		if (cur_entry != free_page_list)
-			np = node_to_page(cur_entry);
-		else
-			np = NULL;
+	for (i = num; (i > 0) || (np == end_free_page()); ) {
+		p = np;
+		np = next_page(p);
 
-		if ((i > 1) && (p + 1 != np))
+		if ((i > 1) && (p + 1 != np) && (np != end_free_page()))
 			i = num;
 		else
 			--i;
@@ -117,9 +111,9 @@ struct page *alloc_cont_pages(size_t num)
 	/* p is now the last page of @num contiguous pages */
 	for (i = 0; i < num; ++i) {
 		reserve_page(p);
-		list_del_init(&(p->list_node));
+		page_delete(p);
 		if (pfirst != NULL)
-			list_add_before(&(pfirst->list_node), &(p->list_node));
+			page_add_before(pfirst, p);
 		pdebug("Allocated continual PFN %d\r\n", PAGE_TO_PFN(p));
 		pfirst = p;
 		p->page_count = num;
@@ -127,56 +121,53 @@ struct page *alloc_cont_pages(size_t num)
 		--nr_free_pages;
 	}
 
+	p = pfirst;
+	for (i = 0; i < num; ++i) {
+		p->first_page = pfirst;
+		p = next_page(p);
+	}
+	assert(p == pfirst);
+
 	EXIT_CRITICAL_SECTION(NULL, flag);
 	return pfirst;
 }
 
-void free_pages(struct page *freep)
+void free_pages(struct page *fp)
 {	
 	/*
 	 * NOTE: see the last comment in alloc_pages()
 	 */
-
-	list_node_t *pfirst_entry, *cur_entry = NULL, *free_entry;
-	struct page *p;
-	bool last_page = false;
+	struct page *p, *freep, *np, *pfirst;
+	size_t i, num = fp->page_count;
 	intr_flag_t intr_flag;
 
 	/* Find the first page in the allocated list */
-	if (freep == NULL)
+	if (fp == NULL)
 		return;
-	for (pfirst_entry = &(freep->list_node);
-	    pfirst_entry > list_prev(pfirst_entry);
-	    pfirst_entry = list_prev(pfirst_entry))
-		/* nothing */;
 
 	/* TODO: acquire free_page_list lock */
 	ENTER_CRITICAL_SECTION(NULL, intr_flag);
 
-	free_entry = list_next(free_page_list);
-	while (!last_page) {
-		if (list_single(pfirst_entry))
-			last_page = true;
-		cur_entry = pfirst_entry;
-		pfirst_entry = list_next(pfirst_entry);
-		list_del(cur_entry);
-		/* Locate suitable location for current allocated page */
-		while (free_entry != free_page_list && free_entry < cur_entry)
-			free_entry = list_next(free_entry);
-		p = node_to_page(cur_entry);
+	p = pfirst = fp->first_page;
+	freep = first_free_page();
+	for (i = 0; i < num; ++i) {
+		pdebug("Freeing PFN %d\r\n", PAGE_TO_PFN(p));
+		np = next_page(p);
+		page_delete(p);
+		/* Locate suitable location for p */
+		while ((freep != end_free_page()) && (freep < p))
+			freep = next_page(freep);
 		/* Checks */
-		if (free_entry == cur_entry)
-			panic("Page %d is both allocated and free?\r\n",
-			    PAGE_TO_PFN(p));
-		if (!is_page_reserved(p))
-			panic("Page %d is allocated but not reserved\r\n",
-			    PAGE_TO_PFN(p));
-		/* Free the page and add the page back to free list */
+		assert(freep != p);
+		assert(is_page_reserved(p));
+		/* Free the page and add it back to list */
 		shred_and_release_page(p);
-		list_add_before(free_entry, cur_entry);
+		page_add_before(freep, p);
+		p->first_page = NULL;
+		p->page_count = 0;
 		pdebug("Freed PFN %d\r\n", PAGE_TO_PFN(p));
-		
 		++nr_free_pages;
+		p = np;
 	}
 
 	EXIT_CRITICAL_SECTION(NULL, intr_flag);
