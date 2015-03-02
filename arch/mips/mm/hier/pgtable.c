@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <string.h>
+#include <sync.h>
 
 mm_t kern_high_mm;
 mm_t kern_low_mm;
@@ -70,6 +71,8 @@ int pgtable_get(void *pgtable, ptr_t vaddr, bool create, void *result)
 {
 	struct pagedesc pdesc;
 	int ret = 0;
+	intr_flag_t flag;
+
 	memset(&pdesc, 0, sizeof(struct pagedesc));
 	pdesc.pgd = *(pgd_t *)pgtable;
 
@@ -111,12 +114,17 @@ int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page,
 {
 	struct pagedesc pdesc;
 	struct page *p;
+	intr_flag_t flag;
 
 	/* Filter NULL address */
+	vaddr = PGADDR_ROUNDDOWN(vaddr);
 	if (vaddr == 0)
 		return -EINVAL;
 
-	vaddr = PGADDR_ROUNDDOWN(vaddr);
+	/* TODO: acquire per-page-table lock. 
+	 * Actually, this should be a per-mm_struct lock for page tables.
+	 * Some day I'll move it elsewhere. */
+
 	pgtable_get(pgtable, vaddr, true, &pdesc);
 
 	if (pdesc.pte[pdesc.ptx] && (pdesc.pte[pdesc.ptx] != vaddr)) {
@@ -148,6 +156,8 @@ struct page *pgtable_remove(void *pgtable, ptr_t vaddr)
 {
 	struct pagedesc pdesc;
 	struct page *p = NULL;
+
+	/* TODO: acquire a per-page-table lock.  (ditto) */
 
 	pgtable_get(pgtable, vaddr, false, &pdesc);
 

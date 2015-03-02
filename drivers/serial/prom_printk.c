@@ -10,7 +10,7 @@
 
 #include <drivers/prom_printk.h>
 #include <drivers/uart16550.h>
-#include <asm/irq.h>
+#include <sync.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -18,11 +18,13 @@
 
 void prom_puts(const char *s)
 {
-	bool flags;
-	local_irq_save(flags);
+	intr_flag_t flags;
+	
+	/* TODO: acquire console lock */
+	ENTER_CRITICAL_SECTION(NULL, flags);
 	for ( ; *s != '\0'; ++s)
 		Uart16550Put((unsigned char)*s);
-	local_irq_restore(flags);
+	EXIT_CRITICAL_SECTION(NULL, flags);
 }
 
 int prom_printk(const char *fmt, ...)

@@ -28,12 +28,24 @@ typedef unsigned long genericptr_t, ptr_t;
 typedef int pid_t;	/* PID, -1 = invalid, 0 = idle, 1 = init, -2 = kernel */
 typedef unsigned short asid_t;
 
-typedef int bool;
-#define false		0
-#define true		1
+/*
+ * I have to define boolean variables as unsigned long.
+ * See comments about intr_flag_t for details.
+ */
+typedef unsigned long bool;
+#define false	0
+#define true	1
 
 typedef unsigned long size_t;
 typedef signed long ssize_t;
+
+/* 
+ * Due to a likely GCC-related bug or something, interrupt flags should 
+ * be always declared as intr_flag_t type.
+ * I defined it as a macro because C doesn't allow something like
+ * 'typedef register bool intr_flag_t'.
+ */
+#define intr_flag_t	register bool
 
 /*
  * This macro is a wrapper for casting integer constants to unsigned longs,

@@ -13,6 +13,8 @@
 #include <string.h>
 #include <printk.h>
 #include <panic.h>
+#include <assert.h>
+#include <sync.h>
 #include <mm/mmap.h>
 #include <ds/list.h>
 
@@ -29,10 +31,17 @@ struct page *alloc_pages(size_t num)
 {
 	struct page *p, *pfirst = NULL;
 	size_t i;
+	intr_flag_t flag;
+
+	/* TODO: acquire free_page_list lock */
+	ENTER_CRITICAL_SECTION(NULL, flag);
+
 	list_node_t *pgentry, *cur_entry = list_next(free_page_list);
 
-	if (nr_free_pages < num)
+	if (nr_free_pages < num) {
+		EXIT_CRITICAL_SECTION(NULL, flag);
 		return NULL;
+	}
 
 	/* Concatenate desired number of free pages into a list, in
 	 * ascending order. */
@@ -60,6 +69,7 @@ struct page *alloc_pages(size_t num)
 	 * doesn't have a head node (or sentry node).  No idea how to fix
 	 * this...
 	 */
+	EXIT_CRITICAL_SECTION(NULL, flag);
 	return pfirst;
 }
 
@@ -70,10 +80,16 @@ struct page *alloc_cont_pages(size_t num)
 {
 	struct page *p = NULL, *np, *pfirst;
 	int i;
+	intr_flag_t flag;
 	list_node_t *pgentry = NULL, *cur_entry;
 
-	if (nr_free_pages < num)
+	/* TODO: acquire free_page_list lock */
+	ENTER_CRITICAL_SECTION(NULL, flag);
+
+	if (nr_free_pages < num) {
+		EXIT_CRITICAL_SECTION(NULL, flag);
 		return NULL;
+	}
 
 	cur_entry = list_next(free_page_list);
 	pfirst = NULL;
@@ -93,8 +109,10 @@ struct page *alloc_cont_pages(size_t num)
 			--i;
 	}
 
-	if (i > 0)
+	if (i > 0) {
+		EXIT_CRITICAL_SECTION(NULL, flag);
 		return NULL;
+	}
 
 	/* p is now the last page of @num contiguous pages */
 	for (i = 0; i < num; ++i) {
@@ -109,11 +127,12 @@ struct page *alloc_cont_pages(size_t num)
 		--nr_free_pages;
 	}
 
+	EXIT_CRITICAL_SECTION(NULL, flag);
 	return pfirst;
 }
 
 void free_pages(struct page *freep)
-{
+{	
 	/*
 	 * NOTE: see the last comment in alloc_pages()
 	 */
@@ -121,6 +140,7 @@ void free_pages(struct page *freep)
 	list_node_t *pfirst_entry, *cur_entry = NULL, *free_entry;
 	struct page *p;
 	bool last_page = false;
+	intr_flag_t intr_flag;
 
 	/* Find the first page in the allocated list */
 	if (freep == NULL)
@@ -129,6 +149,9 @@ void free_pages(struct page *freep)
 	    pfirst_entry > list_prev(pfirst_entry);
 	    pfirst_entry = list_prev(pfirst_entry))
 		/* nothing */;
+
+	/* TODO: acquire free_page_list lock */
+	ENTER_CRITICAL_SECTION(NULL, intr_flag);
 
 	free_entry = list_next(free_page_list);
 	while (!last_page) {
@@ -155,4 +178,6 @@ void free_pages(struct page *freep)
 		
 		++nr_free_pages;
 	}
+
+	EXIT_CRITICAL_SECTION(NULL, intr_flag);
 }

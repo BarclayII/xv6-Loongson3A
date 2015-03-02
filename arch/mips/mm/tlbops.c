@@ -13,10 +13,16 @@
 #include <asm/mm/page.h>
 #include <asm/mipsregs.h>
 #include <asm/cp0regdef.h>
+#include <sys/types.h>
+#include <stddef.h>
 
 void tlb_flush_all(void)
 {
 	int i;
+	intr_flag_t flags;
+
+	/* TODO: acquire per-CPU TLB lock */
+	ENTER_CRITICAL_SECTION(NULL, flags);
 	for (i = 0; i < current_cpu_data.tlbsize; ++i) {
 		write_c0_index(i);
 		write_c0_entryhi(ENTRYHI_DUMMY(i));
@@ -24,10 +30,15 @@ void tlb_flush_all(void)
 		write_c0_entrylo1(0);
 		tlbwi();
 	}
+	EXIT_CRITICAL_SECTION(NULL, flags);
 }
 
 void tlb_remove(ptr_t vaddr)
 {
+	intr_flag_t flags;
+
+	/* TODO: acquire per-CPU TLB lock */
+	ENTER_CRITICAL_SECTION(NULL, flags);
 	/* get ASID */
 	unsigned long asid = read_c0_entryhi() & ENTHI_ASID_MASK;
 	/* write even VPN and ASID into ENTRYHI and query TLB */
@@ -60,4 +71,6 @@ void tlb_remove(ptr_t vaddr)
 
 		tlbwi();
 	}
+
+	EXIT_CRITICAL_SECTION(NULL, flags);
 }
