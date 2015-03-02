@@ -71,7 +71,6 @@ int pgtable_get(void *pgtable, ptr_t vaddr, bool create, void *result)
 {
 	struct pagedesc pdesc;
 	int ret = 0;
-	intr_flag_t flag;
 
 	memset(&pdesc, 0, sizeof(struct pagedesc));
 	pdesc.pgd = *(pgd_t *)pgtable;
@@ -114,7 +113,6 @@ int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page,
 {
 	struct pagedesc pdesc;
 	struct page *p;
-	intr_flag_t flag;
 
 	/* Filter NULL address */
 	vaddr = PGADDR_ROUNDDOWN(vaddr);

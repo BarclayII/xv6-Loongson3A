@@ -15,6 +15,7 @@
 #include <asm/cp0regdef.h>
 #include <sys/types.h>
 #include <stddef.h>
+#include <sync.h>
 
 void tlb_flush_all(void)
 {
