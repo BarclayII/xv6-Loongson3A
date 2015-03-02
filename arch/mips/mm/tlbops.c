@@ -13,7 +13,6 @@
 #include <asm/mm/page.h>
 #include <asm/mipsregs.h>
 #include <asm/cp0regdef.h>
-#include <sync.h>
 
 void tlb_flush_all(void)
 {
@@ -29,11 +28,6 @@ void tlb_flush_all(void)
 
 void tlb_remove(ptr_t vaddr)
 {
-	bool flag;
-
-	/* TODO: exclusive TLB lock */
-	ENTER_CRITICAL_SECTION(NULL, flag);
-
 	/* get ASID */
 	unsigned long asid = read_c0_entryhi() & ENTHI_ASID_MASK;
 	/* write even VPN and ASID into ENTRYHI and query TLB */
@@ -66,6 +60,4 @@ void tlb_remove(ptr_t vaddr)
 
 		tlbwi();
 	}
-
-	EXIT_CRITICAL_SECTION(NULL, flag);
 }

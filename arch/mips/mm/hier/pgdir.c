@@ -54,7 +54,6 @@ ptr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p,
 	pgdir_check(pgdir);
 	ptr_t *dir = (ptr_t *)PAGE_TO_KVADDR(pgdir);
 	unsigned long entry;
-
 	if (dir[index]) {
 		/* Shouldn't allow two different entries having same index */
 		printk("pgdir = %016x\r\n", dir);

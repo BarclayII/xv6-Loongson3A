@@ -14,20 +14,15 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <sync.h>
 
 
 void prom_puts(const char *s)
 {
 	bool flags;
-	
-	/* TODO: exclusive serial console lock */
-	ENTER_CRITICAL_SECTION(NULL, flags);
-
+	local_irq_save(flags);
 	for ( ; *s != '\0'; ++s)
 		Uart16550Put((unsigned char)*s);
-	
-	EXIT_CRITICAL_SECTION(NULL, flags);
+	local_irq_restore(flags);
 }
 
 int prom_printk(const char *fmt, ...)

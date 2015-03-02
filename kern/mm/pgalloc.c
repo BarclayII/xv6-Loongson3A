@@ -13,7 +13,6 @@
 #include <string.h>
 #include <printk.h>
 #include <panic.h>
-#include <sync.h>
 #include <mm/mmap.h>
 #include <ds/list.h>
 
@@ -30,11 +29,6 @@ struct page *alloc_pages(size_t num)
 {
 	struct page *p, *pfirst = NULL;
 	size_t i;
-	bool flag;
-
-	/* TODO: free_list lock */
-	ENTER_CRITICAL_SECTION(NULL, flag);
-
 	list_node_t *pgentry, *cur_entry = list_next(free_page_list);
 
 	if (nr_free_pages < num)
@@ -61,8 +55,6 @@ struct page *alloc_pages(size_t num)
 		}
 	}
 
-	EXIT_CRITICAL_SECTION(NULL, flag);
-
 	/*
 	 * IMPORTANT NOTE: the list of allocated pages, unlike free list,
 	 * doesn't have a head node (or sentry node).  No idea how to fix
@@ -78,11 +70,7 @@ struct page *alloc_cont_pages(size_t num)
 {
 	struct page *p = NULL, *np, *pfirst;
 	int i;
-	bool flag;
 	list_node_t *pgentry = NULL, *cur_entry;
-
-	/* TODO: free_list lock */
-	ENTER_CRITICAL_SECTION(NULL, flag);
 
 	if (nr_free_pages < num)
 		return NULL;
@@ -133,7 +121,6 @@ void free_pages(struct page *freep)
 	list_node_t *pfirst_entry, *cur_entry = NULL, *free_entry;
 	struct page *p;
 	bool last_page = false;
-	bool flag;
 
 	/* Find the first page in the allocated list */
 	if (freep == NULL)
@@ -142,9 +129,6 @@ void free_pages(struct page *freep)
 	    pfirst_entry > list_prev(pfirst_entry);
 	    pfirst_entry = list_prev(pfirst_entry))
 		/* nothing */;
-
-	/* TODO: free_list lock */
-	ENTER_CRITICAL_SECTION(NULL, flag);
 
 	free_entry = list_next(free_page_list);
 	while (!last_page) {
@@ -171,6 +155,4 @@ void free_pages(struct page *freep)
 		
 		++nr_free_pages;
 	}
-
-	EXIT_CRITICAL_SECTION(NULL, flag);
 }
