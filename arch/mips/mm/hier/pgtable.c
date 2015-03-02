@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <string.h>
+#include <sync.h>
 
 mm_t kern_high_mm;
 mm_t kern_low_mm;
@@ -70,10 +71,15 @@ int pgtable_get(void *pgtable, ptr_t vaddr, bool create, void *result)
 {
 	struct pagedesc pdesc;
 	int ret = 0;
+	bool flag;
+
 	memset(&pdesc, 0, sizeof(struct pagedesc));
 	pdesc.pgd = *(pgd_t *)pgtable;
 
 	VADDR_SPLIT(vaddr, pdesc);
+
+	/* TODO: per page table lock */
+	ENTER_CRITICAL_SECTION(NULL, flag);
 
 	if (!create) {
 		if (
@@ -99,6 +105,8 @@ int pgtable_get(void *pgtable, ptr_t vaddr, bool create, void *result)
 			pdesc.pte = (pte_t)pde_add_pgdir(pdesc.pmd, pdesc.pmx);
 	}
 
+	EXIT_CRITICAL_SECTION(NULL, flag);
+
 	memcpy(result, &pdesc, sizeof(struct pagedesc));
 	return ret;
 }
@@ -111,12 +119,17 @@ int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page,
 {
 	struct pagedesc pdesc;
 	struct page *p;
+	bool flag;
 
 	/* Filter NULL address */
 	if (vaddr == 0)
 		return -EINVAL;
 
 	vaddr = PGADDR_ROUNDDOWN(vaddr);
+
+	/* TODO: per page table lock */
+	ENTER_CRITICAL_SECTION(NULL, flag);
+
 	pgtable_get(pgtable, vaddr, true, &pdesc);
 
 	if (pdesc.pte[pdesc.ptx] && (pdesc.pte[pdesc.ptx] != vaddr)) {
@@ -141,6 +154,9 @@ int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page,
 	unsigned int flags = perm & (PTE_LOWMASK - PTE_CACHE_MASK);
 	flags |= PTE_CACHEABLE | PTE_PHYS;
 	pde_add_entry(pdesc.pte, pdesc.ptx, page, flags);
+
+	EXIT_CRITICAL_SECTION(NULL, flag);
+
 	return 0;
 }
 
@@ -148,6 +164,10 @@ struct page *pgtable_remove(void *pgtable, ptr_t vaddr)
 {
 	struct pagedesc pdesc;
 	struct page *p = NULL;
+	bool flag;
+
+	/* TODO: per page table lock */
+	ENTER_CRITICAL_SECTION(NULL, flag);
 
 	pgtable_get(pgtable, vaddr, false, &pdesc);
 
@@ -177,6 +197,8 @@ struct page *pgtable_remove(void *pgtable, ptr_t vaddr)
 
 	/* Blast TLB entries containing this virtual address away */
 	tlb_remove(vaddr);
+
+	EXIT_CRITICAL_SECTION(NULL, flag);
 
 	return p;
 }
