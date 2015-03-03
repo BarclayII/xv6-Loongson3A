@@ -32,6 +32,6 @@
 #define ENTRYHI_DUMMY(idx) (CKSEG0 + ((idx) << (PGSHIFT + 1)))
 
 void tlb_flush_all(void);
-void tlb_remove(ptr_t vaddr);
+void tlb_remove(addr_t vaddr);
 
 #endif

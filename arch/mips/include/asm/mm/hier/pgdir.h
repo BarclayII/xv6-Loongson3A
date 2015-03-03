@@ -25,10 +25,10 @@ void pgdir_delete(pgdir_t *pgdir);
 #define pgdir_asid(pd)		((pd)->pgdir.asid)
 #define pgdir_entries(pd)	((pd)->pgdir.entries)
 #define pgdir_empty(pd)		(pgdir_entries(pd) == 0)
-ptr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p,
+addr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p,
     unsigned int flags);
-ptr_t pgdir_add_pgdir(pgdir_t *pgdir, unsigned short index);
-ptr_t pgdir_remove_entry(pgdir_t *pgdir, unsigned short index);
+addr_t pgdir_add_pgdir(pgdir_t *pgdir, unsigned short index);
+addr_t pgdir_remove_entry(pgdir_t *pgdir, unsigned short index);
 void pgdir_remove_pgdir(pgdir_t *pgdir, unsigned short index);
 
 /* Shortcuts */

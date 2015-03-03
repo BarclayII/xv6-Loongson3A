@@ -11,6 +11,7 @@
 #ifndef _ASM_MM_HIER_VMM_H
 #define _ASM_MM_HIER_VMM_H
 
+#include <sys/types.h>
 #include <asm/mm/page.h>
 #include <asm/mm/pgtable.h>
 #include <asm/mm/hier/pgdir.h>
@@ -46,6 +47,6 @@ extern mm_t kern_low_mm;		/* Low memory manager */
 #define kern_mm	kern_high_mm
 
 void arch_mm_init(void);
-void dump_pagedesc(ptr_t vaddr, struct pagedesc *pdesc);
+void dump_pagedesc(addr_t vaddr, struct pagedesc *pdesc);
 
 #endif

@@ -34,7 +34,7 @@ void tlb_flush_all(void)
 	EXIT_CRITICAL_SECTION(NULL, flags);
 }
 
-void tlb_remove(ptr_t vaddr)
+void tlb_remove(addr_t vaddr)
 {
 	intr_flag_t flags;
 

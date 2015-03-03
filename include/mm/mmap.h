@@ -110,12 +110,12 @@ static inline struct page *__pfn_to_page(unsigned long n)
 #define KVADDR_TO_PFN(kvaddr)	PADDR_TO_PFN(KVADDR_TO_PADDR(kvaddr))
 #define PFN_TO_KVADDR(n)	PADDR_TO_KVADDR(PFN_TO_PADDR(n))
 
-static inline struct page *__kvaddr_to_page(ptr_t kvaddr)
+static inline struct page *__kvaddr_to_page(addr_t kvaddr)
 {
 	return !kvaddr ? NULL : PADDR_TO_PAGE(KVADDR_TO_PADDR(kvaddr));
 }
 
-static inline ptr_t __page_to_kvaddr(struct page *p)
+static inline addr_t __page_to_kvaddr(struct page *p)
 {
 	return !p ? 0 : PADDR_TO_KVADDR(PAGE_TO_PADDR(p));
 }

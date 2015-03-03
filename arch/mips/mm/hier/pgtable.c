@@ -48,7 +48,7 @@ void pgtable_bootstrap(void)
 	    kern_mm.pgd, ASID_KERNEL);
 }
 
-void dump_pagedesc(ptr_t vaddr, struct pagedesc *pdesc)
+void dump_pagedesc(addr_t vaddr, struct pagedesc *pdesc)
 {
 	printk("VADDR\t%016x\r\n", vaddr);
 	printk("PGD\t%016x:%d\r\n", pdesc->pgd, pdesc->pgx);
@@ -67,7 +67,7 @@ void dump_pagedesc(ptr_t vaddr, struct pagedesc *pdesc)
  * @vaddr needn't be aligned to page size; it is automatically rounded
  * down to page size within the VADDR_SPLIT macro.
  */
-int pgtable_get(void *pgtable, ptr_t vaddr, bool create, void *result)
+int pgtable_get(void *pgtable, addr_t vaddr, bool create, void *result)
 {
 	struct pagedesc pdesc;
 	int ret = 0;
@@ -108,7 +108,7 @@ int pgtable_get(void *pgtable, ptr_t vaddr, bool create, void *result)
 /*
  * Fails only if the virtual address already exists and @replace is not set.
  */
-int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page,
+int pgtable_insert(void *pgtable, addr_t vaddr, struct page *page,
     unsigned int perm, bool replace, struct page **replaced_page)
 {
 	struct pagedesc pdesc;
@@ -150,7 +150,7 @@ int pgtable_insert(void *pgtable, ptr_t vaddr, struct page *page,
 	return 0;
 }
 
-struct page *pgtable_remove(void *pgtable, ptr_t vaddr)
+struct page *pgtable_remove(void *pgtable, addr_t vaddr)
 {
 	struct pagedesc pdesc;
 	struct page *p = NULL;

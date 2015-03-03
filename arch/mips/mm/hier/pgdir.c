@@ -48,11 +48,11 @@ void pgdir_delete(pgdir_t *pgdir)
  * NOTE: This function does *not* modify anything in @p.  Increasing
  *       reference counter or things like that should be done outside.
  */
-ptr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p,
+addr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p,
     unsigned int flags)
 {
 	pgdir_check(pgdir);
-	ptr_t *dir = (ptr_t *)PAGE_TO_KVADDR(pgdir);
+	addr_t *dir = (addr_t *)PAGE_TO_KVADDR(pgdir);
 	unsigned long entry;
 	if (dir[index]) {
 		/* Shouldn't allow two different entries having same index */
@@ -77,7 +77,7 @@ ptr_t pgdir_add_entry(pgdir_t *pgdir, unsigned short index, struct page *p,
  * Allocate a new page directory, usually an intermediate one, into
  * the page directory.
  */
-ptr_t pgdir_add_pgdir(pgdir_t *pgdir, unsigned short index)
+addr_t pgdir_add_pgdir(pgdir_t *pgdir, unsigned short index)
 {
 	pgdir_check(pgdir);
 	pgdir_t *pd = pgdir_new(pgdir->pgdir.asid);
@@ -90,15 +90,15 @@ ptr_t pgdir_add_pgdir(pgdir_t *pgdir, unsigned short index)
  * NOTE: Like pgdir_add_entry(), this function does not modify the page
  *       originally stored there in any way.
  */
-ptr_t pgdir_remove_entry(pgdir_t *pgdir, unsigned short index)
+addr_t pgdir_remove_entry(pgdir_t *pgdir, unsigned short index)
 {
 	pgdir_check(pgdir);
-	ptr_t result;
+	addr_t result;
 	unsigned long entry;
 
 	--(pgdir->pgdir.entries);
 
-	ptr_t *dir = (ptr_t *)PAGE_TO_KVADDR(pgdir);
+	addr_t *dir = (addr_t *)PAGE_TO_KVADDR(pgdir);
 	entry = dir[index];
 	dir[index] = 0;
 
@@ -116,7 +116,7 @@ ptr_t pgdir_remove_entry(pgdir_t *pgdir, unsigned short index)
 void pgdir_remove_pgdir(pgdir_t *pgdir, unsigned short index)
 {
 	pgdir_check(pgdir);
-	ptr_t result = pgdir_remove_entry(pgdir, index);
+	addr_t result = pgdir_remove_entry(pgdir, index);
 	pgdir_t *pd = KVADDR_TO_PAGE(result);
 	if (pgdir_empty(pd))
 		pgdir_delete(pd);

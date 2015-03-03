@@ -23,7 +23,9 @@ typedef unsigned long long uint64, __u64, u64;
 typedef signed long long int64, __s64;
 
 /* unsigned long integers defined as ptr_t are only for manipulating addresses */
-typedef unsigned long genericptr_t, ptr_t;
+typedef unsigned long addr_t;
+
+typedef void *genericptr_t, ptr_t;
 
 typedef int pid_t;	/* PID, -1 = invalid, 0 = idle, 1 = init, -2 = kernel */
 typedef unsigned short asid_t;

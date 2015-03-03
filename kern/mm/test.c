@@ -166,14 +166,14 @@ void test_tlb(void)
 
 	printk("PFN1 = %016x\r\n", pfn1);
 	printk("PFN2 = %016x\r\n", pfn2);
-	pgtable_insert(&(kern_mm.pgd), (ptr_t)a, p1, PTE_VALID | PTE_DIRTY,
+	pgtable_insert(&(kern_mm.pgd), (addr_t)a, p1, PTE_VALID | PTE_DIRTY,
 	    false, NULL);
-	pgtable_insert(&(kern_mm.pgd), (ptr_t)b, p2, PTE_VALID | PTE_DIRTY,
+	pgtable_insert(&(kern_mm.pgd), (addr_t)b, p2, PTE_VALID | PTE_DIRTY,
 	    false, NULL);
-	pgtable_get(&(kern_mm.pgd), (ptr_t)a, false, &pdesc1);
-	pgtable_get(&(kern_mm.pgd), (ptr_t)b, false, &pdesc2);
-	dump_pagedesc((ptr_t)a, &pdesc1);
-	dump_pagedesc((ptr_t)b, &pdesc2);
+	pgtable_get(&(kern_mm.pgd), (addr_t)a, false, &pdesc1);
+	pgtable_get(&(kern_mm.pgd), (addr_t)b, false, &pdesc2);
+	dump_pagedesc((addr_t)a, &pdesc1);
+	dump_pagedesc((addr_t)b, &pdesc2);
 	printk("PTE1 = %016x\r\n", pdesc1.pte[pdesc1.ptx]);
 	printk("PTE2 = %016x\r\n", pdesc2.pte[pdesc2.ptx]);
 
@@ -195,26 +195,26 @@ void test_tlb(void)
 	assert(*a == pa);
 	assert(*b == pb);
 
-	assert(pgtable_remove(&(kern_mm.pgd), (ptr_t)a) == p1);
+	assert(pgtable_remove(&(kern_mm.pgd), (addr_t)a) == p1);
 #if 0
 	printk("TEST: %016x\r\n", *b);	/* should not panic */
 	printk("TEST: %016x\r\n", *a);	/* should panic */
 #endif
-	assert(pgtable_remove(&(kern_mm.pgd), (ptr_t)b) == p2);
+	assert(pgtable_remove(&(kern_mm.pgd), (addr_t)b) == p2);
 #if 0
 	printk("TEST: %016x\r\n", *a);	/* should panic */
 	printk("TEST: %016x\r\n", *b);	/* should panic */
 #endif
 	printk("Inserting back...\r\n");
-	pgtable_insert(&(kern_mm.pgd), (ptr_t)a, p1, PTE_VALID,
+	pgtable_insert(&(kern_mm.pgd), (addr_t)a, p1, PTE_VALID,
 	    false, NULL);
-	pgtable_get(&(kern_mm.pgd), (ptr_t)a, false, &pdesc1);
-	dump_pagedesc((ptr_t)a, &pdesc1);
+	pgtable_get(&(kern_mm.pgd), (addr_t)a, false, &pdesc1);
+	dump_pagedesc((addr_t)a, &pdesc1);
 	assert(*a == pa);
 #if 0
 	printk("TEST: %016x\r\n", *b);	/* should panic */
 #endif
-	assert(pgtable_remove(&(kern_mm.pgd), (ptr_t)a) == p1);
+	assert(pgtable_remove(&(kern_mm.pgd), (addr_t)a) == p1);
 
 #undef first_free_pfn
 

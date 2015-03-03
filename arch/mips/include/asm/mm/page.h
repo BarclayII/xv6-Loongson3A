@@ -101,12 +101,12 @@
 #define PAGE_OFF(vaddr)	((vaddr) & PAGE_OFF_MASK)
 
 #ifndef __ASSEMBLER__
-typedef ptr_t *pte_t;
-typedef ptr_t *pmd_t;
+typedef addr_t *pte_t;
+typedef addr_t *pmd_t;
 #ifndef CONFIG_3LEVEL_PT
-typedef ptr_t *pud_t;
+typedef addr_t *pud_t;
 #endif
-typedef ptr_t *pgd_t;
+typedef addr_t *pgd_t;
 
 /* NOTE that pdesc is not a pointer */
 #ifdef CONFIG_3LEVEL_PT
