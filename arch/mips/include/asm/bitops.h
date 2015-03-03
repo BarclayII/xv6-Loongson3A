@@ -99,4 +99,18 @@ atomic_change_bit(unsigned int pos, volatile unsigned int *addr)
 		);
 }
 
+/*
+ * Find most significant bit set.
+ */
+static inline int
+fls(unsigned int x)
+{
+	asm volatile (
+		"clz	%0, %1"
+		: "=r"(x)
+		: "r"(x)
+	);
+	return 32 - x;
+}
+
 #endif

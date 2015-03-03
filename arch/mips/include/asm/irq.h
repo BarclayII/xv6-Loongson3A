@@ -30,8 +30,8 @@
 		"	di;" \
 		"	ei;" \
 		"1:" \
-		: "=r"(flags) \
-		: /* no input */ \
+		: /* no output */ \
+		: "r"(flags) \
 		: "memory" \
 	)
 

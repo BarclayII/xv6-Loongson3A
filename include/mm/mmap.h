@@ -39,20 +39,24 @@
 #define MAX_LOW_MEM_MB		256
 #define MAX_LOW_MEM		MB_TO_BYTES(MAX_LOW_MEM_MB)
 
+struct kmem_slab;
+typedef struct kmem_slab kmem_slab_t;
+
 /*
  * Physical page structure
  */
 struct page {
 	unsigned int	ref_count;
-	/* This field should be aligned to 4 bytes, or an address error might
-	 * occur. */
-	unsigned short	flags;
+	/* number of pages belong to the same allocated page set */
+	unsigned int	page_count;
+	unsigned int	flags;
 	/*
 	 * flags are represented by bit position index, and are manipulated by
 	 * atomic_bit_set/clear/change macros.
 	 */
 #define PAGE_RESERVED	0
-	unsigned short	type;
+	/* Page type, only valid in first page */
+	unsigned int	type;
 #define PGTYPE_GENERIC	0	/* generic */
 #define PGTYPE_PGSTRUCT	1	/* page structure storage */
 #define PGTYPE_PGDIR	2	/* page directory */
@@ -60,14 +64,18 @@ struct page {
 	list_node_t	list_node;
 	/* shortcut to first page of the allocated set */
 	struct page	*first_page;
-	/* number of pages belong to the same allocated page set */
-	unsigned int	page_count;
+	/* type-specific extra data */
 	union {
 		/* For page directories */
 		struct {
-			unsigned short	entries;
-			unsigned short	asid;
+			unsigned int	entries;
+			unsigned int	asid;
 		} pgdir;
+		/* For slab pages, only meaningful at first page */
+		struct {
+			/* associated slab structure */
+			kmem_slab_t	*slab;
+		} slab;
 	};
 };
 
@@ -89,7 +97,7 @@ extern size_t highmem_base_pfn;	/* The lowest PFN in high memory */
 	((unsigned long)((struct page *)(p) - (page_array)) + (highmem_base_pfn))
 #define PAGE_TO_PADDR(p)	(PAGE_TO_PFN(p) << PGSHIFT)
 #define PFN_TO_PADDR(n)		((n) << PGSHIFT)
-#define PADDR_TO_PFN(addr)	(PGADDR_ROUNDDOWN(addr) >> PGSHIFT)
+#define PADDR_TO_PFN(addr)	((addr) >> PGSHIFT)
 
 static inline struct page *__pfn_to_page(unsigned long n)
 {
@@ -124,6 +132,11 @@ static inline addr_t __page_to_kvaddr(struct page *p)
 #define PAGE_TO_KVADDR(p)	__page_to_kvaddr(p)
 
 /*
+ * Page type checks
+ */
+#define is_slab(p)		((p)->first_page->type == PGTYPE_SLAB)
+
+/*
  * Physical page manipulation
  */
 #define is_page_reserved(p) \
@@ -153,6 +166,7 @@ inline void shred_page(struct page *p);
 #define prev_page(p)		node_to_page(list_prev(&((p)->list_node)))
 #define first_free_page()	node_to_page(list_next(free_page_list))
 /* Actually not a valid page.  It's just a hack. */
+/* DO NOT REFERENCE */
 #define end_free_page()		node_to_page(free_page_list)
 #define page_add_before(p, newp) \
 	list_add_before(&((p)->list_node), &((newp)->list_node))
