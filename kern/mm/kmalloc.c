@@ -33,7 +33,7 @@ void *kmalloc(size_t bytes)
 {
 	bytes = ROUNDUP(bytes, ALIGN);
 	pdebug("Requested %d bytes allocation\r\n", bytes);
-	if (bytes > KMALLOC_LARGE)
+	if (bytes > LARGE_CHUNK)
 		return kmalloc_large(bytes);
 	return slab_alloc(bytes);
 }

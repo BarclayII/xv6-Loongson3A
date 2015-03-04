@@ -83,6 +83,9 @@ struct kmem_cache_group {
 extern struct kmem_cache_group kmcache_group;
 #define kmcache		(kmcache_group.cache)
 
+/* object sizes larger than this constant is not handled by slab allocator */
+#define LARGE_CHUNK	(PGSIZE >> 1)
+
 void *slab_alloc(size_t bytes);
 void slab_free(void *ptr);
 void slab_bootstrap(void);

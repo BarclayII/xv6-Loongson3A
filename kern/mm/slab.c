@@ -273,9 +273,11 @@ void slab_bootstrap(void)
 	for (i = 0; i < NR_TINY_SIZES; ++i) {
 		kmcache[i].avail = kmcache[i].full = NULL;
 		kmcache[i].size = tiny_sizes[i];
+		assert(kmcache[i].size <= LARGE_CHUNK);
 	}
 	for (i = NR_TINY_SIZES; i < NR_SLAB_ORDERS; ++i) {
 		kmcache[i].avail = kmcache[i].full = NULL;
-		kmcache[i].size = 1 << (i + 1);
+		kmcache[i].size = kmcache[i - 1].size * 2;
+		assert(kmcache[i].size <= LARGE_CHUNK);
 	}
 }

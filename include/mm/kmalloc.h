@@ -14,7 +14,6 @@
 #include <mm/mmap.h>
 #include <sys/types.h>
 
-#define KMALLOC_LARGE	(PGSIZE >> 1)
 #define ALIGN		8
 
 void *kmalloc(size_t bytes);
