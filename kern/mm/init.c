@@ -112,4 +112,5 @@ void mm_init(void)
 	test_shm();
 
 	test_slab();
+	test_slab2();
 }

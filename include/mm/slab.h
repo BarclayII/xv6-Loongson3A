@@ -88,5 +88,6 @@ void slab_free(void *ptr);
 void slab_bootstrap(void);
 
 void test_slab(void);
+void test_slab2(void);
 
 #endif

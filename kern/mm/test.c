@@ -341,3 +341,25 @@ void test_slab(void)
 		printk("%016x\r\n", ptr[i]);
 	printk("Free pages after test_slab(): %d\r\n", nr_free_pages);
 }
+
+void test_slab2(void)
+{
+	printk("**********test_slab2()**********\r\n");
+	ptr_t ptr0, ptr1, ptr2, ptr3;
+	ptr0 = kmalloc(32);
+	ptr1 = kmalloc(32);
+	ptr2 = kmalloc(32);
+	kfree(ptr1);
+	kfree(ptr2);
+	ptr1 = kmalloc(32);
+	ptr2 = kmalloc(32);
+	ptr3 = kmalloc(32);
+	assert(ptr2 < ptr1);
+	assert(ptr1 < ptr3);
+	kfree(ptr0);
+	kfree(ptr1);
+	kfree(ptr2);
+	kfree(ptr3);
+	printk("succeeded\r\n");
+}
+
