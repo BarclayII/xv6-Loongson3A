@@ -8,12 +8,12 @@
  *
  */
 
-#include <asm/cache.h>
 #include <asm/mm/pgtable.h>
 #include <asm/mm/tlb.h>
 #include <asm/mipsregs.h>
 #include <mm/mmap.h>
 #include <mm/vmm.h>
+#include <mm/kmalloc.h>
 #include <printk.h>
 #include <ds/list.h>
 #include <asm/memrw.h>
@@ -283,4 +283,32 @@ void test_shm(void)
 	assert(pgtable_remove(pgd, vaddr1) == p);
 	assert(pgtable_remove(pgd, vaddr2) == p);
 	pgfree(p);
+}
+
+void test_slab(void)
+{
+	printk("**********test_slab**********\r\n");
+	printk("Free pages before test_slab(): %d\r\n", nr_free_pages);
+	void *ptr[10];
+	size_t size[10];
+	int i;
+	for (i = 0; i < 10; ++i) {
+		if ((read_c0_random() & 7) == 0)
+			size[i] = 1 + (read_c0_count() & 0xffff);
+		else
+			size[i] = 1 + (read_c0_count() & 0xff);
+	}
+	printk("Allocating object sizes:");
+	for (i = 0; i < 10; ++i)
+		printk("%u ", size[i]);
+	printk("\r\n");
+	for (i = 0; i < 10; ++i)
+		ptr[i] = kmalloc(size[i]);
+	for (i = 0; i < 10; ++i)
+		kfree(ptr[i]);
+	for (i = 0; i < 10; ++i)
+		printk("%016x\r\n", ptr[i]);
+	printk("Free pages after test_slab(): %d\r\n", nr_free_pages);
+
+	printk("%d\r\n", size[0] % size[1]);
 }

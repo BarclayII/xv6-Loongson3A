@@ -16,6 +16,7 @@
 #include <asm/memrw.h>
 #include <mm/mmap.h>
 #include <mm/vmm.h>
+#include <mm/slab.h>
 #include <ds/list.h>
 #include <printk.h>
 #include <string.h>
@@ -100,6 +101,7 @@ void mm_init(void)
 	printk("Size of page struct: %d\r\n", sizeof(struct page));
 	setup_page_array();
 	arch_mm_init();
+	slab_bootstrap();
 	printk("Current free pages: %d\r\n", nr_free_pages);
 
 	test_mm();
@@ -108,4 +110,6 @@ void mm_init(void)
 	test_pgtable();
 	test_tlb();
 	test_shm();
+
+	test_slab();
 }

@@ -51,13 +51,15 @@ struct page *alloc_pages(size_t num)
 			page_delete(p);
 			if (pfirst == NULL)
 				pfirst = p;
-			else
+			else {
 				page_add_before(pfirst, p);
+				p->type = PGTYPE_TAIL;
+				p->first_page = pfirst;
+			}
 			--i;
 			pdebug("Allocated PFN %d\r\n", PAGE_TO_PFN(p));
 			--nr_free_pages;
 			p->page_count = num;
-			p->first_page = pfirst;
 		} else
 			panic("Allocated page %d inside free list\r\n",
 			    PAGE_TO_PFN(p));
@@ -70,6 +72,7 @@ struct page *alloc_pages(size_t num)
 	 * this...
 	 */
 	EXIT_CRITICAL_SECTION(NULL, flag);
+	pfirst->type = PGTYPE_GENERIC;
 	return pfirst;
 }
 
@@ -121,14 +124,16 @@ struct page *alloc_cont_pages(size_t num)
 		--nr_free_pages;
 	}
 
-	p = pfirst;
-	for (i = 0; i < num; ++i) {
+	p = next_page(pfirst);
+	for (i = 1; i < num; ++i) {
+		p->type = PGTYPE_TAIL;
 		p->first_page = pfirst;
 		p = next_page(p);
 	}
 	assert(p == pfirst);
 
 	EXIT_CRITICAL_SECTION(NULL, flag);
+	pfirst->type = PGTYPE_GENERIC;
 	return pfirst;
 }
 
@@ -148,7 +153,7 @@ void free_pages(struct page *fp)
 	/* TODO: acquire free_page_list lock */
 	ENTER_CRITICAL_SECTION(NULL, intr_flag);
 
-	p = pfirst = fp->first_page;
+	p = pfirst = first_page(fp);
 	freep = first_free_page();
 	for (i = 0; i < num; ++i) {
 		pdebug("Freeing PFN %d\r\n", PAGE_TO_PFN(p));

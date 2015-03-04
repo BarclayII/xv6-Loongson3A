@@ -16,6 +16,7 @@
 #include <asm/bitops.h>
 #include <sys/types.h>
 #include <ds/list.h>
+#include <mm/slab.h>
 #include <mathop.h>
 #include <stddef.h>
 #include <panic.h>
@@ -39,9 +40,6 @@
 #define MAX_LOW_MEM_MB		256
 #define MAX_LOW_MEM		MB_TO_BYTES(MAX_LOW_MEM_MB)
 
-struct kmem_slab;
-typedef struct kmem_slab kmem_slab_t;
-
 /*
  * Physical page structure
  */
@@ -57,25 +55,24 @@ struct page {
 #define PAGE_RESERVED	0
 	/* Page type, only valid in first page */
 	unsigned int	type;
+#define PGTYPE_TAIL	-1	/* tail pages */
 #define PGTYPE_GENERIC	0	/* generic */
 #define PGTYPE_PGSTRUCT	1	/* page structure storage */
 #define PGTYPE_PGDIR	2	/* page directory */
 #define PGTYPE_SLAB	3	/* kernel object slabs */
 	list_node_t	list_node;
-	/* shortcut to first page of the allocated set */
-	struct page	*first_page;
 	/* type-specific extra data */
 	union {
+		/* For tail pages */
+		/* shortcut to first page of the allocated set */
+		struct page	*first_page;
 		/* For page directories */
 		struct {
 			unsigned int	entries;
 			unsigned int	asid;
 		} pgdir;
 		/* For slab pages, only meaningful at first page */
-		struct {
-			/* associated slab structure */
-			kmem_slab_t	*slab;
-		} slab;
+		kmem_slab_t	slab;
 	};
 };
 
@@ -134,7 +131,12 @@ static inline addr_t __page_to_kvaddr(struct page *p)
 /*
  * Page type checks
  */
-#define is_slab(p)		((p)->first_page->type == PGTYPE_SLAB)
+#define is_tail(p)	((p)->type == PGTYPE_TAIL)
+static inline struct page *first_page(struct page *p)
+{
+	return is_tail(p) ? p->first_page : p;
+}
+#define is_slab(p)	(first_page(p)->type == PGTYPE_SLAB)
 
 /*
  * Physical page manipulation
@@ -146,20 +148,11 @@ static inline addr_t __page_to_kvaddr(struct page *p)
 inline void shred_page(struct page *p);
 #define release_page(p)	\
 	atomic_clear_bit(PAGE_RESERVED, (unsigned int *)&((p)->flags))
-#define shred_and_release_page(p) \
-	do { \
-		shred_page(p); \
-		release_page(p); \
-	} while (0)
-
-#define inc_pageref(p)		(++((p)->ref_count))
-#define dec_pageref(p)		(--((p)->ref_count))
-#define page_unref(p)	\
-	do { \
-		dec_pageref(p); \
-		if ((p)->ref_count == 0) \
-			pgfree(p); \
-	} while (0)
+static inline void shred_and_release_page(struct page *p)
+{
+	shred_page(p);
+	release_page(p);
+}
 
 #define node_to_page(node)	member_to_struct(node, struct page, list_node)
 #define next_page(p)		node_to_page(list_next(&((p)->list_node)))
@@ -170,10 +163,16 @@ inline void shred_page(struct page *p);
 #define end_free_page()		node_to_page(free_page_list)
 #define page_add_before(p, newp) \
 	list_add_before(&((p)->list_node), &((newp)->list_node))
-#define page_add_after(p, np) \
+#define page_add_after(p, newp) \
 	list_add_after(&((p)->list_node), &((newp)->list_node))
 #define page_delete(p)		list_del_init(&((p)->list_node))
-#define single_page(p)		((p) == next_page(p))
+static inline bool single_page(struct page *p)
+{
+	return p == next_page(p);
+}
+
+/* Get page structure from slab */
+#define slab_to_page(s)		member_to_struct(s, struct page, slab)
 
 struct free_page_group {
 	list_node_t	head;
@@ -190,6 +189,15 @@ struct page *alloc_cont_pages(size_t num);
 #define pgalloc()	alloc_page()
 void free_pages(struct page *freep);
 #define pgfree(p)	free_pages(p)
+
+#define inc_pageref(p)		(++((p)->ref_count))
+#define dec_pageref(p)		(--((p)->ref_count))
+static inline void page_unref(struct page *p)
+{
+	dec_pageref(p);
+	if ((p)->ref_count == 0)
+		pgfree(p);
+}
 
 /* Test routines */
 void test_mm(void);

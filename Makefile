@@ -58,6 +58,8 @@ OBJS		= arch/mips/entry.o \
 		  kern/mm/init.o \
 		  kern/mm/pgalloc.o \
 		  kern/mm/test.o \
+		  kern/mm/slab.o \
+		  kern/mm/kmalloc.o \
 		  kern/printk.o \
 		  kern/panic.o \
 		  kern/init.o $(KLIBC_OBJS) \

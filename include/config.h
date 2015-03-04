@@ -18,7 +18,7 @@
 /* #define CONFIG_IPT */
 
 /* Enable pdebug() and vpdebug() printing */
-/* #define DEBUG */
+#define DEBUG
 
 /* Enable 16K pages */
 #define CONFIG_16KPAGES
