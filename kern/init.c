@@ -96,9 +96,9 @@ int main(void)
 
 	printk("STATUS: %08x\r\n", read_c0_status());
 
-	mm_init();
-
 	srand(read_c0_count());
+
+	mm_init();
 
 	local_irq_enable();
 

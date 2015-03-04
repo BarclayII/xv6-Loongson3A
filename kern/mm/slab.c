@@ -279,6 +279,7 @@ void slab_free(void *ptr)
 	addr_t slab_start = PAGE_TO_KVADDR(p);
 	kmem_slab_t *slab = &(p->slab);
 	int index = ((addr_t)ptr - slab_start) / slab->cache->size;
+	/* TODO: double free check */
 
 	/* Fill in the chunk with the index of current object */
 	*(int *)(slab_start + slab->cache->size * index) = slab->index;

@@ -19,6 +19,7 @@
 #include <asm/memrw.h>
 #include <string.h>
 #include <assert.h>
+#include <stdlib.h>
 
 void test_mm(void)
 {
@@ -285,30 +286,53 @@ void test_shm(void)
 	pgfree(p);
 }
 
+#define NR_SLAB_TESTS	32
 void test_slab(void)
 {
 	printk("**********test_slab**********\r\n");
 	printk("Free pages before test_slab(): %d\r\n", nr_free_pages);
-	void *ptr[10];
-	size_t size[10];
+	void *ptr[NR_SLAB_TESTS];
+	size_t size[NR_SLAB_TESTS];
+	int seq[2 * NR_SLAB_TESTS], state[NR_SLAB_TESTS];
+	memset(state, 0, sizeof(state));
 	int i;
-	for (i = 0; i < 10; ++i) {
+	for (i = 0; i < NR_SLAB_TESTS; ++i) {
 		if ((read_c0_random() & 7) == 0)
-			size[i] = 1 + (read_c0_count() & 0xffff);
+			size[i] = 1 + rand() % 0x10000;
 		else
-			size[i] = 1 + (read_c0_count() & 0xff);
+			size[i] = 1 + rand() % 0x100;
+		seq[i * 2] = seq[i * 2 + 1] = i;
 	}
-	printk("Allocating object sizes:");
-	for (i = 0; i < 10; ++i)
+	printk("Allocating object sizes:\r\n");
+	for (i = 0; i < NR_SLAB_TESTS; ++i) {
 		printk("%u ", size[i]);
+		if (i % 8 == 7)
+			printk("\r\n");
+	}
 	printk("\r\n");
-	for (i = 0; i < 10; ++i)
-		ptr[i] = kmalloc(size[i]);
-	for (i = 0; i < 10; ++i)
-		kfree(ptr[i]);
-	for (i = 0; i < 10; ++i)
+	for (i = 0; i < NR_SLAB_TESTS * 2 - 1; ++i) {
+		int t = seq[i];
+		int u = i + rand() % (2 * NR_SLAB_TESTS - i);
+		seq[i] = seq[u];
+		seq[u] = t;
+	}
+	printk("Alloc-free sequence:\r\n");
+	for (i = 0; i < NR_SLAB_TESTS * 2; ++i) {
+		printk("%d ", seq[i]);
+		if (i % 8 == 7)
+			printk("\r\n");
+	}
+	memset(ptr, 0, sizeof(ptr));
+	for (i = 0; i < NR_SLAB_TESTS * 2; ++i) {
+		++state[seq[i]];
+		assert(state[seq[i]] <= 2);
+		if (ptr[seq[i]])
+			kfree(ptr[seq[i]]);
+		else
+			ptr[seq[i]] = kmalloc(size[seq[i]]);
+	}
+	printk("Allocated addresses:\r\n");
+	for (i = 0; i < NR_SLAB_TESTS; ++i)
 		printk("%016x\r\n", ptr[i]);
 	printk("Free pages after test_slab(): %d\r\n", nr_free_pages);
-
-	printk("%d\r\n", size[0] % size[1]);
 }
