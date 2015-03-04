@@ -326,10 +326,15 @@ void test_slab(void)
 	for (i = 0; i < NR_SLAB_TESTS * 2; ++i) {
 		++state[seq[i]];
 		assert(state[seq[i]] <= 2);
-		if (ptr[seq[i]])
+		if (ptr[seq[i]]) {
+			printk("FREEING OBJECT %d WITH SIZE %d\r\n",
+			    seq[i], size[i]);
 			kfree(ptr[seq[i]]);
-		else
+		} else {
+			printk("ALLOCATING OBJECT %d WITH SIZE %d\r\n",
+			    seq[i], size[i]);
 			ptr[seq[i]] = kmalloc(size[seq[i]]);
+		}
 	}
 	printk("Allocated addresses:\r\n");
 	for (i = 0; i < NR_SLAB_TESTS; ++i)
