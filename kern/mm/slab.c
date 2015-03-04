@@ -93,6 +93,7 @@ static kmem_cache_t *find_kmcache(size_t bytes)
 			return &(kmcache[i]);
 		}
 
+	/* NOTREACHED */
 	panic("Failed to find kmem_cache with %d bytes\r\n", bytes);
 	return NULL;
 }
@@ -102,43 +103,72 @@ static inline kmem_slab_t *find_available_slab(kmem_cache_t *cache)
 	return cache->avail;
 }
 
-static inline void set_slab_available(kmem_slab_t *slab)
+static void set_slab_available(kmem_slab_t *slab)
 {
+	kmem_slab_t *next = next_slab(slab);
 	pdebug("Marking slab %016x available\r\n", slab);
+	/* Because list_del_init modifies what's before and what's after
+	 * the node, it must be finished before setting the full or available
+	 * queue NULL. */
 	list_del_init(&(slab->node));
-	/* Check if it's the only slab in full list */
-	if (slab->cache->full == slab && single_slab(slab))
+	/* Switch the queue head to next slab or NULL if nothing remains */
+	if (slab->cache->full == slab && slab == next) {
+		pdebug("\tremoving single %016x from full\r\n", slab);
 		slab->cache->full = NULL;
-	if (slab->cache->avail == NULL)
+	} else
+		slab->cache->full = next;
+
+	if (slab->cache->avail == NULL) {
+		pdebug("\tsetting up single slab %016x\r\n", slab);
 		slab->cache->avail = slab;
-	else
+	} else {
+		pdebug("\tadding %016x at %016x\r\n",
+		    slab, slab->cache->avail);
 		list_add_before(&(slab->cache->avail->node), &(slab->node));
+	}
 	pdebug("Slab %016x is set available\r\n", slab);
 }
 
-static inline void set_slab_full(kmem_slab_t *slab)
+static void set_slab_full(kmem_slab_t *slab)
 {
+	kmem_slab_t *next = next_slab(slab);
 	pdebug("Marking slab %016x full\r\n", slab);
 	list_del_init(&(slab->node));
-	/* Check if it's the only slab in available list */
-	if (slab->cache->avail == slab && single_slab(slab))
+	/* Switch the queue head to next slab or NULL if nothing remains */
+	if (slab->cache->avail == slab && slab == next) {
+		pdebug("\tremoving single %016x from available\r\n", slab);
 		slab->cache->avail = NULL;
-	if (slab->cache->full == NULL)
+	} else
+		slab->cache->avail = next;
+
+	if (slab->cache->full == NULL) {
+		pdebug("\tsetting up single slab %016x\r\n", slab);
 		slab->cache->full = slab;
-	else
+	} else {
+		pdebug("\tadding %016x at %016x\r\n",
+		    slab, slab->cache->full);
 		list_add_before(&(slab->cache->full->node), &(slab->node));
+	}
+
 	pdebug("Slab %016x is set full\r\n", slab);
 }
 
-static inline void set_slab_empty(kmem_slab_t *slab)
+static void set_slab_empty(kmem_slab_t *slab)
 {
+	kmem_slab_t *next = next_slab(slab);
 	pdebug("Marking slab %016x empty\r\n", slab);
 	list_del_init(&(slab->node));
 	/* Enforce both checks */
-	if (slab->cache->avail == slab && single_slab(slab))
+	if (slab->cache->avail == slab && slab == next)
 		slab->cache->avail = NULL;
-	if (slab->cache->full == slab && single_slab(slab))
-		slab->cache->full = NULL;
+	else
+		slab->cache->avail = next;
+
+	if (slab->cache->full == slab)
+		/* NOTREACHED */
+		panic("Full slab %d should not become immediately empty?\r\n",
+		    slab);
+
 	pdebug("Slab %016x is set empty\r\n", slab);
 }
 
@@ -213,12 +243,15 @@ void *slab_alloc(size_t bytes)
 		if ((slab = slab_new(cache)) == NULL)
 			return NULL;
 	}
+	pdebug("\tslab found at %016x\r\n", slab);
 
 	/* Get & update first free index */
+	pdebug("\tcurrent slab index %d\r\n", slab->index);
 	assert(slab->index >= 0);
 	slab_start = PAGE_TO_KVADDR(slab_to_page(slab));
 	result = (void *)(slab_start + slab->index * cache->size);
 	slab->index = *(unsigned int *)result;
+	pdebug("\tnew     slab index %d\r\n", slab->index);
 
 	/* Update free chunk count and slab state */
 	--(slab->count);
@@ -248,11 +281,14 @@ void slab_free(void *ptr)
 	addr_t slab_start = PAGE_TO_KVADDR(p);
 	kmem_slab_t *slab = &(p->slab);
 	int index = ((addr_t)ptr - slab_start) / slab->cache->size;
+	pdebug("\tslab found at %016x\r\n", slab);
 	/* TODO: double free check */
 
 	/* Fill in the chunk with the index of current object */
+	pdebug("\tcurrent slab index %d\r\n", slab->index);
 	*(int *)(slab_start + slab->cache->size * index) = slab->index;
 	slab->index = index;
+	pdebug("\tnew     slab index %d\r\n", slab->index);
 
 	/* Update free chunk count and slab state */
 	if (slab_full(slab))

@@ -261,11 +261,11 @@ static void test_slab(void)
 		++state[seq[i]];
 		assert(state[seq[i]] <= 2);
 		if (ptr[seq[i]]) {
-			printk("FREEING OBJECT %d WITH SIZE %d\r\n",
+			pdebug("FREEING OBJECT %d WITH SIZE %d\r\n",
 			    seq[i], size[seq[i]]);
 			kfree(ptr[seq[i]]);
 		} else {
-			printk("ALLOCATING OBJECT %d WITH SIZE %d\r\n",
+			pdebug("ALLOCATING OBJECT %d WITH SIZE %d\r\n",
 			    seq[i], size[seq[i]]);
 			ptr[seq[i]] = kmalloc(size[seq[i]]);
 		}
