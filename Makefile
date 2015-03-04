@@ -36,7 +36,8 @@ KLIBC_OBJS	= klibc/snprintf.o \
 		  klibc/strcmp.o \
 		  klibc/strlen.o \
 		  klibc/memset.o \
-		  klibc/memcpy.o
+		  klibc/memcpy.o \
+		  klibc/rand.o
 
 LIB_OBJS	= lib/list.o
 

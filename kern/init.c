@@ -28,6 +28,7 @@
 #include <mm/mmap.h>
 #include <mm/vmm.h>
 #include <assert.h>
+#include <stdlib.h>
 
 int main(void)
 {
@@ -96,6 +97,8 @@ int main(void)
 	printk("STATUS: %08x\r\n", read_c0_status());
 
 	mm_init();
+
+	srand(read_c0_count());
 
 	local_irq_enable();
 

@@ -11,6 +11,11 @@
 #ifndef _STDLIB_H
 #define _STDLIB_H
 
+#define	RAND_MAX	2147483647
+
 unsigned long strtoul(const char *nptr, char **endptr, int base);
+int rand_r(unsigned int *seed);
+int rand(void);
+void srand(unsigned int seed);
 
 #endif
