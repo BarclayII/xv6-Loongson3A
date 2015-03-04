@@ -11,6 +11,7 @@
 #ifndef _MM_SLAB_H
 #define _MM_SLAB_H
 
+#include <asm/mm/page.h>
 #include <sys/types.h>
 #include <ds/list.h>
 #include <stddef.h>
@@ -63,7 +64,6 @@ static inline bool slab_empty(kmem_slab_t *s)
  * A cache manages one particular type of object within one or more slabs...
  */
 typedef struct kmem_cache {
-	list_node_t	node;
 	/* List (or queue) of available and full slabs.
 	 *
 	 * Empty slabs are immediately freed. */
@@ -73,27 +73,15 @@ typedef struct kmem_cache {
 	size_t		size;		/* cache object size */
 } kmem_cache_t;
 
+#define NR_SLAB_ORDERS	(PGSHIFT - 1)
+
 struct kmem_cache_group {
-	list_node_t	head;
+	kmem_cache_t	cache[NR_SLAB_ORDERS];
 	/* TODO: add a lock */
 };
 
 extern struct kmem_cache_group kmcache_group;
-
-/* These object list manipulating macros could be compacted into a
- * macro-building macro, but it's not ctags friendly. */
-#define kmcache_list		(&(kmcache_group.head))
-#define node_to_kmcache(n)	member_to_struct(n, kmem_cache_t, node)
-#define first_kmcache()		node_to_kmcache(list_next(kmcache_list))
-/* DO NOT REFERENCE */
-#define end_kmcache()		node_to_kmcache(kmcache_list)
-#define next_kmcache(cache)	node_to_kmcache(list_next(&((cache)->node)))
-#define prev_kmcache(cache)	node_to_kmcache(list_next(&((cache)->node)))
-#define kmcache_add_before(c, newc) \
-	list_add_before(&((c)->node), &((newc)->node))
-#define kmcache_add_after(c, newc) \
-	list_add_after(&((c)->node), &((newc)->node))
-#define kmcache_delete(c)	list_del_init(&((c)->node))
+#define kmcache		(kmcache_group.cache)
 
 void *slab_alloc(size_t bytes);
 void slab_free(void *ptr);

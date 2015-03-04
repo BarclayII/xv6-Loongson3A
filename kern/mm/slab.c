@@ -25,7 +25,6 @@
  *
  * Cache list:
  * Cache #	Lower Bound		Upper Bound
- * (Pre-allocated statically)
  * 1		8			8
  * 2		16			16
  * 3		24			32
@@ -34,7 +33,6 @@
  * 6		104			128
  * 7		136			192
  * 8		200			256
- * (Dynamically allocated)
  * n>8		2^(n-1)+8		2^n
  *
  * Requested size greater than half the page size is processed by a separate
@@ -62,11 +60,10 @@ static const unsigned short ubound[32] = {
 	256,	256,	256,	256,
 	256,	256,	256,	256,
 };
-static const unsigned short tiny_sizes[8] = {
+#define NR_TINY_SIZES	8
+static const unsigned short tiny_sizes[NR_TINY_SIZES] = {
 	8, 16, 32, 64, 96, 128, 192, 256
 };
-#define NR_TINY_SIZES	8
-#define MAX_TINY_SIZE	256
 
 struct kmem_cache_group kmcache_group;
 
@@ -80,54 +77,23 @@ struct kmem_cache_group kmcache_group;
 static kmem_cache_t *find_kmcache(size_t bytes)
 {
 	static kmem_cache_t *last_accessed = NULL;
-	kmem_cache_t *cache;
+	int i;
 
-	pdebug("Finding kmem_cache with %d bytes\r\n", bytes);
-
-	/* Shortcut: cache the last accessed kmem_cache_t */
 	if (KMCACHE_ALMOST_FIT(bytes, last_accessed)) {
-		pdebug("\tResult already cached\r\n");
+		pdebug("Result already cached\r\n");
 		return last_accessed;
 	}
-
-	for (cache = first_kmcache();
-	    cache != end_kmcache();
-	    cache = next_kmcache(cache))
-		if (KMCACHE_ALMOST_FIT(bytes, cache)) {
-			pdebug("\tFound cache with %d bytes\r\n", cache->size);
-			last_accessed = cache;
-			return cache;
+	pdebug("Finding kmem_cache with %d bytes\r\n", bytes);
+	for (i = 0; i < NR_SLAB_ORDERS; ++i)
+		if (KMCACHE_ALMOST_FIT(bytes, &(kmcache[i]))) {
+			pdebug("\tFound cache with %d bytes\r\n",
+			    kmcache[i].size);
+			last_accessed = &(kmcache[i]);
+			return &(kmcache[i]);
 		}
 
-	pdebug("\tFailed to find kmem_cache with %d bytes\r\n", bytes);
+	panic("Failed to find kmem_cache with %d bytes\r\n", bytes);
 	return NULL;
-}
-
-static kmem_cache_t *kmcache_new(size_t bytes)
-{
-	pdebug("Allocating kmem_cache with size %d\r\n", bytes);
-	/* Request a new cache by calling kmalloc().
-	 * NOTE: This requires that a cache for kmem_cache_t to be established
-	 *       prior to everything, which is achieved in slab_bootstrap(). */
-	kmem_cache_t *cache = kmalloc(sizeof(kmem_cache_t));
-	if (cache == NULL)
-		/* Failed to allocate a new cache */
-		return NULL;
-	/* Fill in the members */
-	cache->avail = cache->full = NULL;
-	cache->size = UBOUND(bytes);
-	/* Add the cache into the cache list */
-	kmem_cache_t *c;
-	for (c = first_kmcache();
-	    c != end_kmcache() && c->size < cache->size;
-	    c = next_kmcache(c))
-		/* nothing */;
-	kmcache_add_before(c, cache);
-	pdebug("Allocated kmem_cache with size %d\r\n", bytes);
-	if (c != end_kmcache())
-		pdebug("\tAdded before size %d\r\n", c->size);
-
-	return cache;
 }
 
 static inline kmem_slab_t *find_available_slab(kmem_cache_t *cache)
@@ -233,8 +199,8 @@ void *slab_alloc(size_t bytes)
 	 * we can really do. */
 	cache = find_kmcache(bytes);
 	if (!cache) {
-		if ((cache = kmcache_new(bytes)) == NULL)
-			return NULL;
+		/* (usually) NOTREACHED */
+		return NULL;
 	}
 
 	/* Find an available slab, or allocate a new one if there's no such
@@ -299,49 +265,10 @@ void slab_free(void *ptr)
 
 void slab_bootstrap(void)
 {
-	/*
-	 * The bootstrap routine for slab allocation is rather primitive as
-	 * we manually construct kmem_cache_t data inside a page here.
-	 */
 	pdebug("Bootstrapping slab allocation\r\n");
-
-	/* Initialize cache list */
-	list_init(kmcache_list);
-
-	/* Allocate a slab for storing caches.  slab_new() shouldn't be called
-	 * because it assumes that a suitable cache has been already found,
-	 * and we're *creating* caches here. */
-	struct page *p = pgalloc();
-	p->type = PGTYPE_SLAB;
-	kmem_slab_t *slab = &(p->slab);
-
-	/* Find what size category kmem_cache_t falls into */
-	size_t kmem_cache_size = UBOUND(sizeof(kmem_cache_t));
-
-	/* Fill in the slab */
-	list_init(&(slab->node));
-	slab->capacity = PGSIZE * p->page_count / kmem_cache_size;
-	fill_slab(slab, kmem_cache_size, slab->capacity);
-
-	/* Fill in the initial cache structure */
-	kmem_cache_t init_cache;
-	list_init(&(init_cache.node));
-	init_cache.avail = init_cache.full = NULL;
-	init_cache.size = kmem_cache_size;
-
-	/* Copy the structure into the first chunk of slab */
-	memcpy((void *)PAGE_TO_KVADDR(p), &init_cache, sizeof(kmem_cache_t));
-
-	/* Relate the slab and the copied cache */
-	slab->cache = (kmem_cache_t *)PAGE_TO_KVADDR(p);
-
-	/* Fill in other members of the slab */
-	slab->index = 1;
-	slab->count = slab->capacity - 1;
-
-	/* Mark it available */
-	set_slab_available(slab);
-
-	/* Add the cache into cache list */
-	kmcache_add_before(end_kmcache(), slab->cache);
+	int i;
+	for (i = 0; i < NR_TINY_SIZES; ++i) {
+		kmcache[i].avail = kmcache[i].full = NULL;
+		kmcache[i].size = tiny_sizes[i];
+	}
 }
