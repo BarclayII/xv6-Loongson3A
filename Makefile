@@ -39,7 +39,7 @@ KLIBC_OBJS	= klibc/snprintf.o \
 		  klibc/memcpy.o \
 		  klibc/rand.o
 
-LIB_OBJS	= lib/list.o
+LIB_OBJS	=
 
 OBJS		= arch/mips/entry.o \
 		  arch/mips/setup.o \

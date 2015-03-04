@@ -16,14 +16,51 @@ typedef struct _list_node {
 	struct _list_node *prev, *next;
 } list_node_t;
 
-inline void list_init(list_node_t *l);
-inline void list_add_before(list_node_t *l, list_node_t *node);
-inline void list_add_after(list_node_t *l, list_node_t *node);
-#define list_add	list_add_after
-inline void list_del(list_node_t *node);
-inline void list_del_init(list_node_t *node);
-inline list_node_t *list_prev(list_node_t *node);
-inline list_node_t *list_next(list_node_t *node);
+static inline void list_init(list_node_t *l)
+{
+	l->prev = l->next = l;
+}
+
+static inline void list_add_before(list_node_t *l, list_node_t *node)
+{
+	l->prev->next = node;
+	node->prev = l->prev;
+	l->prev = node;
+	node->next = l;
+}
+
+static inline void list_add_after(list_node_t *l, list_node_t *node)
+{
+	l->next->prev = node;
+	node->next = l->next;
+	l->next = node;
+	node->prev = l;
+}
+
+static inline void list_del(list_node_t *node)
+{
+	node->prev->next = node->next;
+	node->next->prev = node->prev;
+}
+
+static inline void list_del_init(list_node_t *node)
+{
+	node->prev->next = node->next;
+	node->next->prev = node->prev;
+	node->prev = node->next = node;
+}
+
+static inline list_node_t *list_prev(list_node_t *node)
+{
+	return node->prev;
+}
+
+static inline list_node_t *list_next(list_node_t *node)
+{
+	return node->next;
+}
+
+#define list_add(l, n)	list_add_after(l, n)
 /* For lists with a head node */
 #define list_empty(l)	(((l) == (l)->next) && ((l) == (l)->prev))
 /* For lists without head node */
