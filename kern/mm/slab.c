@@ -112,11 +112,13 @@ static void set_slab_available(kmem_slab_t *slab)
 	 * queue NULL. */
 	list_del_init(&(slab->node));
 	/* Switch the queue head to next slab or NULL if nothing remains */
-	if (slab->cache->full == slab && slab == next) {
-		pdebug("\tremoving single %016x from full\r\n", slab);
-		slab->cache->full = NULL;
-	} else
-		slab->cache->full = next;
+	if (slab->cache->full == slab) {
+		if (slab == next) {
+			pdebug("\tremoving single %016x from full\r\n", slab);
+			slab->cache->full = NULL;
+		} else
+			slab->cache->full = next;
+	}
 
 	if (slab->cache->avail == NULL) {
 		pdebug("\tsetting up single slab %016x\r\n", slab);
@@ -135,11 +137,14 @@ static void set_slab_full(kmem_slab_t *slab)
 	pdebug("Marking slab %016x full\r\n", slab);
 	list_del_init(&(slab->node));
 	/* Switch the queue head to next slab or NULL if nothing remains */
-	if (slab->cache->avail == slab && slab == next) {
-		pdebug("\tremoving single %016x from available\r\n", slab);
-		slab->cache->avail = NULL;
-	} else
-		slab->cache->avail = next;
+	if (slab->cache->avail == slab) {
+		if (slab == next) {
+			pdebug("\tremoving single %016x from available\r\n",
+			    slab);
+			slab->cache->avail = NULL;
+		} else
+			slab->cache->avail = next;
+	}
 
 	if (slab->cache->full == NULL) {
 		pdebug("\tsetting up single slab %016x\r\n", slab);
@@ -159,15 +164,16 @@ static void set_slab_empty(kmem_slab_t *slab)
 	pdebug("Marking slab %016x empty\r\n", slab);
 	list_del_init(&(slab->node));
 	/* Enforce both checks */
-	if (slab->cache->avail == slab && slab == next)
-		slab->cache->avail = NULL;
-	else
-		slab->cache->avail = next;
+	if (slab->cache->avail == slab) {
+		if (slab == next)
+			slab->cache->avail = NULL;
+		else
+			slab->cache->avail = next;
+	}
 
 	if (slab->cache->full == slab)
 		/* NOTREACHED */
-		panic("Full slab %d should not become immediately empty?\r\n",
-		    slab);
+		panic("Full slab %016x becoming immediately empty?\r\n", slab);
 
 	pdebug("Slab %016x is set empty\r\n", slab);
 }
