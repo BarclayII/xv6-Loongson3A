@@ -77,11 +77,14 @@ typedef struct kmem_cache {
 
 struct kmem_cache_group {
 	kmem_cache_t	cache[NR_SLAB_ORDERS];
+	/* Cache the most recently accessed object cache */
+	kmem_cache_t	*last_accessed;
 	/* TODO: add a lock */
 };
 
 extern struct kmem_cache_group kmcache_group;
 #define kmcache		(kmcache_group.cache)
+#define kmcache_last_accessed	(kmcache_group.last_accessed)
 
 /* object sizes larger than this constant is not handled by slab allocator */
 #define LARGE_CHUNK	(PGSIZE >> 1)

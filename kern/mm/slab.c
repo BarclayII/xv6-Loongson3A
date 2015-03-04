@@ -76,19 +76,20 @@ struct kmem_cache_group kmcache_group;
 
 static kmem_cache_t *find_kmcache(size_t bytes)
 {
-	static kmem_cache_t *last_accessed = NULL;
 	int i;
 
-	if (KMCACHE_ALMOST_FIT(bytes, last_accessed)) {
+	/* Shortcut: cache the last accessed kmem_cache */
+	if (KMCACHE_ALMOST_FIT(bytes, kmcache_last_accessed)) {
 		pdebug("Result already cached\r\n");
-		return last_accessed;
+		return kmcache_last_accessed;
 	}
 	pdebug("Finding kmem_cache with %d bytes\r\n", bytes);
+	/* Traverse the cache array and find a fit one */
 	for (i = 0; i < NR_SLAB_ORDERS; ++i)
 		if (KMCACHE_ALMOST_FIT(bytes, &(kmcache[i]))) {
 			pdebug("\tFound cache with %d bytes\r\n",
 			    kmcache[i].size);
-			last_accessed = &(kmcache[i]);
+			kmcache_last_accessed = &(kmcache[i]);
 			return &(kmcache[i]);
 		}
 
@@ -198,8 +199,7 @@ void *slab_alloc(size_t bytes)
 	addr_t slab_start;
 	void *result;
 	/* Find a suitable cache first.  If such cache could not be found,
-	 * create one.  If the creation also fails, then there's nothing
-	 * we can really do. */
+	 * fail (or panic, since this should not really happen). */
 	cache = find_kmcache(bytes);
 	if (!cache) {
 		/* (usually) NOTREACHED */
