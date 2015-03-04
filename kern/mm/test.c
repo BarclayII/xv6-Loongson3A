@@ -311,9 +311,9 @@ static void test_slab3(void)
 	kfree(ptr[1]);
 	kfree(ptr[3]);
 	ptr[1] = kmalloc(PGSIZE >> 1);
-	ptr[3] = kmalloc(PGSIZE >> 3);
-	printk("%016x %016x\r\n", ptr[1]);
-	printk("%016x %016x\r\n", ptr[3]);
+	ptr[3] = kmalloc(PGSIZE >> 1);
+	printk("%016x\r\n", ptr[1]);
+	printk("%016x\r\n", ptr[3]);
 	kfree(ptr[0]);
 	kfree(ptr[1]);
 	kfree(ptr[2]);

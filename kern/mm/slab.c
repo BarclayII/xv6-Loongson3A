@@ -104,38 +104,41 @@ static inline kmem_slab_t *find_available_slab(kmem_cache_t *cache)
 static inline void set_slab_available(kmem_slab_t *slab)
 {
 	pdebug("Marking slab %016x available\r\n", slab);
+	list_del_init(&(slab->node));
 	/* Check if it's the only slab in full list */
 	if (slab->cache->full == slab && single_slab(slab))
 		slab->cache->full = NULL;
-	list_del_init(&(slab->node));
 	if (slab->cache->avail == NULL)
 		slab->cache->avail = slab;
 	else
 		list_add_before(&(slab->cache->avail->node), &(slab->node));
+	pdebug("Slab %016x is set available\r\n", slab);
 }
 
 static inline void set_slab_full(kmem_slab_t *slab)
 {
 	pdebug("Marking slab %016x full\r\n", slab);
+	list_del_init(&(slab->node));
 	/* Check if it's the only slab in available list */
 	if (slab->cache->avail == slab && single_slab(slab))
 		slab->cache->avail = NULL;
-	list_del_init(&(slab->node));
 	if (slab->cache->full == NULL)
 		slab->cache->full = slab;
 	else
 		list_add_before(&(slab->cache->full->node), &(slab->node));
+	pdebug("Slab %016x is set full\r\n", slab);
 }
 
 static inline void set_slab_empty(kmem_slab_t *slab)
 {
 	pdebug("Marking slab %016x empty\r\n", slab);
+	list_del_init(&(slab->node));
 	/* Enforce both checks */
 	if (slab->cache->avail == slab && single_slab(slab))
 		slab->cache->avail = NULL;
 	if (slab->cache->full == slab && single_slab(slab))
 		slab->cache->full = NULL;
-	list_del_init(&(slab->node));
+	pdebug("Slab %016x is set empty\r\n", slab);
 }
 
 static void fill_slab(kmem_slab_t *slab, size_t size, unsigned int capacity)
@@ -270,5 +273,9 @@ void slab_bootstrap(void)
 	for (i = 0; i < NR_TINY_SIZES; ++i) {
 		kmcache[i].avail = kmcache[i].full = NULL;
 		kmcache[i].size = tiny_sizes[i];
+	}
+	for (i = NR_TINY_SIZES; i < NR_SLAB_ORDERS; ++i) {
+		kmcache[i].avail = kmcache[i].full = NULL;
+		kmcache[i].size = 1 << (i + 1);
 	}
 }
