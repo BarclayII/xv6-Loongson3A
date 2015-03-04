@@ -104,13 +104,5 @@ void mm_init(void)
 	slab_bootstrap();
 	printk("Current free pages: %d\r\n", nr_free_pages);
 
-	test_mm();
-	/*test2_mm();*/
-
-	test_pgtable();
-	test_tlb();
-	test_shm();
-
-	test_slab();
-	test_slab2();
+	mm_test();
 }

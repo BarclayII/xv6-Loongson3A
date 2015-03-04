@@ -199,8 +199,6 @@ static inline void page_unref(struct page *p)
 		pgfree(p);
 }
 
-/* Test routines */
-void test_mm(void);
-void test2_mm(void);
+void mm_test(void);
 
 #endif

@@ -21,7 +21,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-void test_mm(void)
+static void test_mm(void)
 {
 	printk("**********test_mm**********\r\n");
 #define first_free_pfn \
@@ -68,74 +68,7 @@ void test_mm(void)
 	printk("Current free pages: %d\r\n", nr_free_pages);
 }
 
-struct test {
-	unsigned long a;
-	unsigned long b;
-};
-
-/*
- * I found that the secondary cache and main memory may not notice the
- * changes happening in the primary (data) caches, so this test routine
- * is somehow meaningless until I add some manual cache blasters(?)
- */
-
-#if 0
-void test2_mm(void)
-{
-	/*struct page *p = pgalloc();
-	struct page *p0 = pgalloc();*/
-	struct page *p1 = pgalloc();
-	struct page *p2 = pgalloc();
-	unsigned long pfn1 = PAGE_TO_PFN(p1);
-	unsigned long pfn2 = PAGE_TO_PFN(p2);
-	printk("PFN = %d\r\n", pfn1);
-	printk("KVADDR = %016x\r\n", PFN_TO_KVADDR(pfn1));
-	printk("PFN = %d\r\n", pfn2);
-	printk("KVADDR = %016x\r\n", PFN_TO_KVADDR(pfn2));
-	asm volatile (
-		".set	mips64r2;"
-		"dli	$16, 0x0000000001000000;"
-		"dmtc0	$16, $10;"
-		"move	$17, %0;"
-		"move	$16, %1;"
-		"dsll	$17, 6;"
-		"dsll	$16, 6;"
-		"daddiu	$17, 0x1e;"
-		"daddiu	$16, 0x1e;"
-		"dmtc0	$17, $2;"
-		"dmtc0	$16, $3;"
-		"dmtc0	$0, $0;"
-		"tlbwi"
-		: /* no output */
-		: "r"(pfn1), "r"(pfn2)
-		: "$16", "$17"
-	);
-	printk("ENTRYHI = %016x\r\n", read_c0_entryhi());
-	printk("ENTRYLO0 = %016x\r\n", read_c0_entrylo0());
-	printk("ENTRYLO1 = %016x\r\n", read_c0_entrylo1());
-	memset((char *)PFN_TO_KVADDR(pfn1), '2', 4096);
-	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
-	struct test *sample_va = (struct test *)0x0000000001000ff8;
-	sample_va->a = 0x1111111111111111;
-	sample_va->b = 0x2222222222222222;
-	printk("sample_va = %016x\r\n", sample_va->a);
-	printk("sample_shm = %016x\r\n", sample_va->b);
-	asm volatile (
-		"dmtc0	$0, $2;"
-		"dmtc0	$0, $3;"
-		"tlbwi"
-	);
-	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1) + 0xff8));
-	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn2)));
-	/*pgfree(p);*/
-	pgfree(p1);
-	pgfree(p2);
-	/*pgfree(p0);*/
-	printk("phys = %016x\r\n", read_mem_long(PFN_TO_KVADDR(pfn1)));
-}
-#endif
-
-void test_pgtable(void)
+static void test_pgtable(void)
 {
 	printk("**********test_pgtable**********\r\n");
 	pgd_t pgd = kern_mm.pgd;
@@ -156,7 +89,7 @@ void test_pgtable(void)
 	printk("Current free pages: %d\r\n", nr_free_pages);
 }
 
-void test_tlb(void)
+static void test_tlb(void)
 {
 	printk("**********test_tlb**********\r\n");
 	struct page *p1 = pgalloc(), *p2 = pgalloc(), *p3 = pgalloc();
@@ -228,7 +161,7 @@ void test_tlb(void)
 	    PAGE_TO_PFN(p2), read_mem_ulong(PAGE_TO_KVADDR(p2)));
 }
 
-void test_shm(void)
+static void test_shm(void)
 {
 	printk("**********test_shm**********\r\n");
 
@@ -286,8 +219,9 @@ void test_shm(void)
 	pgfree(p);
 }
 
+/* randomized slab test */
 #define NR_SLAB_TESTS	32
-void test_slab(void)
+static void test_slab(void)
 {
 	printk("**********test_slab**********\r\n");
 	printk("Free pages before test_slab(): %d\r\n", nr_free_pages);
@@ -342,7 +276,8 @@ void test_slab(void)
 	printk("Free pages after test_slab(): %d\r\n", nr_free_pages);
 }
 
-void test_slab2(void)
+/* free index list/stack handling */
+static void test_slab2(void)
 {
 	printk("**********test_slab2()**********\r\n");
 	ptr_t ptr0, ptr1, ptr2, ptr3;
@@ -363,3 +298,46 @@ void test_slab2(void)
 	printk("succeeded\r\n");
 }
 
+/* available & full queue handling */
+static void test_slab3(void)
+{
+	printk("**********test_slab3()**********\r\n");
+	ptr_t ptr[5];
+	int i;
+	for (i = 0; i < 5; ++i) {
+		ptr[i] = kmalloc(PGSIZE >> 1);
+		printk("%016x\r\n", ptr[i]);
+	}
+	kfree(ptr[1]);
+	kfree(ptr[3]);
+	ptr[1] = kmalloc(PGSIZE >> 1);
+	ptr[3] = kmalloc(PGSIZE >> 3);
+	printk("%016x %016x\r\n", ptr[1]);
+	printk("%016x %016x\r\n", ptr[3]);
+	kfree(ptr[0]);
+	kfree(ptr[1]);
+	kfree(ptr[2]);
+	kfree(ptr[3]);
+	ptr[0] = kmalloc(PGSIZE >> 1);
+	ptr[1] = kmalloc(PGSIZE >> 1);
+	ptr[2] = kmalloc(PGSIZE >> 1);
+	printk("%016x %016x %016x\r\n", ptr[0], ptr[1], ptr[2]);
+	kfree(ptr[0]);
+	kfree(ptr[1]);
+	kfree(ptr[2]);
+	kfree(ptr[4]);
+	printk("succeeded\r\n");
+}
+
+void mm_test(void)
+{
+	test_mm();
+
+	test_pgtable();
+	test_tlb();
+	test_shm();
+
+	test_slab();
+	test_slab2();
+	test_slab3();
+}

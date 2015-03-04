@@ -48,10 +48,6 @@ int pgtable_insert(void *pgtable, addr_t vaddr, struct page *page,
 /* Remove a virtual address. */
 struct page *pgtable_remove(void *pgtable, addr_t vaddr);
 
-void test_pgtable(void);
-void test_tlb(void);
-void test_shm(void);
-
 /*
  * Virtual memory area structure which maintains a segment of virtual
  * address space.
