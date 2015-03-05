@@ -8,10 +8,9 @@
  *
  */
 
-#ifndef _SYNC_H
-#define _SYNC_H
+#ifndef _ASM_SYNC_H
+#define _ASM_SYNC_H
 
-#include <asm/sync.h>
-#include <sync/critsec.h>
+#define sync()		asm volatile ("sync" : : : "memory")
 
 #endif
