@@ -11,6 +11,7 @@
 #include <asm/regdef.h>
 #include <asm/mipsregs.h>
 #include <asm/trap.h>
+#include <asm/decode.h>
 #include <asm/mm/tlb.h>
 #include <asm/thread_info.h>
 #include <drivers/uart16550.h>
@@ -23,6 +24,117 @@
 
 unsigned long except_handlers[32];
 extern unsigned long except_generic, except_tlb;
+
+void empty_routine(void)
+{
+	printk("executing empty_routine()\r\n");
+}
+
+static void test_skip(void)
+{
+	int a = 2, b = 2, c = -2, d;
+	printk("**********test_skip**********\r\n");
+	printk("Direct breakpoint\r\n");
+	asm volatile (
+		"break	0"
+	);
+	printk("Jump\r\n");
+	asm volatile (
+		"	.set	push;"
+		"	.set	noreorder;"
+		"	j	1f;"
+		"	break	0;"
+		"1:	.set	pop"
+	);
+	printk("Jump Register\r\n");
+	asm volatile (
+		"	.set	push;"
+		"	.set	noreorder;"
+		"	dla	$16, 1f;"
+		"	jr	$16;"
+		"	break	0;"
+		"1:	.set	pop;"
+		: /* no output */ : /* no input */ : "$16"
+	);
+	/* should print "empty_routine" once */
+	printk("Jump And Link\r\n");
+	asm volatile (
+		".set	push;"
+		".set	noreorder;"
+		"jal	empty_routine;"
+		"break	0;"
+		".set	pop;"
+	);
+	/* should print "empty_routine" once */
+	printk("Jump And Link Register\r\n");
+	asm volatile (
+		".set	push;"
+		".set	noreorder;"
+		"dla	$16, empty_routine;"
+		"jalr	$16;"
+		"break	0;"
+		".set	pop;"
+		: /* no output */ : /* no input */ : "$16"
+	);
+	printk("Branch if Equal (Success)\r\n");
+	asm volatile (
+		"	.set	push;"
+		"	.set	noreorder;"
+		"	li	%0, 1;"
+		"	beq	%1, %2, 1f;"
+		"	break	0;"
+		"	move	%0, $0;"
+		"1:	.set	pop"
+		: "=r"(d) : "r"(a), "r"(b)
+	);
+	assert(d);
+	printk("Branch if Equal (Fail)\r\n");
+	asm volatile (
+		"	.set	push;"
+		"	.set	noreorder;"
+		"	move	%0, $0;"
+		"	beq	%1, %2, 1f;"
+		"	break	0;"
+		"	li	%0, 1;"
+		"1:	.set	pop"
+		: "=r"(d) : "r"(a), "r"(c)
+	);
+	assert(d);
+	/* should print "empty_routine" once */
+	printk("Branch if >= 0 And Link (Success)\r\n");
+	asm volatile (
+		".set	push;"
+		".set	noreorder;"
+		"bgezal	%0, empty_routine;"
+		"break	0;"
+		".set	pop"
+		: /* no output */ : "r"(a)
+	);
+	/* should print "empty_routine" once */
+	printk("Branch if >= 0 And Link (Fail)\r\n");
+	asm volatile (
+		".set	push;"
+		".set	noreorder;"
+		"bgezal	%0, empty_routine;"
+		"break	0;"
+		".set	pop"
+		: /* no output */ : "r"(c)
+	);
+	/* should print "empty_routine" twice */
+	printk("Branch back if not equal (Success and fail)\r\n");
+	asm volatile (
+		"	.set	push;"
+		"	.set	noreorder;"
+		"	b	2f;"
+		"	move	$16, $0;"
+		"1:	li	$16, 1;"
+		"2:	beqz	$16, 1b;"
+		"	break	0;"
+		"	.set	pop"
+		: /* no output */ : /* no input */ : "$16"
+	);
+	printk("Whoa!\r\n");
+}
 
 void trap_init(void)
 {
@@ -41,6 +153,11 @@ void trap_init(void)
 	 * And also cache errors
 	 */
 	memcpy((void *)(ebase + 0x100), &except_generic, 0x80);
+
+	/* force linkage */
+	empty_routine();
+
+	test_skip();
 }
 
 static const char *regname[] = {
@@ -77,7 +194,7 @@ static const char *ex_desc[] = {
 	[EC_cacheerr]	= "Cache Error"
 };
 
-void dump_trapframe(struct trapframe *tf)
+static void dump_trapframe(struct trapframe *tf)
 {
 	int i;
 	for (i = _ZERO; i <= _RA; ++i) {
@@ -137,20 +254,179 @@ static int handle_int(struct trapframe *tf)
 	return -1;
 }
 
+/*
+ * Determine the branch target according to given program counter.
+ *
+ * @pc locates the branching or jumping instruction.
+ */
+static unsigned long branch_target(struct trapframe *tf, unsigned long pc)
+{
+	unsigned int insn = read_insn(pc);
+	unsigned int opcode = OPCODE(insn);
+	unsigned int func, rs, rt, rd;
+	unsigned long offset, branch_pc, cont_pc;
+
+	cont_pc = pc + 8;
+
+	/* Handle jumps */
+	switch (opcode) {
+	case OP_SPECIAL:
+		rs = R_RS(insn);
+		rd = R_RD(insn);
+		func = R_FUNC(insn);
+		switch (func) {
+		case FN_JALR:
+			/* JALR changes destination register (RA in most cases)
+			 * to return address */
+			tf->gpr[rd] = cont_pc;
+			/* fallthru */
+		case FN_JR:
+			/* JR and JALR sets target to where the source register
+			 * is pointing */
+			return tf->gpr[rs];
+		default:
+			goto fail;
+		}
+		break;
+	case OP_JAL:
+		tf->gpr[_RA] = cont_pc;
+		/* fallthru */
+	case OP_J:
+		return (pc & ~J_ACTUAL_INDEX_MASK) | J_INDEX(insn);
+	}
+
+	/* Handle branches */
+	rs = I_RS(insn);
+	offset = I_IOFFSET(insn);
+	/* Offset are added to the address of delay slot, not the branch itself,
+	 * as described in MIPS64 manual */
+	branch_pc = pc + offset + 4;
+
+	switch (opcode) {
+	case OP_REGIMM:
+		func = I_FUNC(insn);
+		switch (func) {
+		case FN_BLTZAL:
+		case FN_BLTZALL:
+			if (tf->gpr[rs] < 0)
+				/* question: will RA be overwritten even if a
+				 * branch doesn't happen? */
+				tf->gpr[_RA] = cont_pc;
+			/* fallthru */
+		case FN_BLTZ:
+		case FN_BLTZL:
+			if (tf->gpr[rs] < 0)
+				return branch_pc;
+			else
+				return cont_pc;
+			break;
+		case FN_BGEZAL:
+		case FN_BGEZALL:
+			if (tf->gpr[rs] >= 0)
+				tf->gpr[_RA] = cont_pc;
+			/* fallthru */
+		case FN_BGEZ:
+		case FN_BGEZL:
+			if (tf->gpr[rs] >= 0)
+				return branch_pc;
+			else
+				return cont_pc;
+			break;
+		default:
+			goto fail;
+		}
+		break;
+	case OP_BLEZ:
+	case OP_BLEZL:
+		if (tf->gpr[rs] <= 0)
+			return branch_pc;
+		else
+			return cont_pc;
+		break;
+	case OP_BGTZ:
+	case OP_BGTZL:
+		if (tf->gpr[rs] > 0)
+			return branch_pc;
+		else
+			return cont_pc;
+		break;
+	}
+
+	/* Handle beq and bne */
+	rt = I_RT(insn);
+	switch (opcode) {
+	case OP_BEQ:
+	case OP_BEQL:
+		if (tf->gpr[rs] == tf->gpr[rt])
+			return branch_pc;
+		else
+			return cont_pc;
+		break;
+	case OP_BNE:
+	case OP_BNEL:
+		if (tf->gpr[rs] != tf->gpr[rt])
+			return branch_pc;
+		else
+			return cont_pc;
+		break;
+	}
+
+fail:
+	printk("instruction address = %016x\r\n", pc);
+	printk("instruction content = %08x\r\n", insn);
+	panic("branch_target(): not a branch instruction\r\n");
+	/* NOTREACHED */
+	return 0;
+}
+
+/* 
+ * Skips the current exception victim instruction and move on if necessary,
+ * i.e. after system call or some of breakpoints.
+ *
+ * This routine should be called after everything is done.
+ */
+static void skip_victim(struct trapframe *tf)
+{
+	/* Check if victim instruction is inside a branch delay slot */
+	if (tf->cp0_cause & CR_BD)
+		tf->cp0_epc = branch_target(tf, tf->cp0_epc);
+	else
+		tf->cp0_epc += 4;
+}
+
+static int handle_bp(struct trapframe *tf)
+{
+	unsigned long victim = (tf->cp0_cause & CR_BD) ?
+	    tf->cp0_epc + 4: tf->cp0_epc;
+	unsigned int code = R_CODE(read_insn(victim));
+	if (code == 0) {
+		printk("Caught breakpoint with code 0, resuming execution\r\n");
+		skip_victim(tf);
+		return 0;
+	} else {
+		printk("Caught breakpoint with code %d\r\n", code);
+	}
+	return -1;
+}
+
 void handle_exception(struct trapframe *tf)
 {
 	int exccode = EXCCODE(tf->cp0_cause);
+	/* Someday I'll merge this switch block into function array */
 	switch (exccode) {
 	case EC_int:
 		if (handle_int(tf) == 0)
-			break;
-		/* else fallthru */
-	default:
-		printk("Caught exception %s (%d)\r\n",
-		    (ex_desc[exccode] == NULL) ? "(unknown)" : ex_desc[exccode],
-		    exccode);
-		dump_trapframe(tf);
-		panic("SUSPENDING SYSTEM...\r\n");
+			return;
+		break;
+	case EC_bp:
+		if (handle_bp(tf) == 0)
+			return;
 		break;
 	}
+
+	printk("Caught exception %s (%d)\r\n",
+	    (ex_desc[exccode] == NULL) ? "(unknown)" : ex_desc[exccode],
+	    exccode);
+	dump_trapframe(tf);
+	panic("SUSPENDING SYSTEM...\r\n");
 }

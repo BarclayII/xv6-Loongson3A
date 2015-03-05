@@ -60,14 +60,14 @@
 struct trapframe {
 	/* General Purpose Registers 
 	 * NOTE: Normally k0 and k1 need not be saved. */
-	unsigned long long gpr[32];
+	unsigned long gpr[32];
 	/* Special registers LO/HI */
-	unsigned long long lo, hi;
+	unsigned long lo, hi;
 	/* Necessary CP0 Registers */
-	unsigned long long cp0_status;
-	unsigned long long cp0_cause;
-	unsigned long long cp0_badvaddr;
-	unsigned long long cp0_epc;
+	unsigned long cp0_status;
+	unsigned long cp0_cause;
+	unsigned long cp0_badvaddr;
+	unsigned long cp0_epc;
 };
 
 #endif	/* !__ASSEMBLER__ */

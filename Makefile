@@ -66,7 +66,7 @@ OBJS		= arch/mips/entry.o \
 		  kern/init.o $(KLIBC_OBJS) \
 		  $(LIB_OBJS)
 
-OUTPUT		= hello
+OUTPUT		= kernel
 
 all: elf
 
