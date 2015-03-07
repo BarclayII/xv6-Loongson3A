@@ -23,6 +23,13 @@
 /* Enable 16K pages */
 #define CONFIG_16KPAGES
 
+/* 
+ * Treat processes and threads alike (as tasks).
+ * Disabling this makes kernel deal with processes and threads differently
+ * (NYI).
+ */
+#define CONFIG_TASK
+
 #ifdef CONFIG_16KPAGES
 #define CONFIG_3LEVEL_PT
 #endif

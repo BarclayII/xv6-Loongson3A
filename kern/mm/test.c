@@ -71,7 +71,7 @@ static void test_mm(void)
 static void test_pgtable(void)
 {
 	printk("**********test_pgtable**********\r\n");
-	pgd_t pgd = kern_mm.pgd;
+	pgd_t pgd = kern_mm.arch_mm.pgd;
 	struct page *p1 = pgalloc();
 	struct page *p2 = pgalloc();
 
@@ -92,6 +92,7 @@ static void test_pgtable(void)
 static void test_tlb(void)
 {
 	printk("**********test_tlb**********\r\n");
+	pgd_t *pgd = &(kern_mm.arch_mm.pgd);
 	struct page *p1 = pgalloc(), *p2 = pgalloc(), *p3 = pgalloc();
 	unsigned long pfn1 = PAGE_TO_PFN(p1), pfn2 = PAGE_TO_PFN(p2);
 	struct pagedesc pdesc1, pdesc2;
@@ -100,12 +101,12 @@ static void test_tlb(void)
 
 	printk("PFN1 = %016x\r\n", pfn1);
 	printk("PFN2 = %016x\r\n", pfn2);
-	pgtable_insert(&(kern_mm.pgd), (addr_t)a, p1, PTE_VALID | PTE_DIRTY,
+	pgtable_insert(pgd, (addr_t)a, p1, PTE_VALID | PTE_DIRTY,
 	    false, NULL);
-	pgtable_insert(&(kern_mm.pgd), (addr_t)b, p2, PTE_VALID | PTE_DIRTY,
+	pgtable_insert(pgd, (addr_t)b, p2, PTE_VALID | PTE_DIRTY,
 	    false, NULL);
-	pgtable_get(&(kern_mm.pgd), (addr_t)a, false, &pdesc1);
-	pgtable_get(&(kern_mm.pgd), (addr_t)b, false, &pdesc2);
+	pgtable_get(pgd, (addr_t)a, false, &pdesc1);
+	pgtable_get(pgd, (addr_t)b, false, &pdesc2);
 	dump_pagedesc((addr_t)a, &pdesc1);
 	dump_pagedesc((addr_t)b, &pdesc2);
 	printk("PTE1 = %016x\r\n", pdesc1.pte[pdesc1.ptx]);
@@ -129,26 +130,26 @@ static void test_tlb(void)
 	assert(*a == pa);
 	assert(*b == pb);
 
-	assert(pgtable_remove(&(kern_mm.pgd), (addr_t)a) == p1);
+	assert(pgtable_remove(pgd, (addr_t)a) == p1);
 #if 0
 	printk("TEST: %016x\r\n", *b);	/* should not panic */
 	printk("TEST: %016x\r\n", *a);	/* should panic */
 #endif
-	assert(pgtable_remove(&(kern_mm.pgd), (addr_t)b) == p2);
+	assert(pgtable_remove(pgd, (addr_t)b) == p2);
 #if 0
 	printk("TEST: %016x\r\n", *a);	/* should panic */
 	printk("TEST: %016x\r\n", *b);	/* should panic */
 #endif
 	printk("Inserting back...\r\n");
-	pgtable_insert(&(kern_mm.pgd), (addr_t)a, p1, PTE_VALID,
+	pgtable_insert(pgd, (addr_t)a, p1, PTE_VALID,
 	    false, NULL);
-	pgtable_get(&(kern_mm.pgd), (addr_t)a, false, &pdesc1);
+	pgtable_get(pgd, (addr_t)a, false, &pdesc1);
 	dump_pagedesc((addr_t)a, &pdesc1);
 	assert(*a == pa);
 #if 0
 	printk("TEST: %016x\r\n", *b);	/* should panic */
 #endif
-	assert(pgtable_remove(&(kern_mm.pgd), (addr_t)a) == p1);
+	assert(pgtable_remove(pgd, (addr_t)a) == p1);
 
 #undef first_free_pfn
 
@@ -165,7 +166,7 @@ static void test_shm(void)
 {
 	printk("**********test_shm**********\r\n");
 
-	pgd_t *pgd = &(kern_mm.pgd);
+	pgd_t *pgd = &(kern_mm.arch_mm.pgd);
 	struct page *p = pgalloc();
 	printk("PFN = %d\r\n", PAGE_TO_PFN(p));
 	unsigned long vaddr1 = 0x800000, vaddr2 = 0x1000000;

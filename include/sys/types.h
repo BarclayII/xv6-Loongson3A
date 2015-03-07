@@ -12,15 +12,15 @@
 #define _SYS_TYPES_H
 
 #ifndef __ASSEMBLER__
-typedef unsigned char uint8, uchar, __u8;
-typedef signed char __s8;
-typedef unsigned short uint16, ushort, __u16;
-typedef signed short __s16;
-typedef unsigned int uint32, uint, __u32;
-typedef signed int __s32;
+typedef unsigned char uint8, uchar, __u8, uint8_t;
+typedef signed char __s8, int8_t;
+typedef unsigned short uint16, ushort, __u16, uint16_t;
+typedef signed short __s16, int16_t;
+typedef unsigned int uint32, uint, __u32, uint32_t;
+typedef signed int __s32, int32_t;
 typedef unsigned long ulong;
-typedef unsigned long long uint64, __u64, u64;
-typedef signed long long int64, __s64;
+typedef unsigned long long uint64, __u64, u64, uint64_t;
+typedef signed long long int64, __s64, int64_t;
 
 /* unsigned long integers defined as ptr_t are only for manipulating addresses */
 typedef unsigned long addr_t;

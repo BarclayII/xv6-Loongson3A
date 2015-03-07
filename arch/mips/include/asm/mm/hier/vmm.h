@@ -18,11 +18,9 @@
 
 struct vm_area_struct;
 
-typedef struct mm_struct {
-	pgd_t			pgd;		/* PGD */
-	unsigned short		asid;
-	struct vm_area_struct	*vma_head;
-} mm_t;
+typedef struct arch_mm_struct {
+	pgd_t	pgd;		/* PGD */
+} arch_mm_t;
 
 /* Page table hierarchy path retrieved by pgtable_get() function */
 struct pagedesc {
@@ -41,10 +39,6 @@ struct pagedesc {
 	unsigned short	pmx;
 	unsigned short	ptx;
 };
-
-extern mm_t kern_high_mm;		/* High memory manager */
-extern mm_t kern_low_mm;		/* Low memory manager */
-#define kern_mm	kern_high_mm
 
 void arch_mm_init(void);
 void dump_pagedesc(addr_t vaddr, struct pagedesc *pdesc);

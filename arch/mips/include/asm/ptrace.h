@@ -70,6 +70,10 @@ struct trapframe {
 	unsigned long cp0_epc;
 };
 
+/* Thread register contexts share the same structure as trapframes, although
+ * their purpose is different. */
+typedef struct trapframe context_t, trapframe_t;
+
 #endif	/* !__ASSEMBLER__ */
 
 #endif

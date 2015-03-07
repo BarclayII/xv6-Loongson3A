@@ -9,11 +9,13 @@
 #ifndef _ASM_THREAD_INFO_H
 #define _ASM_THREAD_INFO_H
 
+#include <asm/stackframe.h>
+
 /*
  * (Hardware) Thread info structure
  */
 
-#define THREAD_SIZE	8192
+#define THREAD_SIZE	KSTACK_SIZE
 #define THREAD_MASK	(THREAD_SIZE - 1)
 
 #ifndef __ASSEMBLER__

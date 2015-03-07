@@ -10,9 +10,16 @@
  * Copyright (C) 2015 Gan Quan <coin2028@hotmail.com>
  */
 
+#ifndef _ASM_STACKFRAME_H
+#define _ASM_STACKFRAME_H
+
 #include <asm/regdef.h>
 #include <asm/cp0regdef.h>
 #include <asm/ptrace.h>
+
+#define KSTACK_SIZE	8192
+
+#ifdef __ASSEMBLER__
 
 	/*
 	 * Get saved kernel sp.
@@ -246,3 +253,6 @@
 	RESTORE_SP_AND_RET
 	.endm
 
+#endif	/* __ASSEMBLER__ */
+
+#endif

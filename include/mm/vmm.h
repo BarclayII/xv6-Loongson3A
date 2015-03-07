@@ -52,6 +52,9 @@ struct page *pgtable_remove(void *pgtable, addr_t vaddr);
  * Virtual memory area structure which maintains a segment of virtual
  * address space.
  */
+
+struct mm_struct;
+
 typedef struct vm_area_struct {
 	addr_t		vma_start;	/* starting address (inclusive) */
 	addr_t		vma_end;	/* ending address (exclusive) */
@@ -62,8 +65,21 @@ typedef struct vm_area_struct {
 #define VMA_EXEC	0x08
 #define VMA_VALID	0x10
 #define VMA_DIRTY	0x20
-	mm_t		*mm;	/* memory management structure */
+	struct mm_struct *mm;	/* memory management structure */
 	list_node_t	node;	/* list node */
 } vm_area_t;
+
+typedef struct mm_struct {
+	arch_mm_t	arch_mm;
+	list_node_t	mmap_list;
+	vm_area_t	*vma_cache;
+	size_t		mmap_count;
+	size_t		owner_count;
+	/* TODO: add lock */
+} mm_t;
+
+extern mm_t kern_high_mm;		/* High memory manager */
+extern mm_t kern_low_mm;		/* Low memory manager */
+#define kern_mm	kern_high_mm
 
 #endif

@@ -36,16 +36,14 @@ pgd_t online_hpt[ASID_MAX + 1];
  */
 void pgtable_bootstrap(void)
 {
-	kern_mm.asid = ASID_KERNEL;
-	kern_mm.vma_head = NULL;
-	kern_mm.pgd = (pgd_t)PAGE_TO_KVADDR(pgdir_new(ASID_KERNEL));
+	kern_mm.arch_mm.pgd = (pgd_t)PAGE_TO_KVADDR(pgdir_new(ASID_KERNEL));
 	printk("Kernel page global directory initialized at %016x\r\n",
-	    kern_mm.pgd);
+	    kern_mm.arch_mm.pgd);
 
 	memset(online_hpt, 0, sizeof(online_hpt));
-	online_hpt[ASID_KERNEL] = kern_mm.pgd;
+	online_hpt[ASID_KERNEL] = kern_mm.arch_mm.pgd;
 	printk("Kernel PGD at %016x registered as ASID %d\r\n",
-	    kern_mm.pgd, ASID_KERNEL);
+	    kern_mm.arch_mm.pgd, ASID_KERNEL);
 }
 
 void dump_pagedesc(addr_t vaddr, struct pagedesc *pdesc)
