@@ -87,18 +87,43 @@ int pgtable_get(void *pgtable, addr_t vaddr, bool create, void *result)
 			ret = -ENOENT;
 	} else {
 #ifdef CONFIG_3LEVEL_PT
-		if (!(pdesc.pmd = pde_get_entry(pdesc.pgd, pdesc.pgx)))
+		if (!(pdesc.pmd = pde_get_entry(pdesc.pgd, pdesc.pgx))) {
 			pdesc.pmd = (pmd_t)pde_add_pgdir(pdesc.pgd, pdesc.pgx);
+			if (pdesc.pmd == NULL)
+				goto nomem;
+		}
 #else
-		if (!(pdesc.pud = pde_get_entry(pdesc.pgd, pdesc.pgx)))
+		if (!(pdesc.pud = pde_get_entry(pdesc.pgd, pdesc.pgx))) {
 			pdesc.pud = (pud_t)pde_add_pgdir(pdesc.pgd, pdesc.pgx);
-		if (!(pdesc.pmd = pde_get_entry(pdesc.pud, pdesc.pux)))
+			if (pdesc.pud == NULL)
+				goto nomem;
+		}
+		if (!(pdesc.pmd = pde_get_entry(pdesc.pud, pdesc.pux))) {
 			pdesc.pmd = (pmd_t)pde_add_pgdir(pdesc.pud, pdesc.pux);
+			if (pdesc.pmd == NULL)
+				goto nomem;
+		}
 #endif
-		if (!(pdesc.pte = pde_get_entry(pdesc.pmd, pdesc.pmx)))
+		if (!(pdesc.pte = pde_get_entry(pdesc.pmd, pdesc.pmx))) {
 			pdesc.pte = (pte_t)pde_add_pgdir(pdesc.pmd, pdesc.pmx);
+			if (pdesc.pte == NULL)
+				goto nomem;
+		}
 	}
+	goto ret;
 
+nomem:
+	ret = -ENOMEM;
+	if (pdesc.pmd && pde_get_entry(pdesc.pmd, pdesc.pmx))
+		pde_remove_pgdir(pdesc.pmd, pdesc.pmx);
+#ifndef CONFIG_3LEVEL_PT
+	if (pdesc.pud && pde_get_entry(pdesc.pud, pdesc.pux))
+		pde_remove_pgdir(pdesc.pud, pdesc.pux);
+#endif
+	if (pdesc.pgd && pde_get_entry(pdesc.pgd, pdesc.pgx))
+		pde_remove_pgdir(pdesc.pgd, pdesc.pgx);
+
+ret:
 	memcpy(result, &pdesc, sizeof(struct pagedesc));
 	return ret;
 }
@@ -123,19 +148,20 @@ int pgtable_insert(void *pgtable, addr_t vaddr, struct page *page,
 
 	pgtable_get(pgtable, vaddr, true, &pdesc);
 
-	if (pdesc.pte[pdesc.ptx] && (pdesc.pte[pdesc.ptx] != vaddr)) {
+	if (pdesc.pte[pdesc.ptx] &&
+	    PADDR_TO_PAGE(pdesc.pte[pdesc.ptx]) != page) {
 		if (!replace)
 			return -EEXIST;
 		else {
-			printk("WARNING: replacing existing PT entry\r\n");
+			pdebug("WARNING: replacing existing PT entry\r\n");
 			p = KVADDR_TO_PAGE(pde_remove_entry(pdesc.pte,
 			    pdesc.ptx));
-			printk("PGD = %016x, VADDR = %016x\r\n",
+			pdebug("PGD = %016x, VADDR = %016x\r\n",
 			    pdesc.pgd, vaddr);
-			printk("OLD = %016x, NEW = %016x\r\n",
+			pdebug("OLD = %016x, NEW = %016x\r\n",
 			    PAGE_TO_KVADDR(p), PAGE_TO_KVADDR(page));
 			if (replaced_page == NULL) {
-				printk("WARNING: replaced_page = NULL\r\n");
+				pdebug("WARNING: replaced_page = NULL\r\n");
 			} else {
 				*replaced_page = p;
 			}
@@ -159,24 +185,24 @@ struct page *pgtable_remove(void *pgtable, addr_t vaddr)
 
 	/*pdebug("Removing PTE for %016x\r\n", vaddr);*/
 	
-	if (pdesc.pte[pdesc.ptx]) {
+	if (pdesc.pte && pdesc.pte[pdesc.ptx]) {
 		p = KVADDR_TO_PAGE(pde_remove_entry(pdesc.pte, pdesc.ptx));
 	}
 	
-	if (pde_empty(pdesc.pte)) {
+	if (pdesc.pte && pde_empty(pdesc.pte)) {
 		pde_remove_pgdir(pdesc.pmd, pdesc.pmx);
 	}
 
 #ifdef CONFIG_3LEVEL_PT
-	if (pde_empty(pdesc.pmd)) {
+	if (pdesc.pmd && pde_empty(pdesc.pmd)) {
 		pde_remove_pgdir(pdesc.pgd, pdesc.pgx);
 	}
 #else
-	if (pde_empty(pdesc.pmd)) {
+	if (pdesc.pmd && pde_empty(pdesc.pmd)) {
 		pde_remove_pgdir(pdesc.pud, pdesc.pux);
 	}
 
-	if (pde_empty(pdesc.pud)) {
+	if (pdesc.pud && pde_empty(pdesc.pud)) {
 		pde_remove_pgdir(pdesc.pgd, pdesc.pgx);
 	}
 #endif

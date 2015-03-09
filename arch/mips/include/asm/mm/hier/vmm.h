@@ -39,6 +39,13 @@ struct pagedesc {
 	unsigned short	ptx;
 };
 
+#define VMA_FREE	0x01
+#define VMA_READ	0x02
+#define VMA_WRITE	0x04
+#define VMA_EXEC	0x08
+#define VMA_VALID	0x10
+#define VMA_DIRTY	0x20
+
 void arch_mm_init(void);
 void dump_pagedesc(addr_t vaddr, struct pagedesc *pdesc);
 
@@ -62,6 +69,16 @@ static inline int arch_map_page(arch_mm_t *arch_mm, addr_t vaddr,
 	if (replace != NULL)
 		pgfree(replace);
 	return 0;
+}
+
+static inline struct page *arch_unmap_page(arch_mm_t *arch_mm, addr_t vaddr)
+{
+	return pgtable_remove(&(arch_mm->pgd), vaddr);
+}
+
+static inline unsigned int page_perm(unsigned long vm_flags)
+{
+	return (vm_flags & VMA_WRITE) ? PTE_VALID|PTE_DIRTY : PTE_VALID;
 }
 
 #endif

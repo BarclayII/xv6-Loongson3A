@@ -28,6 +28,8 @@ void pgdir_check(pgdir_t *pgdir)
 pgdir_t *pgdir_new(asid_t asid)
 {
 	struct page *p = pgalloc();
+	if (p == NULL)
+		return NULL;
 	memset((void *)PAGE_TO_KVADDR(p), 0, PGSIZE);
 	
 	p->type = PGTYPE_PGDIR;
@@ -81,6 +83,8 @@ addr_t pgdir_add_pgdir(pgdir_t *pgdir, unsigned short index)
 {
 	pgdir_check(pgdir);
 	pgdir_t *pd = pgdir_new(pgdir->pgdir.asid);
+	if (pd == NULL)
+		return 0;
 	return pgdir_add_entry(pgdir, index, pd, 0);
 }
 

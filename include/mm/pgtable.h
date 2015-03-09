@@ -38,7 +38,8 @@ int pgtable_get(void *pgtable, addr_t vaddr, bool create, void *result);
  */
 int pgtable_insert(void *pgtable, addr_t vaddr, struct page *page,
     unsigned int perm, bool replace, struct page **replaced_page);
-/* Remove a virtual address. */
+/* Remove a virtual address.  Removing a non-existent virtual address does
+ * nothing. */
 struct page *pgtable_remove(void *pgtable, addr_t vaddr);
 
 #endif

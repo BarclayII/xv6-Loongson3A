@@ -34,12 +34,6 @@ typedef struct vm_area_struct {
 	addr_t		start;		/* starting address (inclusive) */
 	addr_t		end;		/* ending address (exclusive) */
 	unsigned long	flags;		/* various flags... */
-#define VMA_FREE	0x01
-#define VMA_READ	0x02
-#define VMA_WRITE	0x04
-#define VMA_EXEC	0x08
-#define VMA_VALID	0x10
-#define VMA_DIRTY	0x20
 	struct mm_struct *mm;		/* memory management structure */
 	list_node_t	node;		/* list node */
 } vm_area_t;
