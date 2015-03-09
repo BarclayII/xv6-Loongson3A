@@ -187,4 +187,11 @@ struct page *pgtable_remove(void *pgtable, addr_t vaddr)
 	return p;
 }
 
+void arch_mm_new_pgtable(arch_mm_t *arch_mm)
+{
+	/* Allocate a PGD here */
+	arch_mm->pgd = (pgd_t)PAGE_TO_KVADDR(pgdir_new(ASID_INVALID));
+	/* No need to set this PGD online here */
+}
+
 #endif	/* CONFIG_HPT */
