@@ -187,8 +187,8 @@ struct page *alloc_pages(size_t num);
 struct page *alloc_cont_pages(size_t num);
 #define alloc_page()	alloc_pages(1)
 #define pgalloc()	alloc_page()
-void free_pages(struct page *freep);
-#define pgfree(p)	free_pages(p)
+void free_all_pages(struct page *freep);
+#define pgfree(p)	free_all_pages(p)
 
 #define inc_pageref(p)		(++((p)->ref_count))
 #define dec_pageref(p)		(--((p)->ref_count))

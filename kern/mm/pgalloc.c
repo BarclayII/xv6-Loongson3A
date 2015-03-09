@@ -137,7 +137,7 @@ struct page *alloc_cont_pages(size_t num)
 	return pfirst;
 }
 
-void free_pages(struct page *fp)
+void free_all_pages(struct page *fp)
 {	
 	/*
 	 * NOTE: see the last comment in alloc_pages()

@@ -41,7 +41,7 @@ void *kmalloc(size_t bytes)
 static void kfree_large(void *ptr)
 {
 	pdebug("Freeing large chunk at %016x\r\n", ptr);
-	free_pages(KVADDR_TO_PAGE((addr_t)ptr));
+	free_all_pages(KVADDR_TO_PAGE((addr_t)ptr));
 }
 
 void kfree(void *ptr)

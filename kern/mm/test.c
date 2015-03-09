@@ -49,7 +49,7 @@ static void test_mm(void)
 		assert(node_to_page(node)->page_count == 3);
 	}
 	printk("First free PFN after 2nd alloc: %d\r\n", first_free_pfn);
-	free_pages(p1);
+	free_all_pages(p1);
 	printk("First free PFN after 1st free: %d\r\n", first_free_pfn);
 	p3 = alloc_cont_pages(5);
 	printk("PFN for p3: %d\r\n", PAGE_TO_PFN(p3));
@@ -61,9 +61,9 @@ static void test_mm(void)
 		assert(node_to_page(node)->page_count == 5);
 	}
 	printk("First free PFN after 3rd alloc: %d\r\n", first_free_pfn);
-	free_pages(p2);
+	free_all_pages(p2);
 	printk("First free PFN after 2nd free: %d\r\n", first_free_pfn);
-	free_pages(p3);
+	free_all_pages(p3);
 	printk("First free PFN after 3rd free: %d\r\n", first_free_pfn);
 	printk("Current free pages: %d\r\n", nr_free_pages);
 }

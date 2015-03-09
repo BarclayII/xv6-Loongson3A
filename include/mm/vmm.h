@@ -33,7 +33,8 @@ struct mm_struct;
 typedef struct vm_area_struct {
 	addr_t		start;		/* starting address (inclusive) */
 	addr_t		end;		/* ending address (exclusive) */
-	unsigned long	flags;		/* various flags... */
+	/* values of this field are defined in <asm/mm/[imp]/vmm.h> */
+	unsigned long	flags;		/* various flags */
 	struct mm_struct *mm;		/* memory management structure */
 	list_node_t	node;		/* list node */
 } vm_area_t;
