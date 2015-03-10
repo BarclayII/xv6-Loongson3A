@@ -45,7 +45,8 @@
  */
 struct page {
 	unsigned int	ref_count;
-	/* number of pages belong to the same allocated page set */
+	/* number of pages belong to the same allocated page set
+	 * EDIT: only valid in first page */
 	unsigned int	page_count;
 	unsigned int	flags;
 	/*
@@ -170,6 +171,8 @@ static inline bool single_page(struct page *p)
 {
 	return p == next_page(p);
 }
+#define page_split(f, p, n) \
+	list_split(&((f)->list_node), &((p)->list_node), &((n)->list_node))
 
 /* Get page structure from slab */
 #define slab_to_page(s)		member_to_struct(s, struct page, slab)
@@ -187,6 +190,7 @@ struct page *alloc_pages(size_t num);
 struct page *alloc_cont_pages(size_t num);
 #define alloc_page()	alloc_pages(1)
 #define pgalloc()	alloc_page()
+struct page *free_pages(struct page *base, size_t num);
 void free_all_pages(struct page *freep);
 #define pgfree(p)	free_all_pages(p)
 
@@ -197,6 +201,11 @@ static inline void page_unref(struct page *p)
 	dec_pageref(p);
 	if ((p)->ref_count == 0)
 		pgfree(p);
+}
+
+static inline size_t page_count(struct page *p)
+{
+	return first_page(p)->page_count;
 }
 
 void mm_test(void);

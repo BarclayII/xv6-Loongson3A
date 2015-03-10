@@ -33,20 +33,20 @@ static void test_mm(void)
 	printk("First free PFN: %d\r\n", first_free_pfn);
 	p1 = alloc_pages(3);
 	for (i = 0, node = &(p1->list_node);
-	    i < p1->page_count;
+	    i < page_count(p1);
 	    ++i, node = list_next(node)) {
 		printk("\tAllocated PFN: %d\r\n",
 		    PAGE_TO_PFN(node_to_page(node)));
-		assert(node_to_page(node)->page_count == 3);
+		assert(page_count(node_to_page(node)) == 3);
 	}
 	printk("First free PFN after alloc: %d\r\n", first_free_pfn);
 	p2 = alloc_pages(3);
 	for (i = 0, node = &(p2->list_node);
-	    i < p2->page_count;
+	    i < page_count(p2);
 	    ++i, node = list_next(node)) {
 		printk("\tAllocated PFN: %d\r\n",
 		    PAGE_TO_PFN(node_to_page(node)));
-		assert(node_to_page(node)->page_count == 3);
+		assert(page_count(node_to_page(node)) == 3);
 	}
 	printk("First free PFN after 2nd alloc: %d\r\n", first_free_pfn);
 	free_all_pages(p1);
@@ -54,11 +54,11 @@ static void test_mm(void)
 	p3 = alloc_cont_pages(5);
 	printk("PFN for p3: %d\r\n", PAGE_TO_PFN(p3));
 	for (i = 0, node = &(p3->list_node);
-	    i < p3->page_count;
+	    i < page_count(p3);
 	    ++i, node = list_next(node)) {
 		printk("\tAllocated PFN: %d\r\n",
 		    PAGE_TO_PFN(node_to_page(node)));
-		assert(node_to_page(node)->page_count == 5);
+		assert(page_count(node_to_page(node)) == 5);
 	}
 	printk("First free PFN after 3rd alloc: %d\r\n", first_free_pfn);
 	free_all_pages(p2);
@@ -66,6 +66,32 @@ static void test_mm(void)
 	free_all_pages(p3);
 	printk("First free PFN after 3rd free: %d\r\n", first_free_pfn);
 	printk("Current free pages: %d\r\n", nr_free_pages);
+}
+
+static void test_mm2(void)
+{
+	printk("**********test_mm2**********\r\n");
+	size_t freepages = nr_free_pages;
+	printk("Current free pages: %d\r\n", nr_free_pages);
+	struct page *first = alloc_pages(20);
+	struct page *base, *last;
+	int i;
+	printk("After allocation: %d\r\n", nr_free_pages);
+	for (i = 0, base = first; i < 6; ++i, base = next_page(base))
+		/* nothing */;
+	last = free_pages(base, 7);
+	printk("After freeing middle pages: %d\r\n", nr_free_pages);
+	assert(page_count(first) == 6);
+	assert(page_count(last) == 7);
+	free_pages(last, 7);
+	printk("After freeing tail pages: %d\r\n", nr_free_pages);
+	first = free_pages(first, 1);
+	printk("After freeing first single page: %d\r\n", nr_free_pages);
+	first = free_pages(prev_page(first), 1);
+	printk("After freeing last single page: %d\r\n", nr_free_pages);
+	free_all_pages(first);
+	printk("After freeing all pages: %d\r\n", nr_free_pages);
+	assert(nr_free_pages == freepages);
 }
 
 static void test_pgtable(void)
@@ -333,6 +359,7 @@ static void test_slab3(void)
 void mm_test(void)
 {
 	test_mm();
+	test_mm2();
 
 	test_pgtable();
 	test_tlb();

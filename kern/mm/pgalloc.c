@@ -59,7 +59,6 @@ struct page *alloc_pages(size_t num)
 			--i;
 			pdebug("Allocated PFN %d\r\n", PAGE_TO_PFN(p));
 			--nr_free_pages;
-			p->page_count = num;
 		} else
 			panic("Allocated page %d inside free list\r\n",
 			    PAGE_TO_PFN(p));
@@ -73,6 +72,7 @@ struct page *alloc_pages(size_t num)
 	 */
 	EXIT_CRITICAL_SECTION(NULL, flag);
 	pfirst->type = PGTYPE_GENERIC;
+	pfirst->page_count = num;
 	return pfirst;
 }
 
@@ -119,7 +119,6 @@ struct page *alloc_cont_pages(size_t num)
 			page_add_before(pfirst, p);
 		pdebug("Allocated continual PFN %d\r\n", PAGE_TO_PFN(p));
 		pfirst = p;
-		p->page_count = num;
 		--p;
 		--nr_free_pages;
 	}
@@ -134,7 +133,69 @@ struct page *alloc_cont_pages(size_t num)
 
 	EXIT_CRITICAL_SECTION(NULL, flag);
 	pfirst->type = PGTYPE_GENERIC;
+	pfirst->page_count = num;
 	return pfirst;
+}
+
+/*
+ * Freeing given number of pages is astonishing when the allocated page list
+ * is incontiguous.  We may have to shrink the list, or split it into two
+ * parts (the "head" list and the "tail" list).
+ *
+ * Returns the first page following the freed page section.
+ */
+struct page *free_pages(struct page *base, size_t num)
+{
+	if (num == 0 || base == NULL)
+		return NULL;
+
+	struct page *first = first_page(base);
+	struct page *last;
+	struct page *p;
+	size_t i, head_len;
+	size_t total = page_count(first);
+
+	/* Find out the length of "head" list */
+	for (head_len = 0, p = first; p != base; ++head_len, p = next_page(p))
+		assert(is_page_reserved(p));
+
+	/* Find last page (exclusive) */
+	for (i = 0, last = base; i < num; ++i, last = next_page(last))
+		/* Check whether the number given exceeds the number of pages
+		 * available to free */
+		assert((last != first || last == base) &&
+		    is_page_reserved(last));
+
+	/* Mark @last the first page of "tail" list */
+	/* Change the page type first */
+	last->type = base->type = first->type;
+
+	/* Change page count field and first page field in all sublists */
+#define update_page_list(i, from, to, count) \
+	do { \
+		for ((i) = (from); (i) != (to); (i) = next_page(i)) \
+			if (is_tail(i)) \
+				(i)->first_page = (from); \
+			else \
+				(i)->page_count = (count); \
+	} while (0)
+	update_page_list(p, first, base, head_len);
+	update_page_list(p, base, last, num);
+	update_page_list(p, last, first, total - head_len - num);
+#undef update_page_list
+
+	/* Split the page list into two (or three) parts */
+	if (last != first)
+		page_split(first, prev_page(last), last);
+	if (base != first)
+		page_split(first, prev_page(base), base);
+	/* From now on the page list is splitted into @base, @first (possibly)
+	 * and (also possibly) @last. */
+
+	/* Free the pages */
+	free_all_pages(base);
+
+	return last;
 }
 
 void free_all_pages(struct page *fp)
@@ -143,7 +204,7 @@ void free_all_pages(struct page *fp)
 	 * NOTE: see the last comment in alloc_pages()
 	 */
 	struct page *p, *freep, *np, *pfirst;
-	size_t i, num = fp->page_count;
+	size_t i, num = page_count(fp);
 	intr_flag_t intr_flag;
 
 	/* Find the first page in the allocated list */
@@ -168,8 +229,6 @@ void free_all_pages(struct page *fp)
 		/* Free the page and add it back to list */
 		shred_and_release_page(p);
 		page_add_before(freep, p);
-		p->first_page = NULL;
-		p->page_count = 0;
 		pdebug("Freed PFN %d\r\n", PAGE_TO_PFN(p));
 		++nr_free_pages;
 		p = np;

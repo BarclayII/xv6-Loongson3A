@@ -12,6 +12,7 @@
 #define _DS_LIST_H
 
 #include <sync.h>
+#include <assert.h>
 
 /* Dual-linked cycled list */
 typedef struct _list_node {
@@ -56,6 +57,20 @@ static inline void list_del_init(list_node_t *node)
 	p->next = n;
 	n->prev = p;
 	node->prev = node->next = node;
+}
+
+/* Split the list between @prev and @next */
+static inline void list_split(list_node_t *first, list_node_t *prev,
+    list_node_t *next)
+{
+	assert(prev->next == next);
+	assert(next->prev == prev);
+	list_node_t *last = first->prev;
+
+	first->prev = prev;
+	prev->next = first;
+	next->prev = last;
+	last->next = next;
 }
 
 static inline list_node_t *list_prev(list_node_t *node)

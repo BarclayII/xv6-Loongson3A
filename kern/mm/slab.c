@@ -207,7 +207,7 @@ static kmem_slab_t *slab_new(kmem_cache_t *cache)
 	list_init(&(slab->node));
 	slab->cache = cache;
 	slab->index = 0;
-	slab->count = slab->capacity = PGSIZE * p->page_count / cache->size;
+	slab->count = slab->capacity = PGSIZE * page_count(p) / cache->size;
 
 	/* Mark it available */
 	set_slab_available(slab);
