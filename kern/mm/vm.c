@@ -223,7 +223,7 @@ int mm_create_uvm(mm_t *mm, void *addr, size_t len, unsigned long vm_flags)
 	if (start == 0)
 		return 0;
 
-	size_t nr_pages = NR_PAGES_NEEDED(end - start);
+	size_t nr_pages = NR_PAGES_NEEDED(end - start) + 1;
 	struct page *p = alloc_pages(nr_pages);
 	if (p == NULL)
 		return -ENOMEM;
@@ -243,6 +243,8 @@ rollback_pages:
 int mm_destroy_uvm(mm_t *mm, void *addr)
 {
 	vm_area_t *vma = vma_find(mm, addr);
+	if (vma == NULL)
+		return 0;
 	size_t len = vma->end - vma->start;
 	size_t pages = NR_PAGES_NEEDED(len);
 	return unmap_pages(mm, vma->start, pages);

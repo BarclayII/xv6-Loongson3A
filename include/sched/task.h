@@ -50,7 +50,11 @@ typedef struct task_struct {
 	list_node_t	thread_node;	/* Thread list in single process */
 	mm_t		*mm;		/* Memory mapping structure */
 	ptr_t		kstack;		/* Kernel stack (bottom) */
-	unsigned long	heapsize;	/* Extendable heap size */
+	/* For indicating where the user stack should start */
+	ptr_t		progtop;	/* Top of all segments (page-aligned) */
+	/* Expandable heap is placed directly above user stack */
+	ptr_t		ustacktop;	/* Top of user stack */
+	unsigned long	heapsize;	/* Expandable heap size */
 	char		name[PROC_NAME_LEN_MAX];	/* Name */
 	list_node_t	proc_list;	/* Global process list */
 	list_node_t	hash_list;	/* Hash list */
@@ -84,12 +88,11 @@ extern task_group_t task_group;
  * +----------------------------+ . + sizeof(.text)
  * +----------------------------+ sh_addr(.data)
  * |        .data + .bss        |
- * +----------------------------+ . + sizeof(.data) + sizeof(.bss)
+ * +----------------------------+ progtop = . + sizeof(.data) + sizeof(.bss)
  * +----------------------------+ PGROUNDUP(.)
- * |   Thread-specific Stack    |
- * +----------------------------+ . + RLIMIT_STACK (usually aligned)
- * +----------------------------+ PGROUNDUP(.) (maybe equal to .)
- * |       Extendable Heap      |
+ * |   Thread-specific Stack    | (Stack grows down towards lower address)
+ * +----------------------------+ ustacktop = .
+ * |       Extendable Heap      | (Heap grows up towards higher address)
  * +----------------------------+
  * |            ...             |
  * +----------------------------+ XKPHY_START (inaccessible in user mode)
@@ -100,5 +103,8 @@ extern task_group_t task_group;
  * |  Kernel Lowmem Management  |
  * +----------------------------+ CKSEG0_END
  */
+
+#define KSTACK_SIZE	8192
+#define USTACK_SIZE	8192
 
 #endif

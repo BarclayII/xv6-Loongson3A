@@ -85,6 +85,8 @@
 	sd	v1, TF_CAUSE(sp)
 	mfc0	v1, CP0_EPC
 	sd	v1, TF_EPC(sp)
+	dmfc0	v1, CP0_ENTRYHI
+	sd	v1, TF_ENTRYHI(sp)
 	dmfc0	v1, CP0_BADVADDR
 	sd	v1, TF_BADVADDR(sp)
 	sd	t0, TF_T0(sp)
@@ -203,6 +205,8 @@
 	mtc0	v1, CP0_EPC
 	ld	ra, TF_RA(sp)
 	ld	gp, TF_GP(sp)
+	ld	v1, TF_ENTRYHI(sp)
+	dmtc0	v1, CP0_ENTRYHI
 	ld	t9, TF_T9(sp)
 	ld	t0, TF_T0(sp)
 	ld	t1, TF_T1(sp)
