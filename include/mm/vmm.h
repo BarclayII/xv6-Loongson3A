@@ -31,11 +31,16 @@
 struct mm_struct;
 
 typedef struct vm_area_struct {
+	/* @start and @end should be page aligned */
 	addr_t		start;		/* starting address (inclusive) */
 	addr_t		end;		/* ending address (exclusive) */
 	/* values of this field are defined in <asm/mm/[imp]/vmm.h> */
 	unsigned long	flags;		/* various flags */
-	struct mm_struct *mm;		/* memory management structure */
+/* These flags match ELF segment flags */
+#define VMA_EXEC	0x01
+#define VMA_WRITE	0x02
+#define VMA_READ	0x04
+	struct mm_struct *mm;		/* memory mapping structure */
 	list_node_t	node;		/* list node */
 } vm_area_t;
 
@@ -82,7 +87,7 @@ static inline bool vm_area_overlap(vm_area_t *vma1, vm_area_t *vma2)
 }
 
 /*
- * (Per-process) Memory management structure
+ * (Per-process) Memory mapping structure
  */
 
 typedef struct mm_struct {
@@ -104,8 +109,17 @@ typedef struct mm_struct {
 	list_add_after(&((vma)->node), &((new_vma)->node))
 #define vma_delete(vma)	list_del_init(&((vma)->node))
 
-extern mm_t kern_high_mm;		/* High memory manager */
-extern mm_t kern_low_mm;		/* Low memory manager */
+/* Map user address to kernel address.
+ * Note that a user address area may be incontiguous physically. */
+static inline addr_t __uvaddr_to_kvaddr(mm_t *mm, addr_t uvaddr)
+{
+	return PFN_TO_KVADDR(arch_mm_get_pfn(&(mm->arch_mm), uvaddr))
+	    + PAGE_OFF(uvaddr);
+}
+#define UVADDR_TO_KVADDR(mm, uvaddr)	__uvaddr_to_kvaddr(mm, uvaddr)
+
+extern mm_t kern_high_mm;		/* High memory mapping */
+extern mm_t kern_low_mm;		/* Low memory mapping */
 #define kern_mm	kern_high_mm
 
 #endif

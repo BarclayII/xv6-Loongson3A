@@ -92,17 +92,6 @@
 #define XKPHY_BEGIN	0x8000000000000000
 #define XKPHY_END	0xbfffffffffffffff
 
-/*
- * This section mainly maintains page tables because of its large
- * space.
- *
- * I plan to maintain page tables in inverted form, since keeping
- * hundreds of huge page tables seems unrealistic to me...
- *
- * Since this section is Mapped, maybe some TLB entries should be
- * wired to keep the page table addresses staying there...
- */
-
 /* Mapped */
 #define XKSEG_BEGIN	0xc000000000000000
 #define XKSEG_END	0xc00000ff7fffffff
@@ -177,5 +166,34 @@
 #define ASID_KERNEL		0x00	/* Kernel ASID */
 #define ASID_INVALID		0xff	/* Invalid ASID, needs relocation */
 #define ASID_MAX		0xff
+
+#ifndef __ASSEMBLER__
+
+#include <sys/types.h>
+
+static inline bool __userspace(addr_t vaddr)
+{
+	return vaddr <= XUSEG_END;
+}
+
+static inline bool __superspace(addr_t vaddr)
+{
+	return (vaddr >= XSSEG_BEGIN && vaddr <= XSSEG_END) ||
+	    (vaddr >= CSSEG_BEGIN && vaddr <= CSSEG_END);
+}
+
+static inline bool __kernspace(addr_t vaddr)
+{
+	return (vaddr >= XKPHY_BEGIN && vaddr <= XKPHY_END) ||
+	    (vaddr >= XKSEG_BEGIN && vaddr <= XKSEG_END) ||
+	    (vaddr >= CKSEG0_BEGIN && vaddr <= CKSEG1_END) ||
+	    (vaddr >= CKSEG3_BEGIN && vaddr <= CKSEG3_END);
+}
+
+#define USERSPACE(vaddr)	__userspace(vaddr)
+#define SUPERSPACE(vaddr)	(USERSPACE(vaddr) || __superspace(vaddr))
+#define KERNSPACE(vaddr)	(SUPERSPACE(vaddr) || __kernspace(vaddr))
+
+#endif
 
 #endif

@@ -422,6 +422,10 @@ void handle_exception(struct trapframe *tf)
 		if (handle_bp(tf) == 0)
 			return;
 		break;
+	case EC_sys:
+		/* System call */
+		handle_sys(tf);
+		return;
 	}
 
 	printk("Caught exception %s (%d)\r\n",

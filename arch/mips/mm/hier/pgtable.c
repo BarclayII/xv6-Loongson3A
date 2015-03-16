@@ -32,7 +32,7 @@ pgd_t online_hpt[ASID_MAX + 1];
 
 /*
  * Allocate a page global directory for kernel, and initialize the memory
- * manager.
+ * mapping.
  */
 void pgtable_bootstrap(void)
 {
@@ -136,6 +136,7 @@ int pgtable_insert(void *pgtable, addr_t vaddr, struct page *page,
 {
 	struct pagedesc pdesc;
 	struct page *p;
+	int retcode;
 
 	/* Filter NULL address */
 	vaddr = PGADDR_ROUNDDOWN(vaddr);
@@ -146,7 +147,8 @@ int pgtable_insert(void *pgtable, addr_t vaddr, struct page *page,
 	 * Actually, this should be a per-mm_struct lock for page tables.
 	 * Some day I'll move it elsewhere. */
 
-	pgtable_get(pgtable, vaddr, true, &pdesc);
+	if ((retcode = pgtable_get(pgtable, vaddr, true, &pdesc)) != 0)
+		return retcode;
 
 	if (pdesc.pte[pdesc.ptx] &&
 	    PADDR_TO_PAGE(pdesc.pte[pdesc.ptx]) != page) {
@@ -213,11 +215,40 @@ struct page *pgtable_remove(void *pgtable, addr_t vaddr)
 	return p;
 }
 
-void arch_mm_new_pgtable(arch_mm_t *arch_mm)
+int arch_map_page(arch_mm_t *arch_mm, addr_t vaddr, struct page *p,
+    unsigned int perm)
+{
+	int retcode;
+	struct page *replace = NULL;
+	retcode = pgtable_insert(&(arch_mm->pgd), vaddr, p, perm, true,
+	    &replace);
+	if (retcode != 0)
+		return retcode;
+	if (replace != NULL)
+		pgfree(replace);
+	return 0;
+}
+
+unsigned long arch_mm_get_pfn(arch_mm_t *arch_mm, addr_t vaddr)
+{
+	struct pagedesc pdesc;
+
+	pgtable_get(&(arch_mm->pgd), vaddr, false, &pdesc);
+	if (pdesc.pte)
+		return PADDR_TO_PFN(pdesc.pte[pdesc.ptx]);
+	else
+		return 0;
+}
+
+int arch_mm_new_pgtable(arch_mm_t *arch_mm)
 {
 	/* Allocate a PGD here */
-	arch_mm->pgd = (pgd_t)PAGE_TO_KVADDR(pgdir_new(ASID_INVALID));
+	pgdir_t *pgd = pgdir_new(ASID_INVALID);
+	if (pgd == NULL)
+		return -ENOMEM;
+	arch_mm->pgd = (pgd_t)PAGE_TO_KVADDR(pgd);
 	/* No need to set this PGD online here */
+	return 0;
 }
 
 #endif	/* CONFIG_HPT */
