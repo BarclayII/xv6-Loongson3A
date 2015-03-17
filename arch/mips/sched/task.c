@@ -100,6 +100,12 @@ void set_task_ustacktop(task_t *task, ptr_t sp)
 	task->tf->gpr[_SP] = (addr_t)sp;
 }
 
+void set_task_main_args(task_t *task, int argc, char *argv[])
+{
+	task->tf->gpr[_A0] = (unsigned long)argc;
+	task->tf->gpr[_A1] = (unsigned long)argv;
+}
+
 void set_task_entry(task_t *task, addr_t entry)
 {
 	trapframe_t *tf = task->tf;

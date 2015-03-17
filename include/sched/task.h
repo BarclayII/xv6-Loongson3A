@@ -32,9 +32,10 @@ typedef struct task_struct {
 #define EXIT_ZOMBIE		0x0010
 #define EXIT_DEAD		0x0020
 	union {
-		int	exit_code;	/* Exit code */
-		int	signal_code;	/* Signal code */
+		unsigned short	exit;	/* Exit code */
+		unsigned short	signal;	/* Signal code */
 	};
+	unsigned short	on_cpu;		/* CPU # where this task is running */
 	int		asid;		/* ASID if needed */
 	unsigned int	flags;		/* Process flags */
 #define PF_RUNNING	0x0		/* Running */
@@ -44,6 +45,7 @@ typedef struct task_struct {
 	context_t	context;	/* Current context */
 	trapframe_t	*tf;		/* Current trapframe */
 	struct task_struct *parent;	/* Parent task (usually a process) */
+	struct task_struct *first_child;/* First child process */
 	list_node_t	proc_child;	/* Children process list */
 	list_node_t	proc_sib;	/* Sibling process list */
 	struct task_struct *thgroup_leader;	/* Thread group leader */
@@ -56,8 +58,8 @@ typedef struct task_struct {
 	ptr_t		ustacktop;	/* Top of user stack */
 	unsigned long	heapsize;	/* Expandable heap size */
 	char		name[PROC_NAME_LEN_MAX];	/* Name */
-	list_node_t	proc_list;	/* Global process list */
-	list_node_t	hash_list;	/* Hash list */
+	list_node_t	proc_node;	/* Global process list */
+	list_node_t	hash_node;	/* Hash list */
 } task_t;
 
 typedef struct task_group {
@@ -73,7 +75,19 @@ extern task_group_t task_group;
 #define nr_process		(task_group.proc_num)
 #define nr_thread		(task_group.th_num)
 
+#define chnode_to_proc(n)	member_to_struct(n, task_t, proc_child)
+#define chnode_to_task(n)	chnode_to_proc(n)
+#define sibnode_to_proc(n)	member_to_struct(n, task_t, proc_sib)
+#define sibnode_to_task(n)	sibnode_to_proc(n)
+#define thnode_to_thread(n)	member_to_struct(n, task_t, thread_node)
+#define thnode_to_task(n)	thnode_to_thread(n)
+#define procnode_to_proc(n)	member_to_struct(n, task_t, proc_node)
+#define procnode_to_task(n)	procnode_to_proc(n)
+#define hashnode_to_proc(n)	member_to_struct(n, task_t, hash_node)
+#define hashnode_to_task(n)	hashnode_to_proc(n)
+
 #define HASH_LIST_SIZE	32
+#define HASH_LIST_ORDER	5
 
 /*
  * The operating system utilizes XKPHY and CKSEG0 for kernel memory mappings.
