@@ -25,7 +25,6 @@ task_t *task_new(void)
 		task->parent = task;
 		task->thgroup_leader = task;
 
-		list_init(&(task->proc_child));
 		list_init(&(task->proc_sib));
 		list_init(&(task->thread_node));
 		list_init(&(task->proc_node));
@@ -85,19 +84,15 @@ task_t *initproc_init(int argc, char *argv[])
 
 	init->pid = 1;
 	strlcpy(init->name, "init", PROC_NAME_LEN_MAX);
-	++nr_process;
 
 	init->flags = PF_RUNNING;
+
+	add_process(init, init);
 }
 
-void proc_init(void)
+void idle_init(void)
 {
-	/*
-	 * proc_init() spawns two tasks: IDLE and init.
-	 * IDLE always schedules other processes, while init loads user code
-	 * into memory and executes it under user mode.
-	 */
-	task_t *idle, *boot;
+	task_t *idle;
 
 	idle = task_new();
 	if (idle == NULL)
@@ -105,8 +100,9 @@ void proc_init(void)
 	idle->pid = 0;
 	idle->kstack = &init_stack;
 	strlcpy(idle->name, "IDLE", PROC_NAME_LEN_MAX);
-	++nr_process;
 
 	idle->flags = PF_RUNNING;
+
+	add_process(idle, idle);
 }
 

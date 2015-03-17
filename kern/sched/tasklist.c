@@ -30,6 +30,42 @@ static inline int pid_hash(int pid)
 	return (int)hash32((unsigned int)pid, HASH_LIST_ORDER);
 }
 
-void add_task(task_t *task, task_t *parent)
+/* For adding a separate process */
+void add_process(task_t *proc, task_t *parent)
 {
+	assert(task_is_process(proc));
+	assert(task_is_process(parent));
+	int pid_hash = pid_hash(proc->pid);
+	list_add_before(&process_list, &(proc->proc_node));
+	list_add_before(&(process_hash_list[pid_hash]), &(proc->proc_node));
+
+	/* Maintain process tree */
+	proc->parent = parent;
+	if (parent != proc) {
+		task_t *fchild = parent->first_child;
+		if (fchild == NULL)
+			parent->first_child = proc;
+		else
+			list_add_before(&(fchild->proc_sib), &(proc->proc_sib));
+	}
+	++nr_process;
+}
+
+/* For adding a separate thread into thread list of one process */
+void add_thread(task_t *thread, task_t *owner)
+{
+	assert(thread->pid == owner->pid);
+	assert(task_is_process(owner));
+	assert(!task_is_process(thread));
+	thread->thgroup_leader = owner_main;
+	list_add_before(&(owner_main->thread_node), &(thread->thread_node));
+	++nr_thread;
+}
+
+/* NOTE: only removes process itself from process tree, does not remove and
+ *       destroy its threads.  destroy_process() destroys the process and
+ *       all owned threads, releasing resources being held. */
+void remove_process(task_t *proc)
+{
+	assert(task_is_process(proc));
 }

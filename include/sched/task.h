@@ -46,7 +46,6 @@ typedef struct task_struct {
 	trapframe_t	*tf;		/* Current trapframe */
 	struct task_struct *parent;	/* Parent task (usually a process) */
 	struct task_struct *first_child;/* First child process */
-	list_node_t	proc_child;	/* Children process list */
 	list_node_t	proc_sib;	/* Sibling process list */
 	struct task_struct *thgroup_leader;	/* Thread group leader */
 	list_node_t	thread_node;	/* Thread list in single process */
@@ -85,6 +84,9 @@ extern task_group_t task_group;
 #define procnode_to_task(n)	procnode_to_proc(n)
 #define hashnode_to_proc(n)	member_to_struct(n, task_t, hash_node)
 #define hashnode_to_task(n)	hashnode_to_proc(n)
+
+#define task_is_process(task)	((task)->tid == TID_MAIN)
+#define task_is_mainthread(task) task_is_process(task)
 
 #define HASH_LIST_SIZE	32
 #define HASH_LIST_ORDER	5
