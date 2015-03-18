@@ -35,19 +35,31 @@ void add_process(task_t *proc, task_t *parent)
 {
 	assert(task_is_process(proc));
 	assert(task_is_process(parent));
+
 	int pid_hash = pid_hash(proc->pid);
+	int i;
+
 	list_add_before(&process_list, &(proc->proc_node));
-	list_add_before(&(process_hash_list[pid_hash]), &(proc->proc_node));
+	list_add_before(&(process_hash_list[pid_hash]), &(proc->hash_node));
 
 	/* Maintain process tree */
 	proc->parent = parent;
 	if (parent != proc) {
 		task_t *fchild = parent->first_child;
-		if (fchild == NULL)
+		if (fchild == NULL) {
 			parent->first_child = proc;
-		else
+			proc->num_sibling = 1;
+		} else {
+			task_t *t = fchild;
+			for (i = 0; i < fchild->num_sibling; ++i) {
+				++(t->num_sibling);
+				t = next_sib_task(t);
+			}
 			list_add_before(&(fchild->proc_sib), &(proc->proc_sib));
+			proc->num_sibling = fchild->num_sibling;
+		}
 	}
+	++(parent->num_child);
 	++nr_process;
 }
 
@@ -57,8 +69,10 @@ void add_thread(task_t *thread, task_t *owner)
 	assert(thread->pid == owner->pid);
 	assert(task_is_process(owner));
 	assert(!task_is_process(thread));
-	thread->thgroup_leader = owner_main;
-	list_add_before(&(owner_main->thread_node), &(thread->thread_node));
+
+	thread->thgroup_leader = owner;
+	list_add_before(&(owner->thread_node), &(thread->thread_node));
+	++(owner->num_threads);
 	++nr_thread;
 }
 
@@ -68,4 +82,66 @@ void add_thread(task_t *thread, task_t *owner)
 void remove_process(task_t *proc)
 {
 	assert(task_is_process(proc));
+	assert(proc->pid != PID_IDLE && proc->pid != PID_INIT);
+
+	int i;
+	task_t *t;
+
+	list_del_init(&(proc->proc_node));
+	list_del_init(&(proc->hash_node));
+
+	/* Modify parent's first child entry */
+	task_t *parent = proc->parent;
+	if (parent->first_child == proc) {
+		list_node_t *sib = &(proc->proc_sib);
+		if (list_single(sib))
+			parent->first_child = NULL;
+		else
+			parent->first_child = sibnode_to_proc(list_next(sib));
+	}
+	--(parent->num_child);
+
+	/* Delete process from list of its siblings */
+	t = proc;
+	for (i = 0; i < proc->num_sibling; ++i) {
+		--(t->num_sibling);
+		t = next_sib_task(t);
+	}
+	list_del_init(&(proc->proc_sib));
+
+	/* Children are taken over by init */
+	task_t *child = proc->first_child, *ichild = initproc->first_child;
+	unsigned int nr_sibs = task_num_sibling(child);
+	unsigned int nr_isibs = task_num_sibling(ichild);
+	if (child != NULL) {
+		/* Modify the children's parent to init */
+		for (i = 0; i < nr_sibs; ++i) {
+			child->parent = initproc;
+			child->num_sibling = nr_sibs + nr_isibs;
+			child = next_sib_task(child);
+		}
+		if (ichild == NULL) {
+			initproc->first_child = child;
+		} else {
+			for (i = 0; i < nr_isibs; ++i) {
+				ichild->num_sibling = nr_sibs + nr_isibs;
+				ichild = next_sib_task(ichild);
+			}
+			list_concat(&(child->proc_sib), &(ichild->proc_sib));
+		}
+	}
+
+	--nr_process;
 }
+
+/* NOTE: does not actually free resources being held by this thread. */
+void remove_thread(task_t *thread)
+{
+	assert(!task_is_mainthread(thread));
+
+	task_t *owner = thread->thgroup_leader;
+	--(owner->num_threads);
+	list_del_init(&(thread->thread_node));
+	--nr_thread;
+}
+

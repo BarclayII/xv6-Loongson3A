@@ -14,6 +14,7 @@
 #include <asm/thread_info.h>
 
 #define smp_processor_id()	(current_thread_info->cpu_number)
+#define smp_current_task	(current_thread_info->task)
 
 #define NR_CPUS			4
 

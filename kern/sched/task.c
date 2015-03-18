@@ -11,6 +11,8 @@
 
 task_group_t task_group;
 
+task_t *idleproc, *initproc;
+
 task_t *task_new(void)
 {
 	task_t *task;
@@ -45,64 +47,74 @@ int task_setup_mm(task_t *task)
 /*
  * Setup kernel stack and trapframe
  */
-int task_setup_kstack(task_t *task)
+ptr_t task_setup_kstack(task_t *task)
 {
 	task->kstack = kmalloc(KSTACK_SIZE);
 	if (task->kstack == NULL)
-		return -ENOMEM;
+		return NULL;
 	ptr_t sp = task->kstack + KSTACK_SIZE;
-	task->tf = (trapframe_t *)(sp - sizeof(*(task->tf)));
-	return 0;
+	sp -= sizeof(*(task->context));
+	task->context = (context_t *)sp;
+	sp -= sizeof(*(task->tf));
+	task->tf = (trapframe_t *)sp;
+	return sp;
 }
 
-task_t *initproc_init(int argc, char *argv[])
+void initproc_init(int argc, char *argv[])
 {
-	/* init runs in user mode */
-	task_t *init = task_new();
-	task_setup_mm(init);
-	task_setup_kstack(init);
-	task_init_trapframe(init);
-	task_bootstrap_context(init);
-	set_task_user(init);
-	set_task_enable_intr(init);
+	initproc = task_new();
+	if (initproc == NULL)
+		panic("failed to allocate process for init\r\n");
 
-	/* TODO: get entry of init process */
+	/* init runs in user mode */
+	task_setup_mm(initproc);
+	ptr_t sp = task_setup_kstack(initproc);
+	assert(sp != NULL)
+	task_init_trapframe(initproc);
+	task_bootstrap_context(initproc, sp);
+	set_task_user(initproc);
+	set_task_enable_intr(initproc);
+
 	extern void *_binary_ramdisk_init_init_start;
 	extern size_t _binary_ramdisk_init_init_size;
 	addr_t entry;
 	int ret;
 
-	ret = task_load_elf_kmem(init, _binary_ramdisk_init_init_start, &entry);
+	ret = task_load_elf_kmem(initproc, _binary_ramdisk_init_init_start,
+	    &entry);
 	if (ret != 0)
 		panic("init spawning failed with code %d\r\n", ret);
 
-	set_task_ustack(init);
-	ptr_t sp = set_task_argv(init, argc, argv);
-	set_task_ustacktop(init, sp);
-	set_task_main_args(init, argc, (char **)sp);
-	set_task_entry(init, entry);
+	set_task_ustack(initproc);
+	ptr_t sp = set_task_argv(initproc, argc, argv);
+	set_task_ustacktop(initproc, sp);
+	set_task_main_args(initproc, argc, (char **)sp);
+	set_task_entry(initproc, entry);
 
-	init->pid = 1;
-	strlcpy(init->name, "init", PROC_NAME_LEN_MAX);
+	initproc->pid = PID_INIT;
+	strlcpy(initproc->name, "init", PROC_NAME_LEN_MAX);
 
-	init->flags = PF_RUNNING;
+	initproc->flags = PF_RUNNING;
 
-	add_process(init, init);
+	add_process(initproc, initproc);
 }
 
 void idle_init(void)
 {
-	task_t *idle;
-
-	idle = task_new();
-	if (idle == NULL)
+	idleproc = task_new();
+	if (idleproc == NULL)
 		panic("failed to spawn IDLE\r\n");
-	idle->pid = 0;
-	idle->kstack = &init_stack;
-	strlcpy(idle->name, "IDLE", PROC_NAME_LEN_MAX);
+	idleproc->pid = PID_IDLE;
+	idleproc->kstack = &init_stack;
+	strlcpy(idleproc->name, "IDLE", PROC_NAME_LEN_MAX);
 
-	idle->flags = PF_RUNNING;
+	idleproc->flags = PF_RUNNING;
 
-	add_process(idle, idle);
+	add_process(idleproc, idleproc);
 }
 
+void task_init(void)
+{
+	idle_init();
+	initproc_init();
+}

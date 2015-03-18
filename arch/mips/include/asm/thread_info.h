@@ -20,10 +20,13 @@
 
 #ifndef __ASSEMBLER__
 
+struct task_struct;
+
 struct thread_info {
-	unsigned int cpu_number;
-	unsigned int ticks;		/* for clock interrupt */
-	unsigned int compare;		/* for clock interrupt */
+	unsigned int	cpu_number;
+	unsigned int	ticks;		/* for clock interrupt */
+	unsigned int	compare;	/* for clock interrupt */
+	struct task_struct *task;	/* task currently running here */
 };
 
 union thread_stack_info {

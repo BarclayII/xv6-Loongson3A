@@ -21,6 +21,9 @@ typedef struct task_struct {
 	int		tid;		/* Thread ID in process */
 #define TID_MAIN		0
 	int		pid;		/* Process ID (TGID in Linux) */
+	/* Predefined process IDs */
+#define PID_IDLE		0
+#define PID_INIT		1
 	unsigned short	state;		/* Running state */
 #define TASK_INTERRUPTIBLE	0x0001
 #define TASK_UNINTERRUPTIBLE	0x0002
@@ -42,13 +45,8 @@ typedef struct task_struct {
 #define PF_STARTING	0x00000002	/* being created */
 #define PF_EXITING	0x00000004	/* getting shut down */
 #define PF_SIGNALED	0x00000400	/* killed by a signal */
-	context_t	context;	/* Current context */
+	context_t	*context;	/* Current context */
 	trapframe_t	*tf;		/* Current trapframe */
-	struct task_struct *parent;	/* Parent task (usually a process) */
-	struct task_struct *first_child;/* First child process */
-	list_node_t	proc_sib;	/* Sibling process list */
-	struct task_struct *thgroup_leader;	/* Thread group leader */
-	list_node_t	thread_node;	/* Thread list in single process */
 	mm_t		*mm;		/* Memory mapping structure */
 	ptr_t		kstack;		/* Kernel stack (bottom) */
 	/* For indicating where the user stack should start */
@@ -57,6 +55,18 @@ typedef struct task_struct {
 	ptr_t		ustacktop;	/* Top of user stack */
 	unsigned long	heapsize;	/* Expandable heap size */
 	char		name[PROC_NAME_LEN_MAX];	/* Name */
+	/* Process tree related */
+	struct task_struct *parent;	/* Parent task (usually a process) */
+	struct task_struct *first_child;/* First child process */
+	list_node_t	proc_sib;	/* Sibling process list */
+	unsigned int	num_child;	/* Number of children */
+	unsigned int	num_sibling;	/* Number of siblings */
+	/* Thread list per process */
+	struct task_struct *thgroup_leader;	/* Thread group leader */
+	list_node_t	thread_node;	/* Thread list in single process */
+	/* Available in main thread only */
+	unsigned long	num_threads;	/* Number of threads */
+	/* Global process list related */
 	list_node_t	proc_node;	/* Global process list */
 	list_node_t	hash_node;	/* Hash list */
 } task_t;
@@ -69,13 +79,12 @@ typedef struct task_group {
 } task_group_t;
 
 extern task_group_t task_group;
+
 #define process_list		(task_group.proc_list)
 #define process_hash_list	(task_group.hash_list)
 #define nr_process		(task_group.proc_num)
 #define nr_thread		(task_group.th_num)
 
-#define chnode_to_proc(n)	member_to_struct(n, task_t, proc_child)
-#define chnode_to_task(n)	chnode_to_proc(n)
 #define sibnode_to_proc(n)	member_to_struct(n, task_t, proc_sib)
 #define sibnode_to_task(n)	sibnode_to_proc(n)
 #define thnode_to_thread(n)	member_to_struct(n, task_t, thread_node)
@@ -85,11 +94,21 @@ extern task_group_t task_group;
 #define hashnode_to_proc(n)	member_to_struct(n, task_t, hash_node)
 #define hashnode_to_task(n)	hashnode_to_proc(n)
 
+#define next_sib_task(t)	sibnode_to_task(list_next(&((t)->proc_sib)))
+
 #define task_is_process(task)	((task)->tid == TID_MAIN)
 #define task_is_mainthread(task) task_is_process(task)
 
+static inline unsigned int task_num_sibling(task_t *t)
+{
+	return (t == NULL) ? 0 : t->num_sibling;
+}
+
 #define HASH_LIST_SIZE	32
 #define HASH_LIST_ORDER	5
+
+/* IDLE and init are cached globally */
+extern task_t *idleproc, *initproc;
 
 /*
  * The operating system utilizes XKPHY and CKSEG0 for kernel memory mappings.

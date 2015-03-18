@@ -7,7 +7,8 @@ void task_init_trapframe(task_t *task)
 	tf->cp0_cause = read_c0_cause();
 	tf->cp0_badvaddr = read_c0_badvaddr();
 	tf->cp0_entryhi = ASID_INVALID;
-	/* not setting up EPC yet */
+	/* not setting up EPC yet; this is done after locating entry and
+	 * performed inside set_task_entry() */
 }
 
 /*
@@ -15,14 +16,15 @@ void task_init_trapframe(task_t *task)
  * which further redirects control to program entry by restoring tweaked
  * trapframe.
  */
-void task_bootstrap_context(task_t *task)
+void task_bootstrap_context(task_t *task, ptr_t sp)
 {
-	context_t *ctx = &(task->context);
+	context_t *ctx = task->context;
 	ctx->cp0_status = read_c0_status();
 	ctx->cp0_cause = read_c0_cause();
 	ctx->cp0_badvaddr = read_c0_badvaddr();
 	ctx->cp0_epc = (unsigned long)forkret;
 	ctx->gpr[_A0] = (unsigned long)task->tf;
+	ctx->gpr[_SP] = (unsigned long)sp;
 }
 
 void set_task_user(task_t *task)
