@@ -83,8 +83,7 @@ static inline list_node_t *list_next(list_node_t *node)
 	return node->next;
 }
 
-static inline list_node_t *list_concat_headless(list_node_t *list1,
-    list_node_t *list2)
+static inline void list_concat_headless(list_node_t *list1, list_node_t *list2)
 {
 	list_node_t *list1_last = list1->prev;
 	list_node_t *list2_last = list2->prev;

@@ -39,7 +39,13 @@ struct pagedesc {
 	unsigned short	ptx;
 };
 
+struct page;
+
 void arch_mm_init(void);
 void dump_pagedesc(addr_t vaddr, struct pagedesc *pdesc);
+int arch_map_page(arch_mm_t *arch_mm, addr_t vaddr, struct page *p,
+    unsigned int perm);
+int new_arch_mm(arch_mm_t *arch_mm);
+void destroy_arch_mm(arch_mm_t *arch_mm);
 
 #endif

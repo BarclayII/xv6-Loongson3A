@@ -1,3 +1,16 @@
+/*
+ * Copyright (C) 2015 Gan Quan <coin2028@hotmail.com>
+ *
+ * This program is free software; you can redistribute  it and/or modify it
+ * under  the terms of  the GNU General  Public License as published by the
+ * Free Software Foundation;  either version 2 of the  License, or (at your
+ * option) any later version.
+ *
+ */
+
+#include <mm/vmm.h>
+#include <mm/mmap.h>
+#include <sys/types.h>
 
 int arch_map_page(arch_mm_t *arch_mm, addr_t vaddr, struct page *p,
     unsigned int perm)
@@ -13,8 +26,9 @@ int arch_map_page(arch_mm_t *arch_mm, addr_t vaddr, struct page *p,
 	return 0;
 }
 
-void new_arch_mm(arch_mm_t *arch_mm)
+int new_arch_mm(arch_mm_t *arch_mm)
 {
+	return 0;
 }
 
 void destroy_arch_mm(arch_mm_t *arch_mm)

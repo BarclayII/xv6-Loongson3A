@@ -1,3 +1,15 @@
+/*
+ * Copyright (C) 2015 Gan Quan <coin2028@hotmail.com>
+ *
+ * This program is free software; you can redistribute  it and/or modify it
+ * under  the terms of  the GNU General  Public License as published by the
+ * Free Software Foundation;  either version 2 of the  License, or (at your
+ * option) any later version.
+ *
+ */
+
+#include <mm/vmm.h>
+#include <mm/kmalloc.h>
 
 mm_t *mm_new(void)
 {
@@ -49,9 +61,9 @@ void mm_destroy(mm_t *mm)
 	/* Traverse virtual memory area list and free each node */
 	vm_area_t *vma, *next_vma;
 	for (vma = first_vma(mm); vma != end_vma(mm); vma = next_vma) {
-		vma_delete(vma);
+		vm_area_remove(mm, vma);
 		next_vma = list_next(vma);
-		kfree(vma);
+		vm_area_destroy(vma);
 	}
 	/* Destroy @mm itself */
 	kfree(mm);
@@ -97,8 +109,7 @@ int vm_area_insert(mm_t *mm, vm_area_t *new_vma)
  * mapping structure @mm.
  * @vaddr should be page-aligned.
  */
-int map_pages(mm_t *mm, addr_t vaddr, struct page *p,
-    unsigned long flags)
+int map_pages(mm_t *mm, addr_t vaddr, struct page *p, unsigned long flags)
 {
 	assert(PAGE_OFF(vaddr) == 0);
 

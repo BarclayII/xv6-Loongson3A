@@ -215,8 +215,8 @@ struct page *pgtable_remove(void *pgtable, addr_t vaddr)
 	return p;
 }
 
-int arch_map_page(arch_mm_t *arch_mm, addr_t vaddr, struct page *p,
-    unsigned int perm)
+int arch_map_page(struct arch_mm_struct *arch_mm, addr_t vaddr,
+    struct page *p, unsigned int perm)
 {
 	int retcode;
 	struct page *replace = NULL;
@@ -229,7 +229,7 @@ int arch_map_page(arch_mm_t *arch_mm, addr_t vaddr, struct page *p,
 	return 0;
 }
 
-unsigned long arch_mm_get_pfn(arch_mm_t *arch_mm, addr_t vaddr)
+unsigned long arch_mm_get_pfn(struct arch_mm_struct *arch_mm, addr_t vaddr)
 {
 	struct pagedesc pdesc;
 
@@ -240,7 +240,7 @@ unsigned long arch_mm_get_pfn(arch_mm_t *arch_mm, addr_t vaddr)
 		return 0;
 }
 
-int arch_mm_new_pgtable(arch_mm_t *arch_mm)
+int arch_mm_new_pgtable(struct arch_mm_struct *arch_mm)
 {
 	/* Allocate a PGD here */
 	pgdir_t *pgd = pgdir_new(ASID_INVALID);

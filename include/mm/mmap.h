@@ -186,13 +186,13 @@ static inline bool single_page(struct page *p)
 /* Get page structure from slab */
 #define slab_to_page(s)		member_to_struct(s, struct page, slab)
 
-struct free_page_group {
+struct free_page_set {
 	list_node_t	head;
 	unsigned long	count;
 };
-extern struct free_page_group free_page_group;
-#define free_page_list	(list_node_t *)(&(free_page_group.head))
-#define nr_free_pages	(free_page_group.count)
+extern struct free_page_set free_page_set;
+#define free_page_list	(list_node_t *)(&(free_page_set.head))
+#define nr_free_pages	(free_page_set.count)
 
 void mm_init(void);
 struct page *alloc_pages(size_t num);

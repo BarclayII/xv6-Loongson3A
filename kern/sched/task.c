@@ -9,7 +9,7 @@
  *
  */
 
-task_group_t task_group;
+task_set_t task_set;
 
 task_t *idleproc, *initproc;
 

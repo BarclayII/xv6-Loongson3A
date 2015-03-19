@@ -12,6 +12,11 @@
 #ifndef _SCHED_TASK_H
 #define _SCHED_TASK_H
 
+#include <asm/ptrace.h>
+#include <mm/vmm.h>
+#include <sys/types.h>
+#include <ds/list.h>
+
 /*
  * Somewhat an extremely-simplified version of Linux's task_struct, or an
  * extended version of xv6's struct proc.
@@ -71,19 +76,19 @@ typedef struct task_struct {
 	list_node_t	hash_node;	/* Hash list */
 } task_t;
 
-typedef struct task_group {
+typedef struct task_set {
 	list_node_t	proc_list;	/* Global process list */
 	list_node_t	hash_list[HASH_LIST_SIZE]; /* Process hash list */
 	size_t		proc_num;	/* Number of total processes */
 	size_t		th_num;		/* Number of total threads */
-} task_group_t;
+} task_set_t;
 
-extern task_group_t task_group;
+extern task_set_t task_set;
 
-#define process_list		(task_group.proc_list)
-#define process_hash_list	(task_group.hash_list)
-#define nr_process		(task_group.proc_num)
-#define nr_thread		(task_group.th_num)
+#define process_list		(task_set.proc_list)
+#define process_hash_list	(task_set.hash_list)
+#define nr_process		(task_set.proc_num)
+#define nr_thread		(task_set.th_num)
 
 #define sibnode_to_proc(n)	member_to_struct(n, task_t, proc_sib)
 #define sibnode_to_task(n)	sibnode_to_proc(n)
@@ -141,5 +146,25 @@ extern task_t *idleproc, *initproc;
 
 #define KSTACK_SIZE	8192
 #define USTACK_SIZE	8192
+
+/* Hardware specific */
+void task_init_trapframe(task_t *task);
+void task_bootstrap_context(task_t *task, ptr_t sp);
+void set_task_user(task_t *task);
+void set_task_enable_intr(task_t *task);
+int set_task_ustack(task_t *task);
+addr_t set_task_argv(task_t *task, int argc, char *argv[]);
+void set_task_ustacktop(task_t *task, ptr_t sp);
+void set_task_main_args(task_t *task, int argc, char *argv[]);
+void set_task_entry(task_t *task, addr_t entry);
+/* Hardware independent */
+task_t *task_new(void);
+int task_setup_mm(task_t *task);
+ptr_t task_setup_kstack(task_t *task);
+
+void initproc_init(int argc, char *argv[]);
+void idle_init(void);
+
+void task_init(void);
 
 #endif

@@ -32,7 +32,7 @@ unsigned long base_pfn;
  */
 struct page *page_array;
 
-struct free_page_group free_page_group;
+struct free_page_set free_page_set;
 
 static void init_free_page_list(size_t nr_pages, size_t nr_occupied)
 {

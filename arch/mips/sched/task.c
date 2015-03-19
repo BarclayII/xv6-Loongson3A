@@ -1,3 +1,17 @@
+/*
+ * Copyright (C) 2015 Gan Quan <coin2028@hotmail.com>
+ *
+ * This program is free software; you can redistribute  it and/or modify it
+ * under  the terms of  the GNU General  Public License as published by the
+ * Free Software Foundation;  either version 2 of the  License, or (at your
+ * option) any later version.
+ *
+ */
+
+#include <asm/ptrace.h>
+#include <asm/mipsregs.h>
+#include <sched/task.h>
+#include <sys/types.h>
 
 void task_init_trapframe(task_t *task)
 {
@@ -80,9 +94,7 @@ addr_t set_task_argv(task_t *task, int argc, char *argv[])
 
 	/* Push strings and their addresses one by one */
 	ptr_t strtop = task->ustacktop;
-	ptr_t kstrtop;
 	ptr_t argvtop = strtop - argv_space;
-	ptr_t kargvtop;
 	size_t strspace;
 	for (i = argc - 1; i >= 0; --i) {
 		strspace = POW2_ROUNDUP(strlen(argv[i]) + 1, 3);

@@ -50,10 +50,12 @@ OBJS		= arch/mips/entry.o \
 		  arch/mips/cache.o \
 		  arch/mips/mm/init.o \
 		  arch/mips/mm/tlbops.o \
+		  arch/mips/mm/pgtable.o \
 		  arch/mips/mm/hier/pgtable.o \
 		  arch/mips/mm/hier/pgdir.o \
 		  arch/mips/mach/loongson3a5/irq.o \
 		  arch/mips/mach/loongson3a5/addrconf.o \
+		  arch/mips/sched/task.o \
 		  drivers/serial/uart16550.o \
 		  drivers/serial/prom_printk.o \
 		  kern/mm/init.o \
@@ -61,6 +63,8 @@ OBJS		= arch/mips/entry.o \
 		  kern/mm/test.o \
 		  kern/mm/slab.o \
 		  kern/mm/kmalloc.o \
+		  kern/mm/vm.o \
+		  kern/sched/task.o \
 		  kern/printk.o \
 		  kern/panic.o \
 		  kern/init.o $(KLIBC_OBJS) \
