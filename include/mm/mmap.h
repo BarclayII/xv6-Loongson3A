@@ -23,6 +23,11 @@
 
 #define NR_PAGES_NEEDED(bytes)	RSHIFT_ROUNDUP(bytes, PGSHIFT)
 #define NR_PAGES_AVAIL(bytes)	RSHIFT_ROUNDDOWN(bytes, PGSHIFT)
+static inline size_t __nr_pages_spanned(addr_t addr, size_t size)
+{
+	return ((addr + size - 1) >> PGSHIFT) - (addr >> PGSHIFT) + 1;
+}
+#define NR_PAGES_SPANNED(addr, size)	__nr_pages_spanned(addr, size)
 #define PAGES_TO_BYTES(n)	((n) << PGSHIFT)
 
 #define BYTES_TO_KB(x)		RSHIFT_ROUNDUP(x, 10)
@@ -36,6 +41,10 @@
 
 #define PGADDR_ROUNDDOWN(addr)	POW2_ROUNDDOWN(addr, PGSHIFT)
 #define PGADDR_ROUNDUP(addr)	POW2_ROUNDUP(addr, PGSHIFT)
+#define PGROUNDDOWN(addr)	PGADDR_ROUNDDOWN(addr)
+#define PGROUNDUP(addr)		PGADDR_ROUNDUP(addr)
+#define PGSTART(addr)		PGROUNDDOWN(addr)
+#define PGEND(addr)		(PGSTART(addr) + PGSIZE)
 
 #define MAX_LOW_MEM_MB		256
 #define MAX_LOW_MEM		MB_TO_BYTES(MAX_LOW_MEM_MB)
@@ -177,13 +186,13 @@ static inline bool single_page(struct page *p)
 /* Get page structure from slab */
 #define slab_to_page(s)		member_to_struct(s, struct page, slab)
 
-struct free_page_group {
+struct free_page_set {
 	list_node_t	head;
 	unsigned long	count;
 };
-extern struct free_page_group free_page_group;
-#define free_page_list	(list_node_t *)(&(free_page_group.head))
-#define nr_free_pages	(free_page_group.count)
+extern struct free_page_set free_page_set;
+#define free_page_list	(list_node_t *)(&(free_page_set.head))
+#define nr_free_pages	(free_page_set.count)
 
 void mm_init(void);
 struct page *alloc_pages(size_t num);
@@ -192,7 +201,7 @@ struct page *alloc_cont_pages(size_t num);
 #define pgalloc()	alloc_page()
 struct page *free_pages(struct page *base, size_t num);
 void free_all_pages(struct page *freep);
-#define pgfree(p)	free_all_pages(p)
+#define pgfree(p)	free_pages(p, 1)
 
 #define inc_pageref(p)		(++((p)->ref_count))
 #define dec_pageref(p)		(--((p)->ref_count))

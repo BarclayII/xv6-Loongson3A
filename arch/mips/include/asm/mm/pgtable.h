@@ -54,6 +54,18 @@
 
 #ifndef __ASSEMBLER__
 extern pgd_t online_hpt[];
+
+/* Determine page table flags from virtual memory area flags */
+unsigned int page_perm(unsigned long vm_flags);
+
+struct arch_mm_struct;
+struct page;
+
+int arch_map_page(struct arch_mm_struct *arch_mm, addr_t vaddr,
+    struct page *p, unsigned int perm);
+struct page *arch_unmap_page(struct arch_mm_struct *arch_mm, addr_t vaddr);
+unsigned long arch_mm_get_pfn(struct arch_mm_struct *arch_mm, addr_t vaddr);
+int arch_mm_new_pgtable(struct arch_mm_struct *arch_mm);
 #endif	/* !__ASSEMBLER__ */
 
 #endif	/* CONFIG_HPT */
