@@ -206,7 +206,7 @@ int unmap_pages(mm_t *mm, addr_t vaddr, size_t nr_pages)
 
 	/* Unmap and free physical pages */
 	struct page *p;
-	addr_t cur_vaddr;
+	addr_t cur_vaddr = vaddr;
 	int i;
 	for (i = 0; i < nr_pages; ++i) {
 		/* Unmapped pages are automatically handled in the following
@@ -253,7 +253,7 @@ rollback_pages:
 /* Destroy an entire virtual memory area which contains @addr */
 int mm_destroy_uvm(mm_t *mm, void *addr)
 {
-	vm_area_t *vma = vm_area_find(mm, addr);
+	vm_area_t *vma = vm_area_find(mm, (addr_t)addr);
 	if (vma == NULL)
 		return 0;
 	size_t len = vma->end - vma->start;
@@ -275,9 +275,9 @@ static inline int copy_uvm(mm_t *mm, void *uvaddr, void *kvaddr, size_t len,
 	addr_t start = 0, end = 0;
 	void *kuvaddr;
 	for (i = 0; i < nr_pages; ++i) {
-		start = (addr_t)((i == 0) ? uvaddr : end);
-		end = (addr_t)((i == nr_pages - 1) ? uvaddr + len :
-		    PGEND(start));
+		start = (i == 0) ? (addr_t)uvaddr : end;
+		end = (i == nr_pages - 1) ? (addr_t)(uvaddr + len) :
+		    PGEND(start);
 		kuvaddr = (void *)UVADDR_TO_KVADDR(mm, start);
 		if (to)
 			memcpy(kvaddr, kuvaddr, end - start);

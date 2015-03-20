@@ -229,6 +229,11 @@ int arch_map_page(struct arch_mm_struct *arch_mm, addr_t vaddr,
 	return 0;
 }
 
+struct page *arch_unmap_page(arch_mm_t *arch_mm, addr_t vaddr)
+{
+	return pgtable_remove(&(arch_mm->pgd), vaddr);
+}
+
 unsigned long arch_mm_get_pfn(struct arch_mm_struct *arch_mm, addr_t vaddr)
 {
 	struct pagedesc pdesc;
