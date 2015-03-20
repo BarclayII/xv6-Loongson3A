@@ -45,7 +45,7 @@ int task_setup_mm(task_t *task)
 }
 
 /*
- * Setup kernel stack and trapframe
+ * Setup kernel stack
  */
 ptr_t task_setup_kstack(task_t *task)
 {
@@ -53,10 +53,12 @@ ptr_t task_setup_kstack(task_t *task)
 	if (task->kstack == NULL)
 		return NULL;
 	ptr_t sp = task->kstack + KSTACK_SIZE;
+	/* Reserve a portion for storing process context */
 	sp -= sizeof(*(task->context));
 	task->context = (context_t *)sp;
 	sp -= sizeof(*(task->tf));
 	task->tf = (trapframe_t *)sp;
+	sp += sizeof(*(task->tf));
 	return sp;
 }
 

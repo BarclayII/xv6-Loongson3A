@@ -36,9 +36,10 @@ void task_bootstrap_context(task_t *task, ptr_t sp)
 	ctx->cp0_status = read_c0_status();
 	ctx->cp0_cause = read_c0_cause();
 	ctx->cp0_badvaddr = read_c0_badvaddr();
-	ctx->cp0_epc = (unsigned long)forkret;
 	ctx->gpr[_A0] = (unsigned long)task->tf;
-	ctx->gpr[_SP] = (unsigned long)sp;
+	ctx->gpr[_RA] = (unsigned long)forkret;
+	/* see switch.S */
+	ctx->gpr[_T8] = (unsigned long)sp;
 }
 
 void set_task_user(task_t *task)
