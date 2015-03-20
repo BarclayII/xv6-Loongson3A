@@ -31,11 +31,16 @@
 struct mm_struct;
 
 typedef struct vm_area_struct {
+	/* @start and @end should be page aligned */
 	addr_t		start;		/* starting address (inclusive) */
 	addr_t		end;		/* ending address (exclusive) */
 	/* values of this field are defined in <asm/mm/[imp]/vmm.h> */
 	unsigned long	flags;		/* various flags */
-	struct mm_struct *mm;		/* memory management structure */
+/* These flags match ELF segment flags */
+#define VMA_EXEC	0x01
+#define VMA_WRITE	0x02
+#define VMA_READ	0x04
+	struct mm_struct *mm;		/* memory mapping structure */
 	list_node_t	node;		/* list node */
 } vm_area_t;
 
@@ -82,7 +87,7 @@ static inline bool vm_area_overlap(vm_area_t *vma1, vm_area_t *vma2)
 }
 
 /*
- * (Per-process) Memory management structure
+ * (Per-process) Memory mapping structure
  */
 
 typedef struct mm_struct {
@@ -97,15 +102,36 @@ typedef struct mm_struct {
 #define node_to_vma(n)	member_to_struct(n, vm_area_t, node)
 #define first_vma(mm)	node_to_vma(list_next(&((mm)->mmap_list)))
 #define end_vma(mm)	node_to_vma(&((mm)->mmap_list))
-#define next_vma(vma)	node_to_vma(list_next(&((vma)->node)))
+#define next_vma(vma)	node_to_vma(list_next(&((vma)->list_node)))
 #define vma_add_before(vma, new_vma) \
 	list_add_before(&((vma)->node), &((new_vma)->node))
 #define vma_add_after(vma, new_vma) \
 	list_add_after(&((vma)->node), &((new_vma)->node))
 #define vma_delete(vma)	list_del_init(&((vma)->node))
 
-extern mm_t kern_high_mm;		/* High memory manager */
-extern mm_t kern_low_mm;		/* Low memory manager */
+/* Map user address to kernel address.
+ * Note that a user address area may be incontiguous physically. */
+static inline addr_t __uvaddr_to_kvaddr(mm_t *mm, addr_t uvaddr)
+{
+	return PFN_TO_KVADDR(arch_mm_get_pfn(&(mm->arch_mm), uvaddr))
+	    + PAGE_OFF(uvaddr);
+}
+#define UVADDR_TO_KVADDR(mm, uvaddr)	__uvaddr_to_kvaddr(mm, uvaddr)
+
+extern mm_t kern_high_mm;		/* High memory mapping */
+extern mm_t kern_low_mm;		/* Low memory mapping */
 #define kern_mm	kern_high_mm
+
+mm_t *mm_new(void);
+void mm_destroy(mm_t *mm);
+vm_area_t *vm_area_find(mm_t *mm, addr_t addr);
+int vm_area_insert(mm_t *mm, vm_area_t *new_vma);
+
+int map_pages(mm_t *mm, addr_t vaddr, struct page *p, unsigned long flags);
+int unmap_pages(mm_t *mm, addr_t vaddr, size_t nr_pages);
+int mm_create_uvm(mm_t *mm, void *addr, size_t len, unsigned long vm_flags);
+int mm_destroy_uvm(mm_t *mm, void *addr);
+int copy_to_uvm(mm_t *mm, void *uvaddr, void *kvaddr, size_t len);
+int copy_from_uvm(mm_t *mm, void *uvaddr, void *kvaddr, size_t len);
 
 #endif

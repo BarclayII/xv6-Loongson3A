@@ -39,13 +39,6 @@ struct pagedesc {
 	unsigned short	ptx;
 };
 
-#define VMA_FREE	0x01
-#define VMA_READ	0x02
-#define VMA_WRITE	0x04
-#define VMA_EXEC	0x08
-#define VMA_VALID	0x10
-#define VMA_DIRTY	0x20
-
 void arch_mm_init(void);
 void dump_pagedesc(addr_t vaddr, struct pagedesc *pdesc);
 
