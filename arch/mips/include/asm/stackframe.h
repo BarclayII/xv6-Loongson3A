@@ -43,14 +43,6 @@
 	sd	\stackp, kernelsp(k0)
 	.endm
 
-	.macro	SAVE_EX
-	.set	push
-	.set	noat
-	sd	k0, TF_K0(sp)
-	sd	k1, TF_K1(sp)
-	.set	pop
-	.endm
-
 	.macro	SAVE_SOME
 	.set	push
 	.set	noat
@@ -139,7 +131,6 @@
 	.endm
 
 	.macro	SAVE_ALL
-	SAVE_EX
 	SAVE_SOME
 	SAVE_AT
 	SAVE_TEMP
@@ -219,14 +210,6 @@
 	.set	pop
 	.endm
 
-	.macro	RESTORE_EX
-	.set	push
-	.set	noat
-	ld	k0, TF_K0(sp)
-	ld	k1, TF_K1(sp)
-	.set	pop
-	.endm
-
 	/*
 	 * sp should be restored last since it points to the trapframe.
 	 */
@@ -244,7 +227,6 @@
 	RESTORE_STATIC
 	RESTORE_AT
 	RESTORE_SOME
-	RESTORE_EX
 	RESTORE_SP
 	.endm
 
@@ -253,7 +235,6 @@
 	RESTORE_STATIC
 	RESTORE_AT
 	RESTORE_SOME
-	RESTORE_EX
 	RESTORE_SP_AND_RET
 	.endm
 
