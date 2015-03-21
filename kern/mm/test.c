@@ -361,6 +361,25 @@ void test_uvm(void)
 	printk("**********test_uvm**********\r\n");
 	mm_t *mm = mm_new();
 	assert(mm != NULL);
+	printk("PGD = %016x\r\n", mm->arch_mm.pgd);
+
+	int ret;
+	char *msg = "Hello from UVM\r\n";
+	char msg2[20];
+
+	ret = mm_create_uvm(mm, (void *)0x400000, 5 * PGSIZE,
+	    VMA_READ | VMA_WRITE);
+	assert(ret == 0);
+	assert(!unmap_pages(mm, 0x400000 + 2 * PGSIZE, 1));
+	assert(!copy_to_uvm(mm, (void *)0x400080, msg, strlen(msg) + 1));
+	assert(!copy_from_uvm(mm, (void *)0x400080, msg2, strlen(msg) + 1));
+	printk("%s", msg2);
+	assert(strcmp(msg, msg2) == 0);
+	assert(!mm_destroy_uvm(mm, (void *)0x400000));
+	assert(!mm_destroy_uvm(mm, (void *)(0x400000 + 3 * PGSIZE)));
+
+	mm_destroy(mm);
+	printk("free pages: %d\r\n", nr_free_pages);
 }
 
 void mm_test(void)
@@ -375,4 +394,6 @@ void mm_test(void)
 	test_slab();
 	test_slab2();
 	test_slab3();
+
+	test_uvm();
 }
