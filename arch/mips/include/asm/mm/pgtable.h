@@ -66,6 +66,7 @@ int arch_map_page(struct arch_mm_struct *arch_mm, addr_t vaddr,
 struct page *arch_unmap_page(struct arch_mm_struct *arch_mm, addr_t vaddr);
 unsigned long arch_mm_get_pfn(struct arch_mm_struct *arch_mm, addr_t vaddr);
 int arch_mm_new_pgtable(struct arch_mm_struct *arch_mm);
+void arch_mm_destroy_pgtable(struct arch_mm_struct *arch_mm);
 #endif	/* !__ASSEMBLER__ */
 
 #endif	/* CONFIG_HPT */

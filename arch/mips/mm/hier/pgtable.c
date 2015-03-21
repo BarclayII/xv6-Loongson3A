@@ -256,4 +256,9 @@ int arch_mm_new_pgtable(struct arch_mm_struct *arch_mm)
 	return 0;
 }
 
+void arch_mm_destroy_pgtable(struct arch_mm_struct *arch_mm)
+{
+	pgdir_delete((pgdir_t *)KVADDR_TO_PAGE((addr_t)(arch_mm->pgd)));
+}
+
 #endif	/* CONFIG_HPT */

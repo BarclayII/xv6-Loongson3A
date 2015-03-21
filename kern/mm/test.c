@@ -356,6 +356,13 @@ static void test_slab3(void)
 	printk("succeeded\r\n");
 }
 
+void test_uvm(void)
+{
+	printk("**********test_uvm**********\r\n");
+	mm_t *mm = mm_new();
+	assert(mm != NULL);
+}
+
 void mm_test(void)
 {
 	test_mm();

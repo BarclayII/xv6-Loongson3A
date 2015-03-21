@@ -14,14 +14,7 @@
 #include <config.h>
 #include <assert.h>
 #include <mm/pgtable.h>
-
-#ifdef CONFIG_HPT
-#include <asm/mm/hier/vmm.h>
-#endif
-
-#ifdef CONFIG_IPT
-#include <asm/mm/inv/vmm.h>
-#endif
+#include <asm/mm/vmm.h>
 
 /*
  * Virtual memory area structure which maintains a segment of virtual

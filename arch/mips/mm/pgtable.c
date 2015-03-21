@@ -14,11 +14,13 @@
 
 int new_arch_mm(arch_mm_t *arch_mm)
 {
-	return 0;
+	arch_mm->asid = ASID_INVALID;
+	return arch_mm_new_pgtable(arch_mm);
 }
 
 void destroy_arch_mm(arch_mm_t *arch_mm)
 {
+	arch_mm_destroy_pgtable(arch_mm);
 }
 
 unsigned int page_perm(unsigned long vm_flags)
