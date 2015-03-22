@@ -14,6 +14,9 @@
 #include <asm/mm/tlb.h>
 #include <asm/mipsregs.h>
 #include <printk.h>
+#include <sched/task.h>
+
+task_t *online_task[ASID_MAX + 1];
 
 static void init_tlb(void)
 {
@@ -26,6 +29,7 @@ void arch_mm_init(void)
 #ifdef CONFIG_16KPAGES
 	write_c0_pagemask(3 << 13);
 #endif
+	memset(online_task, 0, sizeof(online_task));
 	pgtable_bootstrap();
 	init_tlb();
 }

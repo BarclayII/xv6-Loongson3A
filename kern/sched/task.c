@@ -56,9 +56,6 @@ ptr_t task_setup_kstack(task_t *task)
 	/* Reserve a portion for storing process context */
 	sp -= sizeof(*(task->context));
 	task->context = (context_t *)sp;
-	sp -= sizeof(*(task->tf));
-	task->tf = (trapframe_t *)sp;
-	sp += sizeof(*(task->tf));
 	return sp;
 }
 
@@ -72,7 +69,7 @@ void initproc_init(int argc, char *argv[])
 	task_setup_mm(initproc);
 	ptr_t sp = task_setup_kstack(initproc);
 	assert(sp != NULL)
-	task_init_trapframe(initproc);
+	sp = task_init_trapframe(initproc, sp);
 	task_bootstrap_context(initproc, sp);
 	set_task_user(initproc);
 	set_task_enable_intr(initproc);

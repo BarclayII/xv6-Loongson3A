@@ -142,6 +142,15 @@ extern task_t *idleproc, *initproc;
  * +----------------------------+ CKSEG0_START
  * |  Kernel Lowmem Management  |
  * +----------------------------+ CKSEG0_END
+ *
+ * Kernel Stack Layout:
+ * +----------------------------+ kstack + KSTACK_SIZE
+ * |      Process Context       |
+ * +----------------------------+
+ * |         Trapframe          |
+ * +----------------------------+
+ * |            ...             |
+ * +----------------------------+ kstack
  */
 
 #define KSTACK_SIZE	8192

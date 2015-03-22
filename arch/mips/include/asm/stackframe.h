@@ -56,7 +56,8 @@
 	andi	k0, ST_KSU
 	beqz	k0, 8f
 	move	k1, sp
-	/* If it is called from user mode, kernel sp should be retrieved. */
+	/* If it is called from user mode, switch to corresponding kernel
+	 * stack. */
 	get_saved_sp
 	/* Save original (user or kernel) sp into k0 */
 8:	move	k0, sp
