@@ -10,6 +10,8 @@
 
 #include <mm/vmm.h>
 #include <mm/kmalloc.h>
+#include <string.h>
+#include <errno.h>
 
 mm_t *mm_new(void)
 {
@@ -22,6 +24,18 @@ mm_t *mm_new(void)
 	new_arch_mm(&(mm->arch_mm));
 
 	return mm;
+}
+
+static void vm_area_dump(vm_area_t *vma)
+{
+	if (vma == NULL) {
+		pdebug("VMA NULL\r\n");
+	} else {
+		pdebug("VMA %016x\r\n", vma);
+		pdebug("\tVMA Start: %016x\r\n", vma->start);
+		pdebug("\tVMA End  : %016x\r\n", vma->end);
+		pdebug("\tVMA Flags: %016x\r\n", vma->flags);
+	}
 }
 
 vm_area_t *vm_area_new(addr_t start, addr_t end, unsigned long flags)
@@ -62,7 +76,7 @@ void mm_destroy(mm_t *mm)
 	vm_area_t *vma, *next_vma;
 	for (vma = first_vma(mm); vma != end_vma(mm); vma = next_vma) {
 		vm_area_remove(mm, vma);
-		next_vma = list_next(vma);
+		next_vma = next_vma(vma);
 		vm_area_destroy(vma);
 	}
 	/* Destroy @mm itself */
@@ -149,8 +163,6 @@ rollback_map:
 
 rollback_vma:
 	vm_area_destroy(vma);
-
-ret:
 	return retcode;
 }
 
@@ -165,7 +177,8 @@ ret:
  */
 int unmap_pages(mm_t *mm, addr_t vaddr, size_t nr_pages)
 {
-	assert(PAGE_OFF(vaddr) == 0)
+	pdebug("Unmapping %d pages from %016x\r\n", nr_pages, vaddr);
+	assert(PAGE_OFF(vaddr) == 0);
 	/* Find the starting virtual address area */
 	vm_area_t *vma_start = vm_area_find(mm, vaddr);
 	addr_t vaddr_end = vaddr + nr_pages * PGSIZE;
@@ -175,6 +188,8 @@ int unmap_pages(mm_t *mm, addr_t vaddr, size_t nr_pages)
 	if (vma_start == NULL || vma_end == NULL)
 		return -ENOENT;
 
+	vm_area_dump(vma_start);
+	vm_area_dump(vma_end);
 	/* Update virtual memory area list */
 	if (vma_start == vma_end) {
 		/* The region is inside one virtual memory area entry */
@@ -184,11 +199,16 @@ int unmap_pages(mm_t *mm, addr_t vaddr, size_t nr_pages)
 		if ((head == NULL && vma_start->start != vaddr) ||
 		    (tail == NULL && vaddr_end != vma_start->end))
 			goto rollback_vma;
+		/* Clear cached entry if it's being unmapped */
+		if (vma_start == mm->vma_last_accessed)
+			mm->vma_last_accessed = NULL;
 		vm_area_remove(mm, vma_start);
 		vm_area_destroy(vma_start);
 		/* NULL cases handled in vm_area_insert() */
 		vm_area_insert(mm, head);
 		vm_area_insert(mm, tail);
+		vm_area_dump(head);
+		vm_area_dump(tail);
 	} else {
 		/* The region ends reside in different entries */
 		vm_area_t *vma;
@@ -196,22 +216,27 @@ int unmap_pages(mm_t *mm, addr_t vaddr, size_t nr_pages)
 		for (vma = next_vma(vma_start);
 		    vma != vma_end;
 		    vma = next_vma(vma)) {
+			/* Clear cached entry if it's being unmapped */
+			if (vma == mm->vma_last_accessed)
+				mm->vma_last_accessed = NULL;
 			vm_area_remove(mm, vma);
 			vm_area_destroy(vma);
 		}
 		/* Update entries at both ends */
 		vma_start->end = vaddr;
 		vma_end->start = vaddr + nr_pages * PGSIZE;
+		vm_area_dump(vma_start);
+		vm_area_dump(vma_end);
 	}
 
 	/* Unmap and free physical pages */
 	struct page *p;
-	addr_t cur_vaddr;
+	addr_t cur_vaddr = vaddr;
 	int i;
 	for (i = 0; i < nr_pages; ++i) {
 		/* Unmapped pages are automatically handled in the following
 		 * two functions.  No special handling is needed. */
-		p = arch_unmap_page(mm, cur_vaddr);
+		p = arch_unmap_page(&(mm->arch_mm), cur_vaddr);
 		cur_vaddr += PGSIZE;
 		pgfree(p);
 	}
@@ -230,11 +255,10 @@ int mm_create_uvm(mm_t *mm, void *addr, size_t len, unsigned long vm_flags)
 		return 0;
 
 	addr_t start = PGADDR_ROUNDDOWN((addr_t)addr);
-	addr_t end = PGADDR_ROUNDDOWN((addr_t)addr + len);
 	if (start == 0)
 		return 0;
 
-	size_t nr_pages = NR_PAGES_NEEDED(end - start) + 1;
+	size_t nr_pages = NR_PAGES_SPANNED((addr_t)addr, len);
 	struct page *p = alloc_pages(nr_pages);
 	if (p == NULL)
 		return -ENOMEM;
@@ -253,9 +277,10 @@ rollback_pages:
 /* Destroy an entire virtual memory area which contains @addr */
 int mm_destroy_uvm(mm_t *mm, void *addr)
 {
-	vm_area_t *vma = vma_find(mm, addr);
+	vm_area_t *vma = vm_area_find(mm, (addr_t)addr);
 	if (vma == NULL)
 		return 0;
+	vm_area_dump(vma);
 	size_t len = vma->end - vma->start;
 	size_t pages = NR_PAGES_NEEDED(len);
 	return unmap_pages(mm, vma->start, pages);
@@ -275,11 +300,14 @@ static inline int copy_uvm(mm_t *mm, void *uvaddr, void *kvaddr, size_t len,
 	addr_t start = 0, end = 0;
 	void *kuvaddr;
 	for (i = 0; i < nr_pages; ++i) {
-		start = (addr_t)((i == 0) ? uvaddr : end);
-		end = (addr_t)((i == nr_pages - 1) ? uvaddr + len :
-		    PGEND(start));
+		start = (i == 0) ? (addr_t)uvaddr : end;
+		end = (i == nr_pages - 1) ? (addr_t)(uvaddr + len) :
+		    PGEND(start);
 		kuvaddr = (void *)UVADDR_TO_KVADDR(mm, start);
-		if (to)
+		pdebug("Copying %016x(%016x) [%d] %s %016x\r\n",
+		    start, kuvaddr, end - start,
+		    to ? "<-" : "->", kvaddr);
+		if (!to)
 			memcpy(kvaddr, kuvaddr, end - start);
 		else
 			memcpy(kuvaddr, kvaddr, end - start);

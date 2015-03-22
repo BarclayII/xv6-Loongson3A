@@ -220,6 +220,8 @@ int arch_map_page(struct arch_mm_struct *arch_mm, addr_t vaddr,
 {
 	int retcode;
 	struct page *replace = NULL;
+	pdebug("Mapping physical %016x to virtual %016x (in PGD %016x)\r\n",
+	    PAGE_TO_PADDR(p), vaddr, arch_mm->pgd);
 	retcode = pgtable_insert(&(arch_mm->pgd), vaddr, p, perm, true,
 	    &replace);
 	if (retcode != 0)
@@ -227,6 +229,11 @@ int arch_map_page(struct arch_mm_struct *arch_mm, addr_t vaddr,
 	if (replace != NULL)
 		pgfree(replace);
 	return 0;
+}
+
+struct page *arch_unmap_page(arch_mm_t *arch_mm, addr_t vaddr)
+{
+	return pgtable_remove(&(arch_mm->pgd), vaddr);
 }
 
 unsigned long arch_mm_get_pfn(struct arch_mm_struct *arch_mm, addr_t vaddr)
@@ -249,6 +256,11 @@ int arch_mm_new_pgtable(struct arch_mm_struct *arch_mm)
 	arch_mm->pgd = (pgd_t)PAGE_TO_KVADDR(pgd);
 	/* No need to set this PGD online here */
 	return 0;
+}
+
+void arch_mm_destroy_pgtable(struct arch_mm_struct *arch_mm)
+{
+	pgdir_delete((pgdir_t *)KVADDR_TO_PAGE((addr_t)(arch_mm->pgd)));
 }
 
 #endif	/* CONFIG_HPT */

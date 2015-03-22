@@ -18,7 +18,8 @@
 #include <asm/mm/hier/pgdir.h>
 
 typedef struct arch_mm_struct {
-	pgd_t	pgd;		/* PGD */
+	pgd_t		pgd;		/* PGD */
+	unsigned long	asid;		/* ASID */
 } arch_mm_t;
 
 /* Page table hierarchy path retrieved by pgtable_get() function */
@@ -41,11 +42,6 @@ struct pagedesc {
 
 struct page;
 
-void arch_mm_init(void);
 void dump_pagedesc(addr_t vaddr, struct pagedesc *pdesc);
-int arch_map_page(arch_mm_t *arch_mm, addr_t vaddr, struct page *p,
-    unsigned int perm);
-int new_arch_mm(arch_mm_t *arch_mm);
-void destroy_arch_mm(arch_mm_t *arch_mm);
 
 #endif

@@ -12,32 +12,15 @@
 #include <mm/mmap.h>
 #include <sys/types.h>
 
-int arch_map_page(arch_mm_t *arch_mm, addr_t vaddr, struct page *p,
-    unsigned int perm)
-{
-	int retcode;
-	struct page *replace = NULL;
-	retcode = pgtable_insert(&(arch_mm->pgd), vaddr, p, perm, true,
-	    &replace);
-	if (retcode != 0)
-		return retcode;
-	if (replace != NULL)
-		pgfree(replace);
-	return 0;
-}
-
 int new_arch_mm(arch_mm_t *arch_mm)
 {
-	return 0;
+	arch_mm->asid = ASID_INVALID;
+	return arch_mm_new_pgtable(arch_mm);
 }
 
 void destroy_arch_mm(arch_mm_t *arch_mm)
 {
-}
-
-struct page *arch_unmap_page(arch_mm_t *arch_mm, addr_t vaddr)
-{
-	return pgtable_remove(&(arch_mm->pgd), vaddr);
+	arch_mm_destroy_pgtable(arch_mm);
 }
 
 unsigned int page_perm(unsigned long vm_flags)

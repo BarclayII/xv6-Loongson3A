@@ -25,7 +25,6 @@ struct task_struct;
 struct thread_info {
 	unsigned int	cpu_number;
 	unsigned int	ticks;		/* for clock interrupt */
-	unsigned int	compare;	/* for clock interrupt */
 	struct task_struct *task;	/* task currently running here */
 };
 

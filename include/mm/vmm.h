@@ -14,14 +14,7 @@
 #include <config.h>
 #include <assert.h>
 #include <mm/pgtable.h>
-
-#ifdef CONFIG_HPT
-#include <asm/mm/hier/vmm.h>
-#endif
-
-#ifdef CONFIG_IPT
-#include <asm/mm/inv/vmm.h>
-#endif
+#include <asm/mm/vmm.h>
 
 /*
  * Virtual memory area structure which maintains a segment of virtual
@@ -102,7 +95,7 @@ typedef struct mm_struct {
 #define node_to_vma(n)	member_to_struct(n, vm_area_t, node)
 #define first_vma(mm)	node_to_vma(list_next(&((mm)->mmap_list)))
 #define end_vma(mm)	node_to_vma(&((mm)->mmap_list))
-#define next_vma(vma)	node_to_vma(list_next(&((vma)->list_node)))
+#define next_vma(vma)	node_to_vma(list_next(&((vma)->node)))
 #define vma_add_before(vma, new_vma) \
 	list_add_before(&((vma)->node), &((new_vma)->node))
 #define vma_add_after(vma, new_vma) \
