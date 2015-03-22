@@ -64,10 +64,6 @@ OBJS		= arch/mips/entry.o \
 		  kern/mm/slab.o \
 		  kern/mm/kmalloc.o \
 		  kern/mm/vm.o \
-<<<<<<< HEAD
-		  kern/sched/task.o \
-=======
->>>>>>> master
 		  kern/printk.o \
 		  kern/panic.o \
 		  kern/init.o $(KLIBC_OBJS) \
