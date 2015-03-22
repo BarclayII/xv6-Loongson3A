@@ -220,6 +220,8 @@ int arch_map_page(struct arch_mm_struct *arch_mm, addr_t vaddr,
 {
 	int retcode;
 	struct page *replace = NULL;
+	pdebug("Mapping physical %016x to virtual %016x (in PGD %016x)\r\n",
+	    PAGE_TO_PADDR(p), vaddr, arch_mm->pgd);
 	retcode = pgtable_insert(&(arch_mm->pgd), vaddr, p, perm, true,
 	    &replace);
 	if (retcode != 0)
