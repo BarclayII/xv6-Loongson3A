@@ -9,9 +9,13 @@
  */
 
 #include <asm/ptrace.h>
+#include <asm/cp0regdef.h>
 #include <asm/mipsregs.h>
+#include <asm/addrspace.h>
+#include <asm/syscalldefs.h>
 #include <sched/task.h>
 #include <sys/types.h>
+#include <string.h>
 
 ptr_t task_init_trapframe(task_t *task, ptr_t sp)
 {
@@ -62,11 +66,9 @@ void set_task_enable_intr(task_t *task)
 
 int set_task_ustack(task_t *task)
 {
-	int ret, i;
+	int ret;
 	struct page *p = pgalloc();
-	trapframe_t *tf = task->tf;
-	ptr_t sp;
-	ret = map_pages(task->mm, (void *)(task->progtop), p, USTACK_PERM);
+	ret = map_pages(task->mm, (addr_t)task->progtop, p, USTACK_PERM);
 	if (ret != 0)
 		goto rollback_page;
 	/* Set user stack top (or heap bottom) */
@@ -112,7 +114,7 @@ addr_t set_task_argv(task_t *task, int argc, char *argv[])
 			return 0;
 	}
 
-	return argvtop;
+	return (addr_t)argvtop;
 }
 
 void set_task_ustacktop(task_t *task, ptr_t sp)

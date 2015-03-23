@@ -31,15 +31,14 @@ CFLAGS		+= -nostdinc -nostdlib -g -mips64r2 $(INCFLAG)
 LDSCRIPT	= kernel.ld
 LDFLAGS		= -N -T$(LDSCRIPT)
 
-KLIBC_OBJS	= klibc/snprintf.o \
-		  klibc/strtoul.o \
-		  klibc/strcmp.o \
-		  klibc/strlen.o \
-		  klibc/memset.o \
-		  klibc/memcpy.o \
-		  klibc/rand.o
-
-LIB_OBJS	=
+LIBC_OBJS	= lib/libc/stdio/snprintf.o \
+		  lib/libc/stdlib/strtoul.o \
+		  lib/libc/stdlib/rand.o \
+		  lib/libc/string/strlcpy.o \
+		  lib/libc/string/strcmp.o \
+		  lib/libc/string/strlen.o \
+		  lib/libc/string/memset.o \
+		  lib/libc/string/memcpy.o
 
 OBJS		= arch/mips/entry.o \
 		  arch/mips/setup.o \
@@ -53,9 +52,13 @@ OBJS		= arch/mips/entry.o \
 		  arch/mips/mm/pgtable.o \
 		  arch/mips/mm/hier/pgtable.o \
 		  arch/mips/mm/hier/pgdir.o \
+		  arch/mips/mm/hier/pgfault.o \
 		  arch/mips/mach/loongson3a5/irq.o \
 		  arch/mips/mach/loongson3a5/addrconf.o \
 		  arch/mips/sched/task.o \
+		  arch/mips/syscall/fork.o \
+		  arch/mips/syscall/forkret.o \
+		  arch/mips/syscall/syscall.o \
 		  drivers/serial/uart16550.o \
 		  drivers/serial/prom_printk.o \
 		  kern/mm/init.o \
@@ -64,10 +67,10 @@ OBJS		= arch/mips/entry.o \
 		  kern/mm/slab.o \
 		  kern/mm/kmalloc.o \
 		  kern/mm/vm.o \
+		  kern/fs/write.o \
 		  kern/printk.o \
 		  kern/panic.o \
-		  kern/init.o $(KLIBC_OBJS) \
-		  $(LIB_OBJS)
+		  kern/init.o $(LIBC_OBJS)
 
 OUTPUT		= kernel
 

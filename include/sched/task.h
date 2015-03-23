@@ -76,6 +76,9 @@ typedef struct task_struct {
 	list_node_t	hash_node;	/* Hash list */
 } task_t;
 
+#define HASH_LIST_SIZE	32
+#define HASH_LIST_ORDER	5
+
 typedef struct task_set {
 	list_node_t	proc_list;	/* Global process list */
 	list_node_t	hash_list[HASH_LIST_SIZE]; /* Process hash list */
@@ -108,9 +111,6 @@ static inline unsigned int task_num_sibling(task_t *t)
 {
 	return (t == NULL) ? 0 : t->num_sibling;
 }
-
-#define HASH_LIST_SIZE	32
-#define HASH_LIST_ORDER	5
 
 /* IDLE and init are cached globally */
 extern task_t *idleproc, *initproc;
@@ -156,8 +156,10 @@ extern task_t *idleproc, *initproc;
 #define KSTACK_SIZE	8192
 #define USTACK_SIZE	8192
 
+#define USTACK_PERM	(VMA_READ | VMA_WRITE)
+
 /* Hardware specific */
-void task_init_trapframe(task_t *task);
+ptr_t task_init_trapframe(task_t *task, ptr_t sp);
 void task_bootstrap_context(task_t *task, ptr_t sp);
 void set_task_user(task_t *task);
 void set_task_enable_intr(task_t *task);

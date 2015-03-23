@@ -13,6 +13,7 @@
 #include <asm/trap.h>
 #include <asm/decode.h>
 #include <asm/mm/tlb.h>
+#include <asm/mm/pgtable.h>
 #include <asm/thread_info.h>
 #include <drivers/uart16550.h>
 #include <irqregs.h>

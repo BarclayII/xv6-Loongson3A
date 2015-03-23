@@ -164,6 +164,7 @@
 #define KSEG3		CKSEG3
 
 #define ASID_KERNEL		0x00	/* Kernel ASID */
+#define ASID_MIN		0x01
 #define ASID_INVALID		0xff	/* Invalid ASID, needs relocation */
 #define ASID_MAX		0xff
 

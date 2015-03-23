@@ -74,7 +74,7 @@ unsigned long arch_mm_get_pfn(struct arch_mm_struct *arch_mm, addr_t vaddr);
 int arch_mm_new_pgtable(struct arch_mm_struct *arch_mm);
 void arch_mm_destroy_pgtable(struct arch_mm_struct *arch_mm);
 
-void handle_pgfault(struct trapframe *tf);
+int handle_pgfault(struct trapframe *tf);
 #endif	/* !__ASSEMBLER__ */
 
 #endif	/* CONFIG_HPT */

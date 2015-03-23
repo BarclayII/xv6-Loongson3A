@@ -5,6 +5,7 @@
 #include <printk.h>
 #include <stddef.h>
 #include <errno.h>
+#include <fs/sysfile.h>
 
 #define MAX_WRITE_LEN	BUFSIZ
 
