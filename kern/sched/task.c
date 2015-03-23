@@ -75,7 +75,6 @@ void initproc_init(int argc, char *argv[])
 	set_task_enable_intr(initproc);
 
 	extern void *_binary_ramdisk_init_init_start;
-	extern size_t _binary_ramdisk_init_init_size;
 	addr_t entry;
 	int ret;
 

@@ -70,14 +70,16 @@ OBJS		= arch/mips/entry.o \
 		  kern/fs/write.o \
 		  kern/printk.o \
 		  kern/panic.o \
-		  kern/init.o $(LIBC_OBJS)
+		  kern/init.o $(LIBC_OBJS) \
+
+BINS		= ramdisk/init/init
 
 OUTPUT		= kernel
 
 all: elf
 
-elf: $(OBJS)
-	$(LD) $(LDFLAGS) -o $(OUTPUT) $^
+elf: $(OBJS) $(BINS)
+	$(LD) $(LDFLAGS) -o $(OUTPUT) $(OBJS) -b binary $(BINS)
 	$(OBJDUMP) -S $(OUTPUT) >kernel.s
 
 install: all
@@ -85,6 +87,12 @@ install: all
 
 clean:
 	rm -rf $(OBJS) $(OUTPUT)
+	cd ramdisk/init && make clean
 
 .S.o:
 	$(CC) $(CFLAGS) -c $< -o $*.o
+
+ramdisk/init/init:
+	cd ramdisk/init && make
+
+

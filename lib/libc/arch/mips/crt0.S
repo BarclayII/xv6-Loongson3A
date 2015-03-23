@@ -1,5 +1,9 @@
 
-NESTED(_start, 0, sp)
+#include <asm/asm.h>
+#include <asm/regdef.h>
+#include <asm/syscall.h>
+
+NESTED(__start, 0, sp)
 	.set	push
 	.set	reorder
 	jal	main
@@ -10,4 +14,4 @@ NESTED(_start, 0, sp)
 	syscall
 	/* NOTREACHED */
 	.set	pop
-END(_start)
+END(__start)
