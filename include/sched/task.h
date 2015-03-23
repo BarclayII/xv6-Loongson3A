@@ -44,7 +44,7 @@ typedef struct task_struct {
 		unsigned short	signal;	/* Signal code */
 	};
 	unsigned short	on_cpu;		/* CPU # where this task is running */
-	int		asid;		/* ASID if needed */
+	unsigned int	asid;		/* ASID if needed */
 	unsigned int	flags;		/* Process flags */
 #define PF_RUNNING	0x0		/* Running */
 #define PF_STARTING	0x00000002	/* being created */

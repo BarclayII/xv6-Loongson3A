@@ -10,12 +10,13 @@
 #define _ASM_THREAD_INFO_H
 
 #include <asm/stackframe.h>
+#include <asm/addrspace.h>
 
 /*
  * (Hardware) Thread info structure
  */
 
-#define THREAD_SIZE	KSTACK_SIZE
+#define THREAD_SIZE	2 * KSTACK_SIZE
 #define THREAD_MASK	(THREAD_SIZE - 1)
 
 #ifndef __ASSEMBLER__
@@ -42,6 +43,8 @@ extern union thread_stack_info init_thread_union;
  * The pointer pointing current thread info is stored at GP.
  */
 register struct thread_info *current_thread_info __asm__("$28");
+
+#define current_task		(current_thread_info->task)
 
 #define init_thread_info	(init_thread_union.thread_info)
 #define init_stack		(init_thread_union.stack)

@@ -431,6 +431,15 @@ void handle_exception(struct trapframe *tf)
 		/* System call */
 		handle_sys(tf);
 		return;
+	case EC_tlbm:
+		/* Writing on read-only page */
+		break;
+	case EC_tlbl:
+	case EC_tlbs:
+		/* Loading/storing misses (page faults) */
+		if (handle_pgfault(tf) == 0)
+			return;
+		break;
 	}
 
 	printk("Caught exception %s (%d)\r\n",
@@ -439,3 +448,4 @@ void handle_exception(struct trapframe *tf)
 	dump_trapframe(tf);
 	panic("SUSPENDING SYSTEM...\r\n");
 }
+
