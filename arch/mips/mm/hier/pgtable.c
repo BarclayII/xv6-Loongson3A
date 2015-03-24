@@ -24,7 +24,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sync.h>
-#include <sched/task.h>
+#include <sched.h>
 
 mm_t kern_high_mm;
 mm_t kern_low_mm;

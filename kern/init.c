@@ -29,7 +29,7 @@
 #include <mm/vmm.h>
 #include <assert.h>
 #include <stdlib.h>
-#include <sched/task.h>
+#include <sched.h>
 
 int main(void)
 {
@@ -104,6 +104,10 @@ int main(void)
 	task_init();
 
 	local_irq_enable();
+
+	switch_context(idleproc->context, initproc->context, initproc->kstack);
+
+	panic("context switching failed\r\n");
 
 	for (;;)
 		/* do nothing */;

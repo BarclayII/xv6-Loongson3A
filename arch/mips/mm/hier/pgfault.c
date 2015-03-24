@@ -13,11 +13,12 @@
 #include <asm/addrspace.h>
 #include <asm/thread_info.h>
 #include <asm/mm/tlb.h>
-#include <sched/task.h>
+#include <sched.h>
 
 int handle_pgfault(struct trapframe *tf)
 {
 	/* ASID switching is done with context switching */
+	printk("Handling page fault with trapframe %016x\r\n", tf);
 	unsigned long entryhi = tf->cp0_entryhi;
 	unsigned long asid = entryhi & ENTHI_ASID_MASK;
 	entryhi ^= asid;

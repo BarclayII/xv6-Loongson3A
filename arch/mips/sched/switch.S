@@ -7,15 +7,10 @@
 
 /* void switch_context(context_t *old, context_t *new, ptr_t newkstack) */
 LEAF(switch_context)
+	.set	push
+	.set	noreorder
 	/* Old sp register is stored at t8 */
-	move	t8, sp
-	move	sp, a0
-	SAVE_ALL
-	set_saved_sp a2, t9
-	move	sp, a1
-	RESTORE_ALL
-	move	sp, t8
-	jr	ra
-	nop
+	/* TODO: rewrite switch_context()... */
+	.set	pop
 END(switch_context)
 

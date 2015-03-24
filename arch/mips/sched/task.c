@@ -13,7 +13,7 @@
 #include <asm/mipsregs.h>
 #include <asm/addrspace.h>
 #include <asm/syscalldefs.h>
-#include <sched/task.h>
+#include <sched.h>
 #include <sys/types.h>
 #include <string.h>
 

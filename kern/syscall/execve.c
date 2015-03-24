@@ -8,7 +8,7 @@
  *
  */
 
-#include <sched/task.h>
+#include <sched.h>
 #include <mm/mmap.h>
 #include <mm/vmm.h>
 #include <elf.h>

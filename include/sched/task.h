@@ -12,6 +12,10 @@
 #ifndef _SCHED_TASK_H
 #define _SCHED_TASK_H
 
+#ifndef _SCHED_H
+#error "include <sched.h> instead"
+#endif
+
 #include <asm/ptrace.h>
 #include <mm/vmm.h>
 #include <sys/types.h>
@@ -186,5 +190,7 @@ void initproc_init(int argc, char *argv[]);
 void idle_init(void);
 
 void task_init(void);
+
+extern task_t *idleproc, *initproc;
 
 #endif

@@ -11,7 +11,7 @@
 
 #include <asm/ptrace.h>
 #include <asm/thread_info.h>
-#include <sched/task.h>
+#include <sched.h>
 #include <mm/kmalloc.h>
 #include <mm/vmm.h>
 #include <string.h>

@@ -9,7 +9,7 @@
  *
  */
 
-#include <sched/task.h>
+#include <sched.h>
 #include <ds/list.h>
 #include <assert.h>
 

@@ -56,6 +56,7 @@ OBJS		= arch/mips/entry.o \
 		  arch/mips/mach/loongson3a5/irq.o \
 		  arch/mips/mach/loongson3a5/addrconf.o \
 		  arch/mips/sched/task.o \
+		  arch/mips/sched/switch.o \
 		  arch/mips/syscall/fork.o \
 		  arch/mips/syscall/forkret.o \
 		  arch/mips/syscall/syscall.o \
