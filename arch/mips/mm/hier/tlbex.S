@@ -45,7 +45,7 @@ xtlb_refill:
 	.set	mips64r2
 	dmfc0	k0, CP0_ENTRYHI
 	andi	k1, k0, ENTHI_ASID_MASK		/* k1 = ASID */
-	dla	k0, online_hpt
+	dla	k0, asid_task_set
 	dsll	k1, 3
 	daddu	k1, k0
 	dmfc0	k0, CP0_BADVADDR

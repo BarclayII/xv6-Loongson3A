@@ -30,19 +30,20 @@ mm_t kern_high_mm;
 mm_t kern_low_mm;
 
 struct asid_task_set asid_task_set;
-pgd_t *online_hpt;
 
 void asid_flush(void)
 {
 	/* Unregister all online HPTs */
-	memset(online_hpt, 0, sizeof(online_hpt));
+	memset(current_online_hpt, 0, sizeof(current_online_hpt));
 	current_next_asid = ASID_MIN;
-	online_hpt[ASID_KERNEL] = kern_mm.arch_mm.pgd;
+	current_online_hpt[ASID_KERNEL] = kern_mm.arch_mm.pgd;
 	/* Revert all tasks with valid ASIDs */
 	int i;
 	for (i = ASID_MIN; i < ASID_MAX; ++i) {
-		current_online_tasks[i]->asid = ASID_INVALID;
-		current_online_tasks[i] = NULL;
+		if (current_online_tasks[i] != NULL) {
+			current_online_tasks[i]->asid = ASID_INVALID;
+			current_online_tasks[i] = NULL;
+		}
 	}
 }
 
@@ -55,9 +56,12 @@ void pgtable_bootstrap(void)
 	kern_mm.arch_mm.pgd = (pgd_t)PAGE_TO_KVADDR(pgdir_new(ASID_KERNEL));
 	printk("Kernel page global directory initialized at %016x\r\n",
 	    kern_mm.arch_mm.pgd);
-	online_hpt = asid_task_set.online_hpt;
+	/* Have to clear current_online_tasks first to prevent asid_flush()
+	 * exhibiting weird behavior */
+	memset(current_online_tasks, 0, sizeof(current_online_tasks));
 
 	asid_flush();
+
 	printk("Kernel PGD at %016x registered as ASID %d\r\n",
 	    kern_mm.arch_mm.pgd, ASID_KERNEL);
 }
