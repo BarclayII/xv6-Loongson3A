@@ -76,7 +76,7 @@
 	sd	v1, TF_STATUS(sp)
 	mfc0	v1, CP0_CAUSE
 	sd	v1, TF_CAUSE(sp)
-	mfc0	v1, CP0_EPC
+	dmfc0	v1, CP0_EPC
 	sd	v1, TF_EPC(sp)
 	dmfc0	v1, CP0_ENTRYHI
 	sd	v1, TF_ENTRYHI(sp)

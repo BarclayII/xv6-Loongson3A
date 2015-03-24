@@ -159,6 +159,7 @@ extern task_t *idleproc, *initproc;
 #define USTACK_PERM	(VMA_READ | VMA_WRITE)
 
 /* Task list manipulation */
+void tasklist_init(void);
 void add_process(task_t *proc, task_t *parent);
 void add_thread(task_t *thread, task_t *owner);
 void remove_process(task_t *proc);

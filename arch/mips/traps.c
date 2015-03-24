@@ -195,7 +195,7 @@ static const char *ex_desc[] = {
 	[EC_cacheerr]	= "Cache Error"
 };
 
-static void dump_trapframe(struct trapframe *tf)
+void dump_trapframe(struct trapframe *tf)
 {
 	int i;
 	for (i = _ZERO; i <= _RA; ++i) {
@@ -203,13 +203,13 @@ static void dump_trapframe(struct trapframe *tf)
 	}
 	printk("STATUS\t= %08x\r\n", tf->cp0_status);
 	printk("CAUSE\t= %08x\r\n", tf->cp0_cause);
-	printk("EPC\t= %08x\r\n", tf->cp0_epc);
+	printk("EPC\t= %016x\r\n", tf->cp0_epc);
 	printk("BADVADDR= %016x\r\n", tf->cp0_badvaddr);
+	printk("ENTRYHI\t=%016x\r\n", tf->cp0_entryhi);
 	switch (EXCCODE(tf->cp0_cause)) {
 	case EC_tlbm:
 	case EC_tlbl:
 	case EC_tlbs:
-		printk("ENTRYHI\t=%016x\r\n", read_c0_entryhi());
 		/* Read current ENTRYLO0 and ENTRYLO1 contents */
 		tlbp();
 		if (read_c0_index() >= 0) {

@@ -24,8 +24,6 @@ ptr_t task_init_trapframe(task_t *task, ptr_t sp)
 	trapframe_t *tf = task->tf;
 	memset(tf, 0, sizeof(*tf));
 	tf->cp0_status = read_c0_status();
-	tf->cp0_cause = read_c0_cause();
-	tf->cp0_badvaddr = read_c0_badvaddr();
 	tf->cp0_entryhi = ASID_INVALID;
 	/* not setting up EPC yet; this is done after locating entry and
 	 * performed inside set_task_entry() */
@@ -40,11 +38,8 @@ ptr_t task_init_trapframe(task_t *task, ptr_t sp)
 void task_bootstrap_context(task_t *task, ptr_t sp)
 {
 	context_t *ctx = task->context;
+	memset(ctx, 0, sizeof(*ctx));
 	ctx->cp0_status = read_c0_status();
-	ctx->cp0_status &= ~ST_EXCM;
-	ctx->cp0_status |= (KSU_USER | ST_EXL | ST_IE);
-	ctx->cp0_cause = read_c0_cause();
-	ctx->cp0_badvaddr = read_c0_badvaddr();
 	ctx->gpr[_A0] = (unsigned long)task->tf;
 	ctx->gpr[_RA] = (unsigned long)forkret;
 	/* see switch.S */
@@ -54,8 +49,8 @@ void task_bootstrap_context(task_t *task, ptr_t sp)
 void set_task_user(task_t *task)
 {
 	trapframe_t *tf = task->tf;
-	tf->cp0_status &= ~(ST_KSU | ST_ERL | ST_EXL);
-	tf->cp0_status |= KSU_USER;
+	tf->cp0_status &= ~ST_EXCM;
+	tf->cp0_status |= KSU_USER | ST_EXL;
 }
 
 void set_task_enable_intr(task_t *task)

@@ -29,6 +29,7 @@
 #include <mm/vmm.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <sched/task.h>
 
 int main(void)
 {
@@ -99,6 +100,8 @@ int main(void)
 	srand(read_c0_count());
 
 	mm_init();
+
+	task_init();
 
 	local_irq_enable();
 

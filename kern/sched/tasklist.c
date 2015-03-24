@@ -34,6 +34,14 @@ static inline int pid_hash(int pid)
 	return (int)hash32((unsigned int)pid, HASH_LIST_ORDER);
 }
 
+void tasklist_init(void)
+{
+	int i;
+	list_init(&(process_list));
+	for (i = 0; i < HASH_LIST_SIZE; ++i)
+		list_init(&(process_hash_list[i]));
+}
+
 /* For adding a separate process */
 void add_process(task_t *proc, task_t *parent)
 {

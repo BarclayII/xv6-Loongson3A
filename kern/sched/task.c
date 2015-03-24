@@ -69,12 +69,20 @@ ptr_t task_setup_kstack(task_t *task)
 
 void initproc_init(int argc, char *argv[])
 {
+	printk("Spawning init...\r\n");
+	printk("\tArgument count: %d\r\n", argc);
+	printk("\tArguments: ");
+	int i;
+	for (i = 0; i < argc; ++i)
+		printk("\"%s\" ", argv[i]);
+	printk("\r\n");
+
 	initproc = task_new();
 	if (initproc == NULL)
 		panic("failed to allocate process for init\r\n");
 
 	/* init runs in user mode */
-	task_setup_mm(initproc);
+	assert(task_setup_mm(initproc) == 0);
 	ptr_t ksp = task_setup_kstack(initproc);
 	assert(ksp != NULL);
 	ksp = task_init_trapframe(initproc, ksp);
@@ -82,16 +90,21 @@ void initproc_init(int argc, char *argv[])
 	set_task_user(initproc);
 	set_task_enable_intr(initproc);
 
-	extern void *_binary_ramdisk_init_init_start;
+	/* Directly referencing this symbol actually returns the content
+	 * inside, damn it. */
+	extern unsigned long _binary_ramdisk_init_init_start;
+
+	ptr_t init_start = &_binary_ramdisk_init_init_start;
 	addr_t entry;
 	int ret;
 
-	ret = task_load_elf_kmem(initproc, _binary_ramdisk_init_init_start,
-	    &entry);
+	printk("Loading init from ramdisk at %016x...\r\n", init_start);
+	ret = task_load_elf_kmem(initproc, init_start, &entry);
+	printk("Init entry virtual address %016x\r\n", entry);
 	if (ret != 0)
 		panic("init spawning failed with code %d\r\n", ret);
 
-	set_task_ustack(initproc);
+	assert(set_task_ustack(initproc) == 0);
 	ptr_t usp = (ptr_t)set_task_argv(initproc, argc, argv);
 	set_task_ustacktop(initproc, usp);
 	set_task_main_args(initproc, argc, (char **)usp);
@@ -100,13 +113,14 @@ void initproc_init(int argc, char *argv[])
 	initproc->pid = PID_INIT;
 	strlcpy(initproc->name, "init", PROC_NAME_LEN_MAX);
 
-	initproc->flags = PF_RUNNING;
+	initproc->state = TASK_RUNNABLE;
 
 	add_process(initproc, initproc);
 }
 
 void idle_init(void)
 {
+	printk("Spawning IDLE....\r\n");
 	idleproc = task_new();
 	if (idleproc == NULL)
 		panic("failed to spawn IDLE\r\n");
@@ -114,13 +128,40 @@ void idle_init(void)
 	idleproc->kstack = &init_stack;
 	strlcpy(idleproc->name, "IDLE", PROC_NAME_LEN_MAX);
 
-	idleproc->flags = PF_RUNNING;
+	idleproc->state = TASK_RUNNABLE;
 
 	add_process(idleproc, idleproc);
 }
 
+extern void dump_trapframe(trapframe_t *tf);
+
+void dump_task(task_t *task)
+{
+	printk("PID\t%d\r\n", task->pid);
+	printk("State\t%04x\r\n", task->state);
+	printk("Flags\t%08x\r\n", task->flags);
+	if (task->pid != PID_IDLE) {
+		printk("Context\r\n");
+		dump_trapframe((trapframe_t *)(task->context));
+		printk("Trapframe\r\n");
+		dump_trapframe((trapframe_t *)(task->tf));
+	}
+	printk("KSTACK\t%016x\r\n", task->kstack);
+	if (task->pid != PID_IDLE) {
+		printk("MM\t%016x\r\n", task->mm);
+		printk("PGD\t%016x\r\n", task->mm->arch_mm.pgd);
+		printk("PROGTOP   %016x\r\n", task->progtop);
+		printk("USTACKTOP %016x\r\n", task->ustacktop);
+	}
+}
+
 void task_init(void)
 {
+	tasklist_init();
+
 	idle_init();
 	initproc_init(0, NULL);
+
+	dump_task(idleproc);
+	dump_task(initproc);
 }
