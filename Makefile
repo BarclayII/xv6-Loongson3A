@@ -68,6 +68,9 @@ OBJS		= arch/mips/entry.o \
 		  kern/mm/kmalloc.o \
 		  kern/mm/vm.o \
 		  kern/fs/write.o \
+		  kern/sched/task.o \
+		  kern/sched/tasklist.o \
+		  kern/syscall/execve.o \
 		  kern/printk.o \
 		  kern/panic.o \
 		  kern/init.o $(LIBC_OBJS) \

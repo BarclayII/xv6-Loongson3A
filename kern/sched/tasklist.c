@@ -9,6 +9,10 @@
  *
  */
 
+#include <sched/task.h>
+#include <ds/list.h>
+#include <assert.h>
+
 /* 2^31 + 2^29 - 2^25 + 2^22 - 2^19 - 2^16 + 1 */
 #define GOLDEN_RATIO_PRIME_32       0x9e370001UL
 
@@ -36,11 +40,11 @@ void add_process(task_t *proc, task_t *parent)
 	assert(task_is_process(proc));
 	assert(task_is_process(parent));
 
-	int pid_hash = pid_hash(proc->pid);
+	int hash = pid_hash(proc->pid);
 	int i;
 
 	list_add_before(&process_list, &(proc->proc_node));
-	list_add_before(&(process_hash_list[pid_hash]), &(proc->hash_node));
+	list_add_before(&(process_hash_list[hash]), &(proc->hash_node));
 
 	/* Maintain process tree */
 	proc->parent = parent;

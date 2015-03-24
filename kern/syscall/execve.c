@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2015 Gan Quan <coin2028@hotmail.com>
+ *
+ * This program is free software; you can redistribute  it and/or modify it
+ * under  the terms of  the GNU General  Public License as published by the
+ * Free Software Foundation;  either version 2 of the  License, or (at your
+ * option) any later version.
+ *
+ */
+
+#include <sched/task.h>
+#include <mm/mmap.h>
+#include <mm/vmm.h>
+#include <elf.h>
+#include <string.h>
+#include <errno.h>
+#include <config.h>
 
 /*
  * A safe wrapper for converting ELF segment flags into virtual memory area
@@ -19,34 +36,35 @@ static inline unsigned long elf_to_vmaflags(unsigned int elfflags)
 int task_load_seg_kmem(task_t *task, void *addr, elf64_phdr_t *ph)
 {
 	int retcode;
+	ptr_t dest = (ptr_t)(ph->p_vaddr);
 
 	/* Create user virtual memory area and associated physical area */
 	unsigned long flags = elf_to_vmaflags(ph->p_flags);
-	retcode = mm_create_uvm(task->mm, ph->p_vaddr, ph->p_memsz, flags);
+	retcode = mm_create_uvm(task->mm, dest, ph->p_memsz, flags);
 	if (retcode != 0)
 		return retcode;
 
-	retcode = copy_to_uvm(task->mm, ph->p_vaddr, addr, ph->p_filesz);
+	retcode = copy_to_uvm(task->mm, dest, addr, ph->p_filesz);
 	if (retcode != 0)
-		return retcode;
+		goto rollback_uvm;
 
 	return 0;
 
 rollback_uvm:
-	assert(mm_destroy_uvm(task->mm, ph->p_vaddr) == 0);
+	assert(mm_destroy_uvm(task->mm, dest) == 0);
 	return retcode;
 }
 
 void task_unload_seg(task_t *task, elf64_phdr_t *ph)
 {
-	mm_destroy_uvm(task->mm, ph->p_vaddr);
+	mm_destroy_uvm(task->mm, (ptr_t)(ph->p_vaddr));
 }
 
 int task_load_segs_kmem(task_t *task, void *addr, elf64hdr_t *hdr)
 {
-	struct elf64_phdr_t proghdr;
+	elf64_phdr_t proghdr;
 	size_t off = hdr->e_phoff;
-	int ret;
+	int ret, i;
 
 	for (i = 0; i < hdr->e_phnum; ++i) {
 		memcpy(&proghdr, addr + off, hdr->e_phentsize);
@@ -62,13 +80,14 @@ int task_load_segs_kmem(task_t *task, void *addr, elf64hdr_t *hdr)
 
 		/* Setup program segment top to indicate where the user
 		 * stack should start */
-		if (task->progtop < proghdr.p_vaddr + proghdr.p_memsz)
-			task->progtop = proghdr.p_vaddr + prohhdr.p_memsz;
+		addr_t vaddr = (addr_t)(proghdr.p_vaddr);
+		if ((addr_t)(task->progtop) < vaddr + proghdr.p_memsz)
+			task->progtop = (ptr_t)(vaddr + proghdr.p_memsz);
 
 		off += hdr->e_phentsize;
 	}
 
-	task->progtop = PGROUNDUP(task->progtop);
+	task->progtop = (ptr_t)PGROUNDUP(task->progtop);
 
 	return 0;
 
@@ -83,6 +102,13 @@ rollback_unload:
 }
 
 /*
+ * Should not change.
+ * This is not really hardware-specific, it's sole purpose is for checking
+ * ELF integrity.
+ */
+#define ELF_CURRENT_MACH	EM_MIPS
+
+/*
  * Load ELF program from kernel space memory into user space.
  * Handling statically linked 64-bit program only in this routine is enough.
  *
@@ -95,7 +121,7 @@ int task_load_elf_kmem(task_t *task, void *addr, addr_t *entry)
 	memcpy(&hdr, addr, sizeof(hdr));
 
 	/* Check identification and integrity */
-	if (strncmp(hdr.e_ident, ELFMAG, SELFMAG) != 0 ||
+	if (strncmp((char *)(hdr.e_ident), ELFMAG, SELFMAG) != 0 ||
 	    hdr.e_ident[EI_VERSION] != EV_CURRENT ||
 	    hdr.e_type != ET_EXEC)
 		return -ENOEXEC;

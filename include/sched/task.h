@@ -158,6 +158,12 @@ extern task_t *idleproc, *initproc;
 
 #define USTACK_PERM	(VMA_READ | VMA_WRITE)
 
+/* Task list manipulation */
+void add_process(task_t *proc, task_t *parent);
+void add_thread(task_t *thread, task_t *owner);
+void remove_process(task_t *proc);
+void remove_thread(task_t *thread);
+
 /* Hardware specific */
 ptr_t task_init_trapframe(task_t *task, ptr_t sp);
 void task_bootstrap_context(task_t *task, ptr_t sp);
@@ -172,6 +178,8 @@ void set_task_entry(task_t *task, addr_t entry);
 task_t *task_new(void);
 int task_setup_mm(task_t *task);
 ptr_t task_setup_kstack(task_t *task);
+
+int task_load_elf_kmem(task_t *task, void *addr, addr_t *entry);
 
 void initproc_init(int argc, char *argv[]);
 void idle_init(void);

@@ -9,6 +9,15 @@
  *
  */
 
+#include <asm/ptrace.h>
+#include <asm/thread_info.h>
+#include <sched/task.h>
+#include <mm/kmalloc.h>
+#include <mm/vmm.h>
+#include <string.h>
+#include <stddef.h>
+#include <ds/list.h>
+
 task_set_t task_set;
 
 task_t *idleproc, *initproc;
@@ -16,7 +25,6 @@ task_t *idleproc, *initproc;
 task_t *task_new(void)
 {
 	task_t *task;
-	void *sp;
 
 	task = kmalloc(sizeof(*task));
 	if (task != NULL) {
@@ -67,10 +75,10 @@ void initproc_init(int argc, char *argv[])
 
 	/* init runs in user mode */
 	task_setup_mm(initproc);
-	ptr_t sp = task_setup_kstack(initproc);
-	assert(sp != NULL)
-	sp = task_init_trapframe(initproc, sp);
-	task_bootstrap_context(initproc, sp);
+	ptr_t ksp = task_setup_kstack(initproc);
+	assert(ksp != NULL);
+	ksp = task_init_trapframe(initproc, ksp);
+	task_bootstrap_context(initproc, ksp);
 	set_task_user(initproc);
 	set_task_enable_intr(initproc);
 
@@ -84,9 +92,9 @@ void initproc_init(int argc, char *argv[])
 		panic("init spawning failed with code %d\r\n", ret);
 
 	set_task_ustack(initproc);
-	ptr_t sp = set_task_argv(initproc, argc, argv);
-	set_task_ustacktop(initproc, sp);
-	set_task_main_args(initproc, argc, (char **)sp);
+	ptr_t usp = (ptr_t)set_task_argv(initproc, argc, argv);
+	set_task_ustacktop(initproc, usp);
+	set_task_main_args(initproc, argc, (char **)usp);
 	set_task_entry(initproc, entry);
 
 	initproc->pid = PID_INIT;
@@ -114,5 +122,5 @@ void idle_init(void)
 void task_init(void)
 {
 	idle_init();
-	initproc_init();
+	initproc_init(0, NULL);
 }
