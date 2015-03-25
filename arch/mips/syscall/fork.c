@@ -10,12 +10,16 @@
 
 #include <asm/syscalldefs.h>
 #include <asm/ptrace.h>
+#include <asm/trap.h>
+#include <asm/cpu.h>
 #include <printk.h>
 #include <panic.h>
 
 void forkret(struct trapframe *tf)
 {
 	printk("Entering forkret with trapframe %016x\r\n", tf);
+	printk("kernelsp[0] = %016x\r\n", kernelsp[0]);
+	dump_trapframe(tf);
 	arch_forkret(tf);
 	panic("Returned from arch_forkret???\r\n");
 }

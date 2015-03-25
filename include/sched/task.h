@@ -17,6 +17,7 @@
 #endif
 
 #include <asm/ptrace.h>
+#include <asm/stackframe.h>
 #include <mm/vmm.h>
 #include <sys/types.h>
 #include <ds/list.h>
@@ -150,15 +151,14 @@ extern task_t *idleproc, *initproc;
  * Kernel Stack Layout:
  * +----------------------------+ kstack + KSTACK_SIZE
  * |      Process Context       |
- * +----------------------------+
+ * +----------------------------+ kstacktop
  * |         Trapframe          |
  * +----------------------------+
  * |            ...             |
  * +----------------------------+ kstack
  */
 
-#define KSTACK_SIZE	8192
-#define USTACK_SIZE	8192
+#define kstacktop(task)		((task)->kstack + KSTACK_SIZE - TF_SIZE)
 
 #define USTACK_PERM	(VMA_READ | VMA_WRITE)
 

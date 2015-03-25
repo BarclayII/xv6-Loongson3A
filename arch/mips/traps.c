@@ -11,6 +11,7 @@
 #include <asm/regdef.h>
 #include <asm/mipsregs.h>
 #include <asm/trap.h>
+#include <asm/cpu.h>
 #include <asm/decode.h>
 #include <asm/mm/tlb.h>
 #include <asm/mm/pgtable.h>
@@ -198,6 +199,7 @@ static const char *ex_desc[] = {
 void dump_trapframe(struct trapframe *tf)
 {
 	int i;
+	unsigned long tmp_enthi;
 	for (i = _ZERO; i <= _RA; ++i) {
 		printk("%s\t%016x\r\n", regname[i], tf->gpr[i]);
 	}
@@ -211,12 +213,19 @@ void dump_trapframe(struct trapframe *tf)
 	case EC_tlbl:
 	case EC_tlbs:
 		/* Read current ENTRYLO0 and ENTRYLO1 contents */
+		/* Redundant? */
+		tmp_enthi = read_c0_entryhi();
+		write_c0_entryhi(tf->cp0_entryhi);
 		tlbp();
 		if (read_c0_index() >= 0) {
 			tlbr();
 			printk("ENTRYLO0=%016x\r\n", read_c0_entrylo0());
 			printk("ENTRYLO1=%016x\r\n", read_c0_entrylo1());
 		}
+		write_c0_entryhi(tmp_enthi);
+		break;
+	case EC_ri:
+		printk("Ins\t= %08x\r\n", *(unsigned int *)(tf->cp0_epc));
 		break;
 	default:
 		break;

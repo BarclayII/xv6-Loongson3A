@@ -50,8 +50,9 @@ LEAF(_start)
 	/* Load thread stack into global pointer */
 	dla	gp, init_thread_union
 
-	/* Locate stack at the top of union, but after an empty trapframe */
-	li	sp, THREAD_SIZE - 32 - TF_SIZE
+	/* Locate stack at the top of union, but after an empty trapframe
+	 * (for storing context of idle process) */
+	li	sp, THREAD_SIZE - TF_SIZE
 	daddu	sp, gp
 	/* Save current sp */
 	set_saved_sp sp, t0

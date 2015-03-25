@@ -12,6 +12,7 @@
 #include <asm/cp0regdef.h>
 #include <asm/mipsregs.h>
 #include <asm/addrspace.h>
+#include <asm/thread_info.h>
 #include <asm/syscalldefs.h>
 #include <sched.h>
 #include <sys/types.h>
@@ -24,7 +25,9 @@ ptr_t task_init_trapframe(task_t *task, ptr_t sp)
 	trapframe_t *tf = task->tf;
 	memset(tf, 0, sizeof(*tf));
 	tf->cp0_status = read_c0_status();
+	tf->cp0_cause = read_c0_cause();
 	tf->cp0_entryhi = ASID_INVALID;
+	tf->gpr[_GP] = (unsigned long)&init_thread_union;
 	/* not setting up EPC yet; this is done after locating entry and
 	 * performed inside set_task_entry() */
 	return sp;
@@ -40,17 +43,18 @@ void task_bootstrap_context(task_t *task, ptr_t sp)
 	context_t *ctx = task->context;
 	memset(ctx, 0, sizeof(*ctx));
 	ctx->cp0_status = read_c0_status();
+	ctx->cp0_cause = read_c0_cause();
 	ctx->gpr[_A0] = (unsigned long)task->tf;
 	ctx->gpr[_RA] = (unsigned long)forkret;
-	/* see switch.S */
-	ctx->gpr[_T8] = (unsigned long)sp;
+	ctx->gpr[_SP] = (unsigned long)sp;
+	ctx->gpr[_GP] = (unsigned long)&init_thread_union;
 }
 
 void set_task_user(task_t *task)
 {
 	trapframe_t *tf = task->tf;
 	tf->cp0_status &= ~ST_EXCM;
-	tf->cp0_status |= KSU_USER | ST_EXL;
+	tf->cp0_status |= KSU_USER | ST_EXL | ST_PX | ST_UX;
 }
 
 void set_task_enable_intr(task_t *task)

@@ -18,6 +18,7 @@
 #include <asm/ptrace.h>
 
 #define KSTACK_SIZE	8192
+#define USTACK_SIZE	8192
 
 #ifdef __ASSEMBLER__
 
@@ -40,7 +41,7 @@
 	mfc0	\temp, CP0_EBASE
 	andi	\temp, \temp, 0x3ff
 	dsll	\temp, \temp, 3
-	sd	\stackp, kernelsp(k0)
+	sd	\stackp, kernelsp(\temp)
 	.endm
 
 	.macro	SAVE_SOME

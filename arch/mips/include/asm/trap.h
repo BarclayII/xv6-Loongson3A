@@ -16,6 +16,8 @@
 void trap_init(void);
 void handle_exception(struct trapframe *tf);
 
+void dump_trapframe(struct trapframe *tf);
+
 int handle_sys(struct trapframe *tf);
 
 #endif

@@ -126,6 +126,7 @@ void idle_init(void)
 		panic("failed to spawn IDLE\r\n");
 	idleproc->pid = PID_IDLE;
 	idleproc->kstack = &init_stack;
+	idleproc->context = (ptr_t)(&init_stack) + THREAD_SIZE - TF_SIZE;
 	strlcpy(idleproc->name, "IDLE", PROC_NAME_LEN_MAX);
 
 	idleproc->state = TASK_RUNNABLE;

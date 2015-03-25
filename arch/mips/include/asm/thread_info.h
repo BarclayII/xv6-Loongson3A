@@ -16,7 +16,7 @@
  * (Hardware) Thread info structure
  */
 
-#define THREAD_SIZE	2 * KSTACK_SIZE
+#define THREAD_SIZE	KSTACK_SIZE
 #define THREAD_MASK	(THREAD_SIZE - 1)
 
 #ifndef __ASSEMBLER__
