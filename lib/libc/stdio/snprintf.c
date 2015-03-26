@@ -41,7 +41,6 @@ int vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
 	} while (0)
 
 #define is_digit(ch)	(((ch) >= '0') && ((ch) <= '9'))
-#define tick(ch)	(((ch) == '9') ? '0' : ((ch) + 1))
 
 	static const char *digits = "0123456789abcdef";
 
@@ -52,14 +51,11 @@ int vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
 	int flag = 0;
 	ssize_t pos = 0;
 
-	char ticker = '0';
-
 	int buf_pos;
 	char buf[25];
 	char *s;
 
 	for ( ; *fmt != '\0'; ) {
-		ticker = tick(ticker);
 		if (*fmt == '%') {
 			++fmt;
 fmt_loop:		switch (*fmt) {

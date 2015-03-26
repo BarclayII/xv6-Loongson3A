@@ -440,6 +440,8 @@ void handle_exception(struct trapframe *tf)
 	case EC_sys:
 		/* System call */
 		handle_sys(tf);
+		/* Skip the exception-generating instruction (syscall) */
+		skip_victim(tf);
 		return;
 	case EC_tlbm:
 		/* Writing on read-only page */

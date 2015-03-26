@@ -19,8 +19,7 @@
 int handle_pgfault(struct trapframe *tf)
 {
 	/* ASID switching is done with context switching */
-	printk("Handling page fault with trapframe %016x\r\n", tf);
-	dump_trapframe(tf);
+	pdebug("Handling page fault with trapframe %016x\r\n", tf);
 	unsigned long entryhi = tf->cp0_entryhi;
 	unsigned long asid = entryhi & ENTHI_ASID_MASK;
 	entryhi ^= asid;
@@ -28,19 +27,19 @@ int handle_pgfault(struct trapframe *tf)
 	/* Tasks are not fully implemented yet */
 	/* assert(current_task->asid == asid); */
 	if (asid == ASID_INVALID) {
-		printk("Caught invalid ASID\r\n");
+		pdebug("Caught invalid ASID\r\n");
 		if (current_next_asid == ASID_INVALID) {
 			/* No ASID available, flush TLB and reset ASID */
-			printk("Available ASID Exhausted\r\n");
+			pdebug("Available ASID Exhausted\r\n");
 			tlb_flush_all();
 			asid_flush();
-			printk("ASID refresh complete\r\n");
+			pdebug("ASID refresh complete\r\n");
 		}
 		/* assign a new ASID to current task */
-		printk("Assigning new asid %d\r\n", current_next_asid);
+		pdebug("Assigning new asid %d\r\n", current_next_asid);
 		current_task->asid = asid = current_next_asid++;
 		/* register the PGD as online */
-		printk("Registering ASID... PGD = %016x\r\n",
+		pdebug("Registering ASID... PGD = %016x\r\n",
 		    current_task->mm->arch_mm.pgd);
 		current_online_hpt[asid] = current_task->mm->arch_mm.pgd;
 		current_online_tasks[asid] = current_task;

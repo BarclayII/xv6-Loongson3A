@@ -10,6 +10,7 @@
  */
 
 #include <asm/ptrace.h>
+#include <asm/trap.h>
 #include <asm/thread_info.h>
 #include <sched.h>
 #include <mm/kmalloc.h>
@@ -133,8 +134,6 @@ void idle_init(void)
 
 	add_process(idleproc, idleproc);
 }
-
-extern void dump_trapframe(trapframe_t *tf);
 
 void dump_task(task_t *task)
 {

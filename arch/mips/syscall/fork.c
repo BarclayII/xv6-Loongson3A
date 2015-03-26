@@ -17,9 +17,7 @@
 
 void forkret(struct trapframe *tf)
 {
-	printk("Entering forkret with trapframe %016x\r\n", tf);
-	printk("kernelsp[0] = %016x\r\n", kernelsp[0]);
-	dump_trapframe(tf);
+	pdebug("Entering forkret with trapframe %016x\r\n", tf);
 	arch_forkret(tf);
 	panic("Returned from arch_forkret???\r\n");
 }
