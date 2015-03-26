@@ -68,7 +68,7 @@ ptr_t task_setup_kstack(task_t *task)
 	return sp;
 }
 
-void initproc_init(int argc, char *argv[])
+void initproc_init(int argc, char *const argv[])
 {
 	printk("Spawning init...\r\n");
 	printk("\tArgument count: %d\r\n", argc);
@@ -155,12 +155,18 @@ void dump_task(task_t *task)
 	}
 }
 
+char *const initargv[] = {
+	"init",
+	"sample",
+	"arguments"
+};
+
 void task_init(void)
 {
 	tasklist_init();
 
 	idle_init();
-	initproc_init(0, NULL);
+	initproc_init(3, initargv);
 
 	dump_task(idleproc);
 	dump_task(initproc);

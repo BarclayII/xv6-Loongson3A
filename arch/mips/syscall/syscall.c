@@ -22,7 +22,6 @@ void sys_write(struct trapframe *tf)
 
 void handle_sys(struct trapframe *tf)
 {
-	printk("Received syscall! No. %d\r\n", tf->gpr[_V0]);
 	syscall_t call = __syscalls[tf->gpr[_V0]];
 	call(tf);
 }

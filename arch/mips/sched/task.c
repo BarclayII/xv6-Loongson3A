@@ -86,7 +86,7 @@ rollback_page:
  *
  * @argv[] and its elements should reside in kernel space.
  */
-addr_t set_task_argv(task_t *task, int argc, char *argv[])
+addr_t set_task_argv(task_t *task, int argc, char *const argv[])
 {
 	int i;
 	size_t argv_space = 0;
@@ -109,7 +109,7 @@ addr_t set_task_argv(task_t *task, int argc, char *argv[])
 		argvtop -= 8;
 		if (copy_to_uvm(task->mm, strtop, argv[i], strspace) != 0)
 			return 0;
-		if (copy_to_uvm(task->mm, argvtop, &strtop, sizeof(ptr_t) != 0))
+		if (copy_to_uvm(task->mm, argvtop, &strtop, sizeof(ptr_t)) != 0)
 			return 0;
 	}
 
@@ -121,10 +121,12 @@ void set_task_ustacktop(task_t *task, ptr_t sp)
 	task->tf->gpr[_SP] = (addr_t)sp;
 }
 
-void set_task_main_args(task_t *task, int argc, char *argv[])
+void set_task_main_args(task_t *task, int argc, char *const argv[])
 {
 	task->tf->gpr[_A0] = (unsigned long)argc;
 	task->tf->gpr[_A1] = (unsigned long)argv;
+	printk("ARGC: %d\r\n", argc);
+	printk("ARGV: %016x\r\n", argv);
 }
 
 void set_task_entry(task_t *task, addr_t entry)
