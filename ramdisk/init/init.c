@@ -8,8 +8,7 @@
  *
  */
 
-#include <unistd.h>
-#include <string.h>
+#include <stdio.h>
 
 /*
  * The correct behavior would be displaying a hello message,
@@ -18,13 +17,11 @@
 int main(int argc, char *argv[])
 {
 	int i;
-	char *hellomsg = "Hello from init!\r\n";
-	char *crlf = "\r\n";
-	write(STDERR_FILENO, hellomsg, strlen(hellomsg));
-	for (i = 0; i < argc; ++i) {
-		write(STDERR_FILENO, argv[i], strlen(argv[i]));
-		write(STDERR_FILENO, crlf, strlen(crlf));
-	}
+	char *hellomsg = "Hello from init!";
+	printf("%s\r\n", hellomsg);
+	for (i = 0; i < argc; ++i)
+		printf("%s\r\n", argv[i]);
+
 	for (;;)
 		/* nothing, since exit() is not yet implemented */;
 	return 0;

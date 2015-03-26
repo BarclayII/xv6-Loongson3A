@@ -62,13 +62,13 @@ OBJS		= arch/mips/entry.o \
 		  arch/mips/syscall/syscall.o \
 		  drivers/serial/uart16550.o \
 		  drivers/serial/prom_printk.o \
+		  fs/write.o \
 		  kern/mm/init.o \
 		  kern/mm/pgalloc.o \
 		  kern/mm/test.o \
 		  kern/mm/slab.o \
 		  kern/mm/kmalloc.o \
 		  kern/mm/vm.o \
-		  kern/fs/write.o \
 		  kern/sched/task.o \
 		  kern/sched/tasklist.o \
 		  kern/syscall/execve.o \

@@ -1,4 +1,14 @@
+/*
+ * Copyright (C) 2015 Gan Quan <coin2028@hotmail.com>
+ *
+ * This program is free software; you can redistribute  it and/or modify it
+ * under  the terms of  the GNU General  Public License as published by the
+ * Free Software Foundation;  either version 2 of the  License, or (at your
+ * option) any later version.
+ *
+ */
 
+#include <asm/addrspace.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
@@ -11,6 +21,12 @@
 
 int do_write(int fd, const void *buf, size_t len, ssize_t *result)
 {
+	/* Check if the buffer is inside userspace */
+	if (!USERSPACE((addr_t)buf)) {
+		*result = -1;
+		return -EFAULT;
+	}
+
 	char s[MAX_WRITE_LEN];
 	switch (fd) {
 	case STDOUT_FILENO:

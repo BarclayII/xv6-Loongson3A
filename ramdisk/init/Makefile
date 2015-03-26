@@ -32,7 +32,9 @@ EXEC		= init
 
 LIBC_OBJS	= $(LIBCDIR)/arch/mips/syscall.o \
 		  $(LIBCDIR)/arch/mips/crt0.o \
-		  $(LIBCDIR)/string/strlen.o
+		  $(LIBCDIR)/string/strlen.o \
+		  $(LIBCDIR)/stdio/printf.o \
+		  $(LIBCDIR)/stdio/snprintf.o
 
 OBJS		= init.o
 
