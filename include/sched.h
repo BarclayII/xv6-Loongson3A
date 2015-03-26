@@ -8,14 +8,17 @@
  *
  */
 
-#ifndef _ASM_SMP_H
-#define _ASM_SMP_H
+#ifndef _SCHED_H
+#define _SCHED_H
 
-#include <asm/thread_info.h>
+#include <config.h>
 
-#define smp_processor_id()	(current_thread_info->cpu_number)
-#define smp_current_task	(current_thread_info->task)
+#ifdef CONFIG_TASK
+#include <sched/task.h>
+#else
+#error "!CONFIG_TASK not implemented"
+#endif
 
-#define NR_CPUS			4
+#include <sched/sched.h>
 
 #endif

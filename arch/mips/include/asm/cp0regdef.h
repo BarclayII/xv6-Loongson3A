@@ -65,7 +65,7 @@
 #define ST_FR	0x04000000	/* Float register mode switch (?) */
 #define ST_RE	0x02000000	/* Reverse-endian */
 #define ST_MX	0x01000000	/* Enable DSP or MDMX */
-#define ST_PX	0x00800000
+#define ST_PX	0x00800000	/* Enable 64-bit operations in user mode */
 /* The exception handler would be at 0xbfc00000 if BEV=1, 0x80000000 
  * otherwise */
 #define ST_BEV	0x00400000	/* Bootstrap Exception Vector, usually 0 */

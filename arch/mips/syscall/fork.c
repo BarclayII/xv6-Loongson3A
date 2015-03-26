@@ -8,14 +8,16 @@
  *
  */
 
-#ifndef _ASM_SMP_H
-#define _ASM_SMP_H
+#include <asm/syscalldefs.h>
+#include <asm/ptrace.h>
+#include <asm/trap.h>
+#include <asm/cpu.h>
+#include <printk.h>
+#include <panic.h>
 
-#include <asm/thread_info.h>
-
-#define smp_processor_id()	(current_thread_info->cpu_number)
-#define smp_current_task	(current_thread_info->task)
-
-#define NR_CPUS			4
-
-#endif
+void forkret(struct trapframe *tf)
+{
+	pdebug("Entering forkret with trapframe %016x\r\n", tf);
+	arch_forkret(tf);
+	panic("Returned from arch_forkret???\r\n");
+}

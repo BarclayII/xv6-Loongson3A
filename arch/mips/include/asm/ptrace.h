@@ -54,6 +54,7 @@
 #define TF_CAUSE	0x118
 #define TF_BADVADDR	0x120
 #define TF_EPC		0x128
+#define TF_ENTRYHI	0x130
 
 #ifndef __ASSEMBLER__
 
@@ -68,11 +69,10 @@ struct trapframe {
 	unsigned long cp0_cause;
 	unsigned long cp0_badvaddr;
 	unsigned long cp0_epc;
+	unsigned long cp0_entryhi;	/* for obtaining ASID */
 };
 
-/* Thread register contexts share the same structure as trapframes, although
- * their purpose is different. */
-typedef struct trapframe context_t, trapframe_t;
+typedef struct trapframe trapframe_t, context_t;
 
 #endif	/* !__ASSEMBLER__ */
 

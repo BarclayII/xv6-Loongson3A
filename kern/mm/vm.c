@@ -190,7 +190,6 @@ int unmap_pages(mm_t *mm, addr_t vaddr, size_t nr_pages)
 
 	vm_area_dump(vma_start);
 	vm_area_dump(vma_end);
-
 	/* Update virtual memory area list */
 	if (vma_start == vma_end) {
 		/* The region is inside one virtual memory area entry */

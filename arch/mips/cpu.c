@@ -23,7 +23,8 @@
 struct cpuinfo_mips cpu_data[NR_CPUS];
 
 /*
- * Kernel SP per CPU
+ * Kernel SP per CPU.
+ * Always points to kernel stack of running process.
  */
 unsigned long kernelsp[NR_CPUS];
 

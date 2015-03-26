@@ -18,6 +18,7 @@
 #include <asm/ptrace.h>
 
 #define KSTACK_SIZE	8192
+#define USTACK_SIZE	8192
 
 #ifdef __ASSEMBLER__
 
@@ -40,15 +41,7 @@
 	mfc0	\temp, CP0_EBASE
 	andi	\temp, \temp, 0x3ff
 	dsll	\temp, \temp, 3
-	sd	\stackp, kernelsp(k0)
-	.endm
-
-	.macro	SAVE_EX
-	.set	push
-	.set	noat
-	sd	k0, TF_K0(sp)
-	sd	k1, TF_K1(sp)
-	.set	pop
+	sd	\stackp, kernelsp(\temp)
 	.endm
 
 	.macro	SAVE_SOME
@@ -64,7 +57,8 @@
 	andi	k0, ST_KSU
 	beqz	k0, 8f
 	move	k1, sp
-	/* If it is called from user mode, kernel sp should be retrieved. */
+	/* If it is called from user mode, switch to corresponding kernel
+	 * stack. */
 	get_saved_sp
 	/* Save original (user or kernel) sp into k0 */
 8:	move	k0, sp
@@ -83,8 +77,10 @@
 	sd	v1, TF_STATUS(sp)
 	mfc0	v1, CP0_CAUSE
 	sd	v1, TF_CAUSE(sp)
-	mfc0	v1, CP0_EPC
+	dmfc0	v1, CP0_EPC
 	sd	v1, TF_EPC(sp)
+	dmfc0	v1, CP0_ENTRYHI
+	sd	v1, TF_ENTRYHI(sp)
 	dmfc0	v1, CP0_BADVADDR
 	sd	v1, TF_BADVADDR(sp)
 	sd	t0, TF_T0(sp)
@@ -137,7 +133,6 @@
 	.endm
 
 	.macro	SAVE_ALL
-	SAVE_EX
 	SAVE_SOME
 	SAVE_AT
 	SAVE_TEMP
@@ -203,6 +198,8 @@
 	mtc0	v1, CP0_EPC
 	ld	ra, TF_RA(sp)
 	ld	gp, TF_GP(sp)
+	ld	v1, TF_ENTRYHI(sp)
+	dmtc0	v1, CP0_ENTRYHI
 	ld	t9, TF_T9(sp)
 	ld	t0, TF_T0(sp)
 	ld	t1, TF_T1(sp)
@@ -212,14 +209,6 @@
 	ld	a0, TF_A0(sp)
 	ld	v1, TF_V1(sp)
 	ld	v0, TF_V0(sp)
-	.set	pop
-	.endm
-
-	.macro	RESTORE_EX
-	.set	push
-	.set	noat
-	ld	k0, TF_K0(sp)
-	ld	k1, TF_K1(sp)
 	.set	pop
 	.endm
 
@@ -240,7 +229,6 @@
 	RESTORE_STATIC
 	RESTORE_AT
 	RESTORE_SOME
-	RESTORE_EX
 	RESTORE_SP
 	.endm
 
@@ -249,7 +237,6 @@
 	RESTORE_STATIC
 	RESTORE_AT
 	RESTORE_SOME
-	RESTORE_EX
 	RESTORE_SP_AND_RET
 	.endm
 

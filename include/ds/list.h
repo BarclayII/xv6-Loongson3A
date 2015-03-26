@@ -83,10 +83,22 @@ static inline list_node_t *list_next(list_node_t *node)
 	return node->next;
 }
 
+static inline void list_concat_headless(list_node_t *list1, list_node_t *list2)
+{
+	list_node_t *list1_last = list1->prev;
+	list_node_t *list2_last = list2->prev;
+	list1_last->next = list2;
+	list2->prev = list1_last;
+	list2_last->next = list1;
+	list1->prev = list2_last;
+}
+
 #define list_add(l, n)	list_add_after(l, n)
 /* For lists with a head node */
 #define list_empty(l)	(((l) == (l)->next) && ((l) == (l)->prev))
 /* For lists without head node */
 #define list_single(l)	list_empty(l)
+
+#define list_concat(l1, l2)	list_concat_headless(l1, l2)
 
 #endif

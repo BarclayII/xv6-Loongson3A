@@ -135,6 +135,8 @@ static void test_tlb(void)
 	pgtable_get(pgd, (addr_t)b, false, &pdesc2);
 	dump_pagedesc((addr_t)a, &pdesc1);
 	dump_pagedesc((addr_t)b, &pdesc2);
+	printk("PGD1 = %016x\r\n", pdesc1.pgd[pdesc1.pgx]);
+	printk("PMD1 = %016x\r\n", pdesc1.pmd[pdesc1.pmx]);
 	printk("PTE1 = %016x\r\n", pdesc1.pte[pdesc1.ptx]);
 	printk("PTE2 = %016x\r\n", pdesc2.pte[pdesc2.ptx]);
 

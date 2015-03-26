@@ -65,7 +65,7 @@ static const unsigned short tiny_sizes[NR_TINY_SIZES] = {
 	8, 16, 32, 64, 96, 128, 192, 256
 };
 
-struct kmem_cache_group kmcache_group;
+struct kmem_cache_set kmcache_set;
 
 #define LBOUND(x)	\
 	(((x) > 256) ? (1 << (fls((x) - 1) - 1)) + 8 : lbound[(x >> 3) - 1])

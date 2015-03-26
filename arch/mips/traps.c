@@ -11,8 +11,10 @@
 #include <asm/regdef.h>
 #include <asm/mipsregs.h>
 #include <asm/trap.h>
+#include <asm/cpu.h>
 #include <asm/decode.h>
 #include <asm/mm/tlb.h>
+#include <asm/mm/pgtable.h>
 #include <asm/thread_info.h>
 #include <drivers/uart16550.h>
 #include <irqregs.h>
@@ -194,28 +196,36 @@ static const char *ex_desc[] = {
 	[EC_cacheerr]	= "Cache Error"
 };
 
-static void dump_trapframe(struct trapframe *tf)
+void dump_trapframe(struct trapframe *tf)
 {
 	int i;
+	unsigned long tmp_enthi;
 	for (i = _ZERO; i <= _RA; ++i) {
 		printk("%s\t%016x\r\n", regname[i], tf->gpr[i]);
 	}
 	printk("STATUS\t= %08x\r\n", tf->cp0_status);
 	printk("CAUSE\t= %08x\r\n", tf->cp0_cause);
-	printk("EPC\t= %08x\r\n", tf->cp0_epc);
+	printk("EPC\t= %016x\r\n", tf->cp0_epc);
 	printk("BADVADDR= %016x\r\n", tf->cp0_badvaddr);
+	printk("ENTRYHI\t=%016x\r\n", tf->cp0_entryhi);
 	switch (EXCCODE(tf->cp0_cause)) {
 	case EC_tlbm:
 	case EC_tlbl:
 	case EC_tlbs:
-		printk("ENTRYHI\t=%016x\r\n", read_c0_entryhi());
 		/* Read current ENTRYLO0 and ENTRYLO1 contents */
+		/* Redundant? */
+		tmp_enthi = read_c0_entryhi();
+		write_c0_entryhi(tf->cp0_entryhi);
 		tlbp();
 		if (read_c0_index() >= 0) {
 			tlbr();
 			printk("ENTRYLO0=%016x\r\n", read_c0_entrylo0());
 			printk("ENTRYLO1=%016x\r\n", read_c0_entrylo1());
 		}
+		write_c0_entryhi(tmp_enthi);
+		break;
+	case EC_ri:
+		printk("Ins\t= %08x\r\n", *(unsigned int *)(tf->cp0_epc));
 		break;
 	default:
 		break;
@@ -427,6 +437,21 @@ void handle_exception(struct trapframe *tf)
 		if (handle_bp(tf) == 0)
 			return;
 		break;
+	case EC_sys:
+		/* System call */
+		handle_sys(tf);
+		/* Skip the exception-generating instruction (syscall) */
+		skip_victim(tf);
+		return;
+	case EC_tlbm:
+		/* Writing on read-only page */
+		break;
+	case EC_tlbl:
+	case EC_tlbs:
+		/* Loading/storing misses (page faults) */
+		if (handle_pgfault(tf) == 0)
+			return;
+		break;
 	}
 
 	printk("Caught exception %s (%d)\r\n",
@@ -435,3 +460,4 @@ void handle_exception(struct trapframe *tf)
 	dump_trapframe(tf);
 	panic("SUSPENDING SYSTEM...\r\n");
 }
+

@@ -24,11 +24,28 @@
 #include <errno.h>
 #include <string.h>
 #include <sync.h>
+#include <sched.h>
 
 mm_t kern_high_mm;
 mm_t kern_low_mm;
 
-pgd_t online_hpt[ASID_MAX + 1];
+struct asid_task_set asid_task_set;
+
+void asid_flush(void)
+{
+	/* Unregister all online HPTs */
+	memset(current_online_hpt, 0, sizeof(current_online_hpt));
+	current_next_asid = ASID_MIN;
+	current_online_hpt[ASID_KERNEL] = kern_mm.arch_mm.pgd;
+	/* Revert all tasks with valid ASIDs */
+	int i;
+	for (i = ASID_MIN; i < ASID_MAX; ++i) {
+		if (current_online_tasks[i] != NULL) {
+			current_online_tasks[i]->asid = ASID_INVALID;
+			current_online_tasks[i] = NULL;
+		}
+	}
+}
 
 /*
  * Allocate a page global directory for kernel, and initialize the memory
@@ -39,9 +56,12 @@ void pgtable_bootstrap(void)
 	kern_mm.arch_mm.pgd = (pgd_t)PAGE_TO_KVADDR(pgdir_new(ASID_KERNEL));
 	printk("Kernel page global directory initialized at %016x\r\n",
 	    kern_mm.arch_mm.pgd);
+	/* Have to clear current_online_tasks first to prevent asid_flush()
+	 * exhibiting weird behavior */
+	memset(current_online_tasks, 0, sizeof(current_online_tasks));
 
-	memset(online_hpt, 0, sizeof(online_hpt));
-	online_hpt[ASID_KERNEL] = kern_mm.arch_mm.pgd;
+	asid_flush();
+
 	printk("Kernel PGD at %016x registered as ASID %d\r\n",
 	    kern_mm.arch_mm.pgd, ASID_KERNEL);
 }

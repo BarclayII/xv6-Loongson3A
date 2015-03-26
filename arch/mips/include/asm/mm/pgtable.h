@@ -53,13 +53,19 @@
 #define PTE_PHYS		0x001	/* physical address marker */
 
 #ifndef __ASSEMBLER__
-extern pgd_t online_hpt[];
+
+#ifdef CONFIG_HPT
+#include <asm/mm/hier/pgtable.h>
+#endif
+
+void asid_flush(void);
 
 /* Determine page table flags from virtual memory area flags */
 unsigned int page_perm(unsigned long vm_flags);
 
 struct arch_mm_struct;
 struct page;
+struct trapframe;
 
 int arch_map_page(struct arch_mm_struct *arch_mm, addr_t vaddr,
     struct page *p, unsigned int perm);
@@ -67,6 +73,8 @@ struct page *arch_unmap_page(struct arch_mm_struct *arch_mm, addr_t vaddr);
 unsigned long arch_mm_get_pfn(struct arch_mm_struct *arch_mm, addr_t vaddr);
 int arch_mm_new_pgtable(struct arch_mm_struct *arch_mm);
 void arch_mm_destroy_pgtable(struct arch_mm_struct *arch_mm);
+
+int handle_pgfault(struct trapframe *tf);
 #endif	/* !__ASSEMBLER__ */
 
 #endif	/* CONFIG_HPT */

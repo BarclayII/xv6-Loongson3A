@@ -8,14 +8,16 @@
  *
  */
 
-#ifndef _ASM_SMP_H
-#define _ASM_SMP_H
+#ifndef _SYSCALL_H
+#define _SYSCALL_H
 
-#include <asm/thread_info.h>
+#include <asm/syscall.h>
 
-#define smp_processor_id()	(current_thread_info->cpu_number)
-#define smp_current_task	(current_thread_info->task)
+typedef void (*syscall_t)(struct trapframe *);
 
-#define NR_CPUS			4
+/* All system calls place return value and error code inside trapframe */
+
+/* int write(int fd, const void *buf, size_t len) */
+void sys_write(struct trapframe *tf);
 
 #endif

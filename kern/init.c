@@ -29,6 +29,7 @@
 #include <mm/vmm.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <sched.h>
 
 int main(void)
 {
@@ -39,7 +40,8 @@ int main(void)
 	char *arg;
 
 	early_printk = 1;
-	printk("Hello Loongson 3A!\r\n");
+	int bytes = printk("Hello Loongson 3A!\r\n");
+	printk("%d\r\n", bytes);
 	printk("PRID: %08x\r\n", prid);
 	printk("STATUS: %08x\r\n", read_c0_status());
 	printk("CAUSE: %08x\r\n", read_c0_cause());
@@ -100,7 +102,16 @@ int main(void)
 
 	mm_init();
 
+	task_init();
+
 	local_irq_enable();
+
+	current_task = initproc;
+	ptr_t ksp = kstacktop(initproc);
+	printk("init Kernel Stack Top: %016x\r\n", ksp);
+	switch_context(idleproc->context, initproc->context, ksp);
+
+	panic("context switching failed\r\n");
 
 	for (;;)
 		/* do nothing */;
