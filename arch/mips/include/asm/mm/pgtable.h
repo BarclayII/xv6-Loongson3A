@@ -30,13 +30,12 @@
  * following format:
  * 6666555555555544444444443333333333222222222211111111 110 0 0 0 000000
  * 3210987654321098765432109876543210987654321098765432 109 8 7 6 543210
- * +-------0------++------Physical Frame Number-------+ CCF D V G PTEFLG
+ * +-------0------++------Physical Frame Number-------+ CCF D V G 00X00P
  *
- * The two types of entries could be distinguished by checking the low 12
- * bits, particularly the PTEFLG bits.
+ * The two types of entries could be distinguished by checking the P bit.
  *
  * Refilling the TLB is then simple: we dive into the HPT and fetch the
- * page table entry, right shift the value 6 bits, and then pass the
+ * page table entry, right rotate the value by 6 bits, and then pass the
  * results into CP0.
  */
 
@@ -48,6 +47,9 @@
 #define PTE_DIRTY		0x100
 #define PTE_VALID		0x080
 #define PTE_GLOBAL		0x040
+/* Loongson 2F has this bit for buffer overflow protection.  Not sure whether
+ * Loongson 3A has it. */
+#define PTE_NOEXEC		0x008
 /* Extra page table entry flags not needed by hardware */
 #define PTE_SOFT_SHIFT		6
 #define PTE_PHYS		0x001	/* physical address marker */

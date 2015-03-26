@@ -98,8 +98,14 @@ xtlb_refill:
 	nop
 2:
 	/* Successfully found at least one mapped entry.  Write both. */
-	dsrl	k1, PTE_SOFT_SHIFT
-	dsrl	k0, PTE_SOFT_SHIFT
+	/* Clear the P bit first */
+	ori	k1, PTE_PHYS
+	ori	k0, PTE_PHYS
+	xori	k1, PTE_PHYS
+	xori	k0, PTE_PHYS
+	/* Right rotate */
+	drotr	k1, PTE_SOFT_SHIFT
+	drotr	k0, PTE_SOFT_SHIFT
 	dmtc0	k1, CP0_ENTRYLO0
 	dmtc0	k0, CP0_ENTRYLO1
 	tlbwr

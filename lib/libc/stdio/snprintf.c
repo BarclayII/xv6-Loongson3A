@@ -149,6 +149,7 @@ print_default:	set_ch(*fmt);
 		++fmt;
 	}
 	set_ch('\0');
+	--pos;		/* exclude the null byte */
 #undef FLAG_UNSIGNED
 #undef FLAG_ZEROPAD
 #undef FLAG_NEG

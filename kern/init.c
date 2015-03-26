@@ -40,8 +40,7 @@ int main(void)
 	char *arg;
 
 	early_printk = 1;
-	int bytes = printk("Hello Loongson 3A!\r\n");
-	printk("%d\r\n", bytes);
+	printk("Hello Loongson 3A!\r\n");
 	printk("PRID: %08x\r\n", prid);
 	printk("STATUS: %08x\r\n", read_c0_status());
 	printk("CAUSE: %08x\r\n", read_c0_cause());
