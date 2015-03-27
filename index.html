@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <title>Xv6-loongson3a by BarclayII</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Xv6-loongson3a</h1>
+        <h2>An experimental operating system running on MIPS64 for educational purpose (WIP)</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/BarclayII/xv6-Loongson3A/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/BarclayII/xv6-Loongson3A/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/BarclayII/xv6-Loongson3A" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h3>
+<a id="my-first-project-homepage" class="anchor" href="#my-first-project-homepage" aria-hidden="true"><span class="octicon octicon-link"></span></a>My first project homepage!</h3>
+
+<p>I figured out recently that GitHub projects can have their own homepages!  And I'll gradually add my thoughts and experiences here while continuing my development.</p>
+
+<p>So, here's a brief overview of what I'm doing:</p>
+
+<p>The two teaching operating systems, <a href="http://pdos.csail.mit.edu/6.828/2014/xv6.html">xv6</a> and <a href="https://github.com/chyyuu/ucore_lab">uCore</a> (Chinese, with <del>poor</del> <del>Chin</del>English in source code) are presented in the class I attended last year, both of which run on i386 architecture.  My instructor proposed to port them to a 64-bit (which is widely preferred today), different architecture, a RISC one if possible.  So... I'm in.</p>
+
+<p>xv6 is a clean and complete OS, with necessary (though not all) services and functions implemented: process isolation, scheduler, file systems, system calls, and most of all, multiprocessor support.  It also provides a bunch of userland programs.  The only thing I dislike is... well, indentation.</p>
+
+<p>uCore integrates some concepts from Linux, and slightly organizes the source code, but it constantly annoys me by brutally interrupts console outputs with those from other processes (as it dumps character by character rather than printing an entire buffer out).  It also provides less system calls, and thus, less kernel functions.  Moreover, it lacks multiprocessor support (although a serious one, called <a href="https://github.com/chyyuu/ucore_plus">uCore Plus</a>, is able to run on multicore systems, and even have NUMA support), and maintains concurrency disgracefully by turning on/off interrupts.</p>
+
+<p>So I'm trying my best to write an operating system which combines highlights from both operating systems, on a totally different architecture.  My instructor suggests Loongson 3A, a family of MIPS64.  I have to deal with issues particularly related to 64-bit architectures, and problems about MIPS.</p>
+
+<p>My available device is a <a href="http://www.loongson.cn/multi_techboard.php">multitech board</a>.  It doesn't have hard disks.</p>
+
+<p>Here's my roadmap:<br>
+1. Boot it up (Completed)<br>
+2. Physical page management (Completed)<br>
+3. Virtual memory management and SLAB allocation (Completed)<br>
+4. Processes, context switches, user mode isolation (Completed)<br>
+5. Userland C runtime (Now in progress...)<br>
+6. Scheduler (Now in progress...)<br>
+7. <code>fork(2)</code>, <code>exit(2)</code>, <code>wait(2)</code>, <code>kill(2)</code>, with same arguments as those specified in POSIX (Not yet)<br>
+8. Process memory sharing and copy-on-write (Not yet)<br>
+9. Concurrency maintaining through locks (Not yet)<br>
+10. File system, including devfs (Not yet, disk file system impossible for lacking of hard disks, may have to create a ramdisk or implement <code>tmpfs</code>?)<br>
+11. Necessary userland applications (Not yet)<br>
+12. SMP Multiprocessor support (Not yet)  </p>
+
+<p>My plans (or more precisely, daydreams)<br>
+13. Signals (to prevent userland programs from crashing kernels)<br>
+14. Security (although I frequently create bugs and frustrates myself)<br>
+15. Dynamic linking (which means I have to create a dynamic C runtime library on my own)<br>
+16. Cleaner code and organization (I struggle to stick on Linus' coding standard and tried to write better, but some of my code is still messy)<br>
+16. Berkeley FFS (I have to read the paper and Linux source code)  </p>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
