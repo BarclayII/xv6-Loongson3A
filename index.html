@@ -29,6 +29,28 @@
     <div class="container">
       <section id="main_content">
         <h3>
+<a id="booting-up-20150125-to-20150127" class="anchor" href="#booting-up-20150125-to-20150127" aria-hidden="true"><span class="octicon octicon-link"></span></a>Booting up (2015/01/25 to 2015/01/27)</h3>
+
+<p>As I said, the <a href="http://www.loongson.cn/multi_techboard.php">multi techboard</a> does not have hard disks.  So, rather than booting from disks, the box connects to a host with TFTP service enabled, downloads the kernel, loads it into RAM, and finally starts up.</p>
+
+<p>Originally, there's a Linux kernel specifically modified by Loongson Technology for the box is available, with NFSv2 support, which is already obsoleted by my Fedora 21 laptop...</p>
+
+<p>Anyway, after referencing the <a href="http://www.linux-mips.org/wiki/Porting">Linux/MIPS Porting Guide</a>, I found a guide and sample code for how to write a <a href="http://linux.junsun.net/porting-howto/src/barebone/">Hello World</a> for a MIPS.</p>
+
+<p>I wrote the UART serial driver according to Jun Sun's guide and <a href="http://www.loongson.cn/uploadfile/201204/Loongson3A_processor_user_manual_P1_V1.11.pdf">Loongson 3A User Manual Volume 1</a>, and, unsurprisingly, nothing came out.</p>
+
+<p>I'm neither a MIPS expert or an operating system master.  Since there's no EJTAG device with me, I developed a brute-force debugging method, that is, to manually insert breakpoints (thanks to MIPS that it has a breakpoint instruction) in different places.  Careful review of <a href="http://www.amazon.com/Second-Edition-Kaufmann-Computer-Architecture/dp/0120884216">See MIPS Run</a> revealed that the very first instruction</p>
+
+<pre><code>mtc0    zero, CP0_STATUS
+</code></pre>
+
+<p>actually totally disabled the coprocessor 0, thereby preventing other <code>mtc0</code> instructions from committing changes.  The correct way for manually disabling interrupts is to clear the IE bit inside coprocessor 0.</p>
+
+<p>I also had to change the UART address since that of the box differs from the guide.</p>
+
+<p>After changing the first instruction and adding kernel stack allocation (by assigning a reasonable value to SP), the box finally greeted me with a warm Hello World message.</p>
+
+<h3>
 <a id="my-first-project-homepage" class="anchor" href="#my-first-project-homepage" aria-hidden="true"><span class="octicon octicon-link"></span></a>My first project homepage!</h3>
 
 <p>I figured out recently that GitHub projects can have their own homepages!  And I'll gradually add my thoughts and experiences here while continuing my development.</p>
