@@ -46,7 +46,9 @@
 
 <p>actually totally disabled the coprocessor 0, thereby preventing other <code>mtc0</code> instructions from committing changes.  The correct way for manually disabling interrupts is to clear the IE bit inside coprocessor 0.</p>
 
-<p>I also had to change the UART address since that of the box differs from the guide.</p>
+<p>I also had to change the UART address since that of the box differs from the guide.  I dived into Linux code to figure out the corresponding virtual address, given physical address, until later I understand how MIPS64 address translation works, at which point I realized that I did a lot of unnecessary work previously.</p>
+
+<p>UART driver is very simple to implement, as reading from and writing to some fixed virtual address would do everything, from serial control to reading or writing data.</p>
 
 <p>After changing the first instruction and adding kernel stack allocation (by assigning a reasonable value to SP), the box finally greeted me with a warm Hello World message.</p>
 
