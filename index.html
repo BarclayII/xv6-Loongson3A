@@ -29,6 +29,28 @@
     <div class="container">
       <section id="main_content">
         <h3>
+<a id="mips-exception-handling" class="anchor" href="#mips-exception-handling" aria-hidden="true"><span class="octicon octicon-link"></span></a>MIPS Exception Handling</h3>
+
+<p>The next goal is to handle various exceptions.</p>
+
+<p>Prior to discussing exception handling, I should mention the <em>delayed branches</em>, one of the MIPS pipeline side effects.  It is well-known that conditional jumps may easily delay the pipeline execution and reduce efficiency.  MIPS attempts to address this control hazard by making instructions directly succeeding a branch <em>always</em> be executed.  The instruction immediately following a branch is called to be inside a <em>branch delay slot</em>.</p>
+
+<p>MIPS is a kind of <em>precise exception</em> CPU, that is, when an exception occur, all instruction preceding one certain instruction, called victim, is complete, but it's as if the victim and everything succeeding it were never started.  The victim address is stored inside Exception Program Counter (EPC) inside coprocessor 0 (CP0).</p>
+
+<p>MIPS hardware exception handling is simple.  The CPU first stores the victim address, usually that of the exception-generating instruction (or the instruction to be executed during an interrupt), unless it is inside a branch delay slot, in which case the branch instruction address is stored, inside EPC, to maintain the precise exception property.  It then switches on Exception Level (EXL) in CP0 Status register, and jumps into a fixed exception entry address based on what kind of exception it needs to handle.  All exceptions, e.g. interrupts, system calls, are handled this way.</p>
+
+<p>The <code>eret</code> instruction finishes exception handling by switching off EXL and restoring program counter from EPC.  Often EPC is left unchanged during exception handling, in which case the CPU restarts the victim and tries to continue execution.</p>
+
+<p>The exception entry addresses are selected by exception type and Base Exception Vector (BEV) bit in Status register.  MIPS chooses ones residing in ROM (<code>0xFFFF FFFF BFC0 xxxx</code>) if BEV is set, or those in RAM if BEV is not set.  In my box, BEV is already cleared by BIOS, and there's no need to change BEV back to 1.</p>
+
+<p>The RAM exception entry points are determined by the CP0 Exception Base (EBASE) register, plus some offsets:
+1. <code>EBASE + 0x000</code>: TLB refilling, which will be discussed later.
+2. <code>EBASE + 0x080</code>: 64-bit extended TLB refilling, ditto.
+3. <code>EBASE + 0x100</code>: Cache error, usually won't happen.
+4. <code>EBASE + 0x180</code>: Everything else.
+5. <code>EBASE + 0x200 + ...</code>: These address are for vectored interrupts, but I didn't and won't use this feature.</p>
+
+<h3>
 <a id="booting-up-20150125-to-20150127" class="anchor" href="#booting-up-20150125-to-20150127" aria-hidden="true"><span class="octicon octicon-link"></span></a>Booting up (2015/01/25 to 2015/01/27)</h3>
 
 <p>As I said, the <a href="http://www.loongson.cn/multi_techboard.php">multi techboard</a> does not have hard disks.  So, rather than booting from disks, the box connects to a host with TFTP service enabled, downloads the kernel, loads it into RAM, and finally starts up.</p>
