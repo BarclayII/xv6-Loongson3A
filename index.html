@@ -129,6 +129,53 @@
 </ol>
 
 <p>In the next section I'll briefly cover how C code works together with assembly, which involves the MIPS Application Binary Interface (ABI).</p>
+
+<h3>
+<a id="mips64-application-binary-interface-abi" class="anchor" href="#mips64-application-binary-interface-abi" aria-hidden="true"><span class="octicon octicon-link"></span></a>MIPS64 Application Binary Interface (ABI)</h3>
+
+<p>In a word, ABI is about stack frames and layouts, manner of passing arguments, and ways of properly organizing and aligning data.  ABI plays a major role in operating system development since most code would be written in C, which would be then translated into assembly by some compiler (usually GNU C Compiler) according to some standards, which would be in turn linked with a small portion of code have to be assembly for tasks which could not be completed by C such as:</p>
+
+<ol>
+<li>Preserving and switching thread contexts, that is, to save and restore register sets.</li>
+<li>Exception handling, which involves register preservation as well.</li>
+<li>Some of the hardware-specific tasks, such as TLB refilling or cache management on MIPS, or performing PCI I/O on x86, or accessing coprocessors on MIPS or ARM.</li>
+</ol>
+
+<p>In my project I used the SGI <code>n64</code> ABI, which is for 64-bit MIPS CPUs.  I'll list some but not all of the declarations here:</p>
+
+<ul>
+<li>Register Usage:
+
+<ul>
+<li>
+<code>zero($0)</code>: <em>Wired zero</em>.</li>
+<li>
+<code>at($1)</code>: <em>Assembler temporary</em> register, usually for holding intermediate results.  Rarely used directly in assembler code.</li>
+<li>
+<code>v0($2)</code>, <code>v1($3)</code>: Holds return values of a function.  In most cases a single <code>v0</code> would suffice, but in current Linux or other implementations <code>v0</code> and <code>v1</code> together holds the pair of file descriptors returned by <code>pipe(2)</code>.</li>
+<li>
+<code>a0($4)</code>, <code>a1($5)</code>, <code>a2($6)</code>, <code>a3($7)</code>: Holds the first four arguments when calling a function.</li>
+<li>
+<code>a4($8)</code>, <code>a5($9)</code>, <code>a6($10)</code>, <code>a7($11)</code>: Holds the fifth to the eighth argument when calling a function.  They are named <code>t0</code>, <code>t1</code>, <code>t2</code>, <code>t3</code> in my code currently as these names are from the older <code>o32</code> standard, where they serve as <em>temporary</em> (or <em>caller-saved</em>, indicating that it's function caller's responsibility to preserve them) registers.  Someday I'll fix that.</li>
+<li>
+<code>t0($12)</code>, <code>t1($13)</code>, <code>t2($14)</code>, <code>t3($15)</code>: <em>Temporary</em>, or "<em>caller-saved</em>" registers.  They are not necessary preserved between function calls, and programs must consider them volatile.  They are named <code>t4</code>, <code>t5</code>, <code>t6</code>, <code>t7</code> in my code, due to historical reasons, and again, someday I'll fix those.</li>
+<li>
+<code>s0($16)</code> to <code>s7($23)</code>: <em>Static</em>, or "<em>callee-saved</em>" registers.  Values there must be preserved onto function stack between different function calls.</li>
+<li>
+<code>t8($24)</code>, <code>t9($25)</code>: Yet another two temporary registers.  <code>t9</code> have another purpose of holding address of called function in <em>Position-Independent Code</em> (PIC), but I'm not considering about implementing PIC until I start working on dynamic linking, if I have time.</li>
+<li>
+<code>k0($26)</code>, <code>k1($27)</code>: Reserved for exception handlers, normally should not be used elsewhere.</li>
+<li>
+<code>gp($28)</code>: <em>Global pointer</em>.  Literally, this register retains global variable.  <code>gp</code> may point to <em>Global Offset Table</em> (GOT) in PIC.</li>
+<li>
+<code>sp($29)</code>: <em>Stack pointer</em>.</li>
+<li>
+<code>s8($30)</code> or <code>fp($30)</code>: <em>Frame pointer</em>, which points to top of the stack frame of one function.  The relation between <code>fp</code> and <code>sp</code> somehow resembles that between <code>ESP</code> and <code>EBP</code> in <code>i386</code>.</li>
+<li>
+<code>ra($31)</code>: Saves the return address of this function.</li>
+</ul>
+</li>
+</ul>
       </section>
     </div>
 
