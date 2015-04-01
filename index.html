@@ -170,11 +170,30 @@
 <li>
 <code>sp($29)</code>: <em>Stack pointer</em>.</li>
 <li>
-<code>s8($30)</code> or <code>fp($30)</code>: <em>Frame pointer</em>, which points to top of the stack frame of one function.  The relation between <code>fp</code> and <code>sp</code> somehow resembles that between <code>ESP</code> and <code>EBP</code> in <code>i386</code>.</li>
+<code>s8($30)</code> or <code>fp($30)</code>: <em>Frame pointer</em>, which points to top of the stack frame of one function.  The relation between <code>fp</code> and <code>sp</code> somehow resembles that between <code>ESP</code> and <code>EBP</code> in <code>i386</code>.  When frame pointer is unnecessary, <code>$30</code> is used as another static register.</li>
 <li>
 <code>ra($31)</code>: Saves the return address of this function.</li>
 </ul>
 </li>
+<li>
+<p>Data alignment:</p>
+
+<ul>
+<li>All primitive data, i.e., <code>char</code>, <code>short</code>, <code>int</code>, <code>long long</code>, <code>float</code>, <code>double</code>, could be handled <em>directly</em> by MIPS instructions if and only if they're so-called <em>naturally aligned</em>.  That is, the address of a <code>short</code> variable should be even, the address of a <code>long long</code> variable should be 0 modulo 8, etc.</li>
+<li>
+<p>A structure is organized inside memory by concatenating simple types, inserting <em>padding</em> bytes so as to follow the alignment rules described above.  For example, for the following C structure:</p>
+
+<div class="highlight highlight-C"><pre><span class="pl-k">struct</span> {
+        <span class="pl-k">char</span>    c;
+        <span class="pl-k">short</span>   s;
+        <span class="pl-k">long</span> <span class="pl-k">long</span> d;
+} s;</pre></div>
+
+<p>The C compiler would insert a padding byte between <code>c</code> and <code>s</code>, and 4 bytes between <code>s</code> and <code>d</code>.</p>
+</li>
+</ul>
+</li>
+<li>Stack frame layout is more complicated, and I'm not going to explain it here.  One could always refer to <a href="http://www.amazon.com/Second-Edition-Kaufmann-Computer-Architecture/dp/0120884216">See MIPS Run</a> if interested.  Furthermore, writing nested function in assembly should be avoided as much as possible, as the C compiler probably could do much better than you do.  Currently in my project the only place where I wrote nested calls in assembly is the trap handler entry and C runtime.</li>
 </ul>
       </section>
     </div>
