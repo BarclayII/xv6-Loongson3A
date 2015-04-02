@@ -53,6 +53,8 @@ void task_bootstrap_context(task_t *task, ptr_t sp)
 void set_task_user(task_t *task)
 {
 	trapframe_t *tf = task->tf;
+	/* CP0 register have to be disabled for user processes */
+	tf->cp0_status &= ~ST_CU0;
 	tf->cp0_status &= ~ST_EXCM;
 	tf->cp0_status |= KSU_USER | ST_EXL | ST_PX | ST_UX;
 }
