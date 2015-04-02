@@ -85,6 +85,11 @@ rollback_page:
  * Returns a new stack top to be filled into trapframe of the task.
  *
  * @argv[] and its elements should reside in kernel space.
+ *
+ * FIXME: This implementation did not handle cases where arguments
+ *        take too much space.  The argument array and string array
+ *        should grow *above* the user stack, and should NOT shrink
+ *        the user stack size.
  */
 addr_t set_task_argv(task_t *task, int argc, char *const argv[])
 {
