@@ -106,8 +106,11 @@ typedef struct mm_struct {
  * Note that a user address area may be incontiguous physically. */
 static inline addr_t __uvaddr_to_kvaddr(mm_t *mm, addr_t uvaddr)
 {
-	return PFN_TO_KVADDR(arch_mm_get_pfn(&(mm->arch_mm), uvaddr))
-	    + PAGE_OFF(uvaddr);
+	unsigned long pfn = arch_mm_get_pfn(&(mm->arch_mm), uvaddr);
+	if (pfn == 0)
+		return 0;
+	else
+		return PFN_TO_KVADDR(pfn) + PAGE_OFF(uvaddr);
 }
 #define UVADDR_TO_KVADDR(mm, uvaddr)	__uvaddr_to_kvaddr(mm, uvaddr)
 

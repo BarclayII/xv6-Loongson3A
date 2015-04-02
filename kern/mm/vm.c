@@ -304,6 +304,9 @@ static inline int copy_uvm(mm_t *mm, void *uvaddr, void *kvaddr, size_t len,
 		end = (i == nr_pages - 1) ? (addr_t)(uvaddr + len) :
 		    PGEND(start);
 		kuvaddr = (void *)UVADDR_TO_KVADDR(mm, start);
+		/* Check if the user virtual address is really valid */
+		if (kuvaddr == NULL)
+			return -EACCES;
 		pdebug("Copying %016x(%016x) [%d] %s %016x\r\n",
 		    start, kuvaddr, end - start,
 		    to ? "<-" : "->", kvaddr);
