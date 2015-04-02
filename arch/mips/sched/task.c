@@ -70,8 +70,9 @@ int set_task_ustack(task_t *task)
 	ret = map_pages(task->mm, (addr_t)task->progtop, p, USTACK_PERM);
 	if (ret != 0)
 		goto rollback_page;
-	/* Set user stack top (or heap bottom) */
-	task->ustacktop = task->progtop + USTACK_SIZE;
+	/* Set the starting sp inside trapframe */
+	task->tf->gpr[_SP] = (unsigned long)(task->progtop + USTACK_SIZE);
+	task->ustacktop = (void *)task->tf->gpr[_SP];
 	return 0;
 
 rollback_page:
@@ -81,49 +82,41 @@ rollback_page:
 
 /*
  * Setup arguments passed into process, if applicable.
- * Pushes argument strings as well as their address onto user stack.
- * Returns a new stack top to be filled into trapframe of the task.
+ * Pushes argument strings as well as their address on top of user stack.
+ * Returns the heap bottom.
  *
  * @argv[] and its elements should reside in kernel space.
- *
- * FIXME: This implementation did not handle cases where arguments
- *        take too much space.  The argument array and string array
- *        should grow *above* the user stack, and should NOT shrink
- *        the user stack size.
  */
 addr_t set_task_argv(task_t *task, int argc, char *const argv[])
 {
 	int i;
-	size_t argv_space = 0;
+	size_t argv_space = argc * 8;
 
-	/* Calculate overall space taken by argument strings.
-	 * Note that space occupied by one string @s is actually
+	/* Space occupied by one string @s is actually
 	 * POW2_ROUNDUP(strlen(s) + 1, 3)
 	 * since the address should be aligned to 8 bytes, and the null-
 	 * terminator '\0' itself takes one byte. */
-	for (i = argc - 1; i >= 0; --i)
-		argv_space += POW2_ROUNDUP(strlen(argv[i]) + 1, 3);
 
 	/* Push strings and their addresses one by one */
-	ptr_t strtop = task->ustacktop;
-	ptr_t argvtop = strtop - argv_space;
+	ptr_t argvtop = task->ustacktop;
+	ptr_t strtop = argvtop + argv_space;
 	size_t strspace;
-	for (i = argc - 1; i >= 0; --i) {
+	for (i = 0; i < argc; ++i) {
 		strspace = POW2_ROUNDUP(strlen(argv[i]) + 1, 3);
-		strtop -= strspace;
-		argvtop -= 8;
 		if (copy_to_uvm(task->mm, strtop, argv[i], strspace) != 0)
 			return 0;
 		if (copy_to_uvm(task->mm, argvtop, &strtop, sizeof(ptr_t)) != 0)
 			return 0;
+		argvtop += 8;
+		strtop += strspace;
 	}
 
-	return (addr_t)argvtop;
+	return (addr_t)strtop;
 }
 
-void set_task_ustacktop(task_t *task, ptr_t sp)
+void set_task_ustacktop(task_t *task, ptr_t utop)
 {
-	task->tf->gpr[_SP] = (addr_t)sp;
+	task->ustacktop = utop;
 }
 
 void set_task_main_args(task_t *task, int argc, char *const argv[])

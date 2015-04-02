@@ -106,9 +106,10 @@ void initproc_init(int argc, char *const argv[])
 		panic("init spawning failed with code %d\r\n", ret);
 
 	assert(set_task_ustack(initproc) == 0);
-	ptr_t usp = (ptr_t)set_task_argv(initproc, argc, argv);
-	set_task_ustacktop(initproc, usp);
-	set_task_main_args(initproc, argc, (char **)usp);
+	set_task_main_args(initproc, argc, (char **)initproc->ustacktop);
+	ptr_t utop = (ptr_t)set_task_argv(initproc, argc, argv);
+	assert(utop != 0);
+	set_task_ustacktop(initproc, utop);
 	set_task_entry(initproc, entry);
 
 	initproc->pid = PID_INIT;
