@@ -49,7 +49,7 @@ static void init_free_page_list(size_t nr_pages, size_t nr_occupied)
 	printk("Built free page list of %d pages\r\n", nr_free_pages);
 }
 
-static void init_page_array(size_t nr_pages)
+void init_page_array(size_t nr_pages)
 {
 	unsigned long page_array_bytes = nr_pages * sizeof(struct page);
 	unsigned long page_array_pages = NR_PAGES_NEEDED(page_array_bytes);
@@ -80,26 +80,9 @@ static void init_page_array(size_t nr_pages)
 	init_free_page_list(nr_pages, page_array_pages);
 }
 
-static void setup_page_array(void)
-{
-	unsigned long lowmemsize = (memsize > MAX_LOW_MEM_MB) ?
-	    memsize : MAX_LOW_MEM_MB;
-	unsigned long lowmembytes = MB_TO_BYTES(lowmemsize);
-	unsigned long highmembytes = MB_TO_BYTES(highmemsize);
-	unsigned long num_pages = NR_PAGES_AVAIL(highmembytes);
-
-	/* The lowest physical frame should be just above the lower memory. */
-	highmem_base_pfn = NR_PAGES_NEEDED(memlimit + lowmembytes);
-	printk("Highmem base PFN: %016x\r\n", highmem_base_pfn);
-
-	page_array = (struct page *)PFN_TO_KVADDR(highmem_base_pfn);
-	init_page_array(num_pages);
-}
-
 void mm_init(void)
 {
 	printk("Size of page struct: %d\r\n", sizeof(struct page));
-	setup_page_array();
 	arch_mm_init();
 	slab_bootstrap();
 	printk("Current free pages: %d\r\n", nr_free_pages);

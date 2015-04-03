@@ -194,7 +194,10 @@ extern struct free_page_set free_page_set;
 #define free_page_list	(list_node_t *)(&(free_page_set.head))
 #define nr_free_pages	(free_page_set.count)
 
+void mach_mm_init(void);
+void arch_mm_init(void);
 void mm_init(void);
+void init_page_array(size_t nr_pages);
 struct page *alloc_pages(size_t num);
 struct page *alloc_cont_pages(size_t num);
 #define alloc_page()	alloc_pages(1)
