@@ -4,6 +4,6 @@
 
 #include <sys/types.h>
 
-int do_write(int fd, const void *buf, size_t len, ssize_t *result);
+int do_write(int fd, void *buf, size_t len, ssize_t *result);
 
 #endif

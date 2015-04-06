@@ -21,6 +21,7 @@
 #include <mm/vmm.h>
 #include <sys/types.h>
 #include <ds/list.h>
+#include <asm/thread_info.h>
 
 /*
  * Somewhat an extremely-simplified version of Linux's task_struct, or an
@@ -111,6 +112,8 @@ extern task_set_t task_set;
 
 #define task_is_process(task)	((task)->tid == TID_MAIN)
 #define task_is_mainthread(task) task_is_process(task)
+
+#define current_task		(current_thread_info->task)
 
 static inline unsigned int task_num_sibling(task_t *t)
 {

@@ -15,32 +15,45 @@
 #include <printk.h>
 #include <stddef.h>
 #include <errno.h>
+#include <sched.h>
+#include <mm/kmalloc.h>
+#include <mm/vmm.h>
 #include <fs/sysfile.h>
 
 #define MAX_WRITE_LEN	BUFSIZ
 
-int do_write(int fd, const void *buf, size_t len, ssize_t *result)
+int do_write(int fd, void *buf, size_t len, ssize_t *result)
 {
+	int errno = 0;
+	mm_t *mm = current_task->mm;
 	/* Check if the buffer is inside userspace */
 	if (!USERSPACE((addr_t)buf)) {
 		*result = -1;
 		return -EFAULT;
 	}
 
-	char s[MAX_WRITE_LEN];
+	char *kbuf = kmalloc(MAX_WRITE_LEN);
 	switch (fd) {
 	case STDOUT_FILENO:
 	case STDERR_FILENO:
 		/* Here I only implemented writing to serial console.
 		 * Writing to file will be implemented after I deal with
 		 * filesystems. */
-		strlcpy(s, buf, MAX_WRITE_LEN);
-		*result = printk("%s", s);
-		return 0;
+		if (copy_from_uvm(mm, buf, kbuf, MAX_WRITE_LEN) != 0) {
+			*result = -1;
+			errno = -E2BIG;
+			break;
+		}
+		kbuf[MAX_WRITE_LEN - 1] = '\0';
+		*result = printk("%s", kbuf);
+		errno = 0;
+		break;
 	default:
 		*result = -1;
-		return -EBADF;
+		errno = -EBADF;
+		break;
 	}
-	/* NOTREACHED */
-	return 0;
+
+	kfree(kbuf);
+	return errno;
 }
