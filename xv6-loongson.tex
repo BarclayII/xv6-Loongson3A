@@ -1102,4 +1102,29 @@
 		} restores the trap frame in the same way as returning from an exception.
 	}
 	
+	At this point, \hilite{
+		\texttt{sp} and program counter (set by \texttt{eret} instruction
+		according to \texttt{CP0\_EPC} register) are set to appropriate values.
+	} These are virtual addresses
+	in the process’s address space. The processor’s paging hardware translates them into
+	physical addresses. The fact that \hilite{
+		\texttt{set\_task\_user}
+		\marginpar{
+			\footnotesize\ttfamily
+			arch/mips/sched/\\task.c:53
+		} disables CP0 and sets the processor to work in user mode
+	}
+	means that the user code can only use pages \hilite{
+		within \texttt{XUSEG}
+		\marginpar{
+			\footnotesize\ttfamily
+			\hilite{
+				arch/mips/include\\
+				asm/addrspace.h:44
+			}
+		}
+	},
+	and cannot modify sensitive hardware registers such as \hilite{CP0}.
+	So the process is constrained to using only its own memory.
+	
 \end{document}
