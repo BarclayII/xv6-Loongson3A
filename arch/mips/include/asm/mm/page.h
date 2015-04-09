@@ -50,7 +50,7 @@
  * 16MB		24	21			1	45
  *
  * Looks like 4KB and 256KB pages fully utilize virtual address space bits, and
- * 16KB pages, as well as 16KB pages nearly utilize all bits.  But note that
+ * 16KB pages, as well as 16MB pages nearly utilize all bits.  But note that
  * each process have to preserve one page global directory as well as several other
  * page directories.
  *
