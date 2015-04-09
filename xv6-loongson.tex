@@ -1152,13 +1152,43 @@
 		\end{enumerate}
 		
 		When \texttt{init} execute the following C code:
+		\marginpar{
+			\footnotesize\ttfamily
+			ramdisk/init/init.c:21
+		}
 		\begin{lstlisting}[style=c]
-		printf("%s", hellomsg);
+		printf("%s\r\n", hellomsg);
 		\end{lstlisting}
 		The C library transforms the print request into something like the following system call:
 		\begin{lstlisting}[style=c]
-		write(STDERR_FILENO, hellomsg, strlen(hellomsg));
+		write(STDERR_FILENO, buf, strlen(buf));
 		\end{lstlisting}
+		As the arguments are automatically put into the argument registers by C compiler following
+		the \texttt{n64} ABI, the \texttt{write}
+		\marginpar{
+			\footnotesize\ttfamily
+			lib/libc/arch/\\mips/syscall.S
+		}
+		function only needs to set up \texttt{v0}, and store
+		error number register into a global symbol \texttt{errno} (NYI), since the returning value is already
+		stored in the return value register \texttt{v0}.
+		
+		After the processor catches a system call exception,
+		\marginpar{
+			\footnotesize\ttfamily
+			arch/mips/traps.c:442
+		}
+		it looks up a system call table according
+		to number placed in \texttt{v0}, jumps into the corresponding handler, and begin servicing the
+		user process.
+		\marginpar{
+			\footnotesize
+			\texttt{arch/mips/syscall/\\syscall.c:23},
+		}In \texttt{write}'s case, the service handler is \texttt{do\_write}.
+		\marginpar{
+			\footnotesize\ttfamily
+			\hilite{fs/write.c}
+		}
 	\end{hilight}
 	
 \end{document}
