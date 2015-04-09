@@ -943,7 +943,7 @@
 		function \texttt{forkret}
 		\marginpar{
 			\footnotesize\ttfamily
-			arch/mips/syscall/\\fork.c:26
+			kern/syscall/fork.c:26
 		}, which would in turn transfer control to function \texttt{arch\_forkret}
 		\marginpar{
 			\footnotesize\ttfamily
@@ -1039,8 +1039,12 @@
 	
 	\section{Code: running the first process}
 	Now that the first process's state is prepared, it is time to run it. After \texttt{main} bootstrapped
-	everything, \texttt{mpmain} calls \texttt{scheduler} to start running processes (\hilite{NYI}). 
-	\texttt{Scheduler} (\hilite{NYI})
+	everything, \texttt{mpmain} calls \texttt{sched}
+	\marginpar{
+		\footnotesize\ttfamily
+		\hilite{kern/sched/sched.c}
+	} to start running processes (\hilite{NYI}). 
+	\texttt{sched} (\hilite{NYI})
 	looks for a process with \texttt{p->state} set to \texttt{TASK\_RUNNABLE}, and there’s only one:
 	\texttt{init}. It
 	sets the per-cpu variable \texttt{current\_task}
@@ -1055,9 +1059,47 @@
 			\hilite{arch/mips/sched/switch.S}
 		} by exploiting and changing the ASID field in \texttt{CP0\_ENTRYHI}
 		register
-	}. switchuvm also sets up a task
-	state segment SEG\_TSS that instructs the hardware to execute system calls and inter-
-	rupts on the process’s kernel stack. We will re-examine the task state segment in
-	Chapter 3.
+	}. \hilite{In original xv6 implementation on x86,} switchuvm also sets up a task
+	state segment \texttt{SEG\_TSS} that instructs the hardware to execute system calls and 
+	interrupts on the process’s kernel stack. \hilite{
+		This is no longer required on MIPS hardware, since user/kernel stack switching is done
+		\emph{manually}.  User/kernel stack switching, along with other elements of exception
+		handling, will be explored in chapter 4.
+	}
+	
+	\texttt{sched} now sets p->state to RUNNING and calls \texttt{switch\_context} to perform a
+	context switch to the target process’s kernel thread. \texttt{switch\_context} saves the current registers
+	and loads the saved registers of the target kernel thread (proc->context) into the
+	hardware registers. \hilite{
+		Unlike original xv6, \texttt{switch\_context} is implemented like an ordinary function.
+		So the current context is \emph{inside} the process's context switch,
+		since \texttt{switch\_context} is invoked by \texttt{sched} function, which is periodically called
+		during clock interrupts.  As the current context is saved \emph{during} a switch, the processor
+		would run in the switching procedure of another process after restoring context registers.
+		\texttt{switch\_context} also involves properly changing the current kernel stack.
+	} We’ll examine \texttt{switch\_context} in more detail in Chapter 5.
+	
+	\hilite{
+		Consider the very initial execution of \texttt{init}. As \texttt{task\_bootstrap\_context}
+		\marginpar{
+			\footnotesize\ttfamily
+			arch/mips/sched/\\task.c:41
+		} sets the \texttt{ra} register, i.e. the returning address to the entry of \texttt{forkret},
+		with \texttt{a0} register pointing to the trap frame structure built by \texttt{initproc\_init}.
+		After returning from \texttt{switch\_context}, the processor found itself at the starting point
+		of \texttt{forkret},
+		\marginpar{
+			\footnotesize\ttfamily
+			kern/syscall/fork.c:26
+		}
+		with the trap frame as argument.  As \texttt{forkret} is executed only once
+		per process (whether by \texttt{fork()} or by creating \texttt{init}), it could be designed as a
+		\emph{no-return} function.  \texttt{forkret} passes the received trap frame to assembly code
+		\texttt{arch\_forkret}, which is also a no-return function.  \texttt{arch\_forkret}
+		\marginpar{
+			\footnotesize\ttfamily
+			arch/mips/syscall/\\forkret.S
+		} restores the trap frame in the same way as returning from an exception.
+	}
 	
 \end{document}
