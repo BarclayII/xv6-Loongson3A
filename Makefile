@@ -58,7 +58,6 @@ OBJS		= arch/mips/entry.o \
 		  arch/mips/mach/loongson3a5/mm.o \
 		  arch/mips/sched/task.o \
 		  arch/mips/sched/switch.o \
-		  arch/mips/syscall/fork.o \
 		  arch/mips/syscall/forkret.o \
 		  arch/mips/syscall/syscall.o \
 		  drivers/serial/uart16550.o \
@@ -73,6 +72,7 @@ OBJS		= arch/mips/entry.o \
 		  kern/sched/task.o \
 		  kern/sched/sched.o \
 		  kern/sched/tasklist.o \
+		  kern/syscall/fork.o \
 		  kern/syscall/execve.o \
 		  kern/printk.o \
 		  kern/panic.o \
