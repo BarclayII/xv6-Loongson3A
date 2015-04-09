@@ -7,7 +7,7 @@
 \lstset{basicstyle=\footnotesize\ttfamily}
 
 \lstdefinestyle{c}{
-	basicstyle=\footnotesize\ttfamily,
+	basicstyle=\footnotesize\ttfamily\color{black},
 	keywordstyle=\color{blue},
 	commentstyle=\color{green},
 	stringstyle=\color{red},
@@ -16,6 +16,8 @@
 	showstringspaces=false,
 	language=C
 }
+
+\newenvironment{hilight}{\color{red}}{\color{black}}
 
 \begin{document}
 	\title{
@@ -744,11 +746,11 @@
 	(the address that an x86 instruction manipulates) to a \emph{physical address} (an address
 	that the processor chip sends to main memory).
 	
-	\textcolor{red}{
+	\begin{hilight}
 		In xv6', since the memory management hardware merely consists of a TLB in MIPS
 		architecture, most part of virtual-to-physical translation is done \emph{manually},
 		that is, by software.  Memory management would be discussed in detail in chapter 3.
-	}
+	\end{hilight}
 	
 	Xv6 maintains a separate page table for each process that defines that process's
 	address space. An address space includes the process's
@@ -794,11 +796,11 @@
 	user stack and its kernel stack. The kernel stack is separate (and protected from user
 	code) so that the kernel can execute even if a process has wrecked its user stack.
 	
-	\textcolor{red}{
+	\begin{hilight}
 		If time permitting, xv6' would support processes with multiple threads.  This is not
 		my major goal since threads and processes don't differ very much in design of Linux, and thus,
 		xv6'.
-	}
+	\end{hilight}
 	
 	When a process makes a system call, the processor switches to the kernel stack,
 	raises the hardware privilege level, and starts executing the kernel instructions that 
@@ -844,7 +846,7 @@
 	how xv6 provides strong isolation for processes. The first step in providing strong 
 	isolation is setting up the kernel to run in its own address space.
 	
-	\textcolor{red}{
+	\begin{hilight}
 		When it comes to Loongson Multitech Board, the machine bootstraps
 		itself by loading program from a built-in PMON ROM which is already provided by the
 		manufacturer.  PMON downloads the operating system kernel remotely via TFTP after hardware
@@ -859,9 +861,7 @@
 		lower 256MB to 512MB actually corresponds to I/O devices or ROM, so the kernel can only
 		take the lower 0-256MB address.  The phenomenon one can observe is that xv6' loads itself
 		in virtual address \texttt{0xffff ffff 8030 0000}.
-	}
-	
-	\textcolor{red}{	
+		
 		In MIPS64 architecture, the virtual address layout is fixed, and is described
 		in \texttt{arch/mips/include/asm/addrspace.h}.  By enforcing the virtual addresses
 		directly used by kernel to reside in \texttt{XKPHY}, a kernel-mode-only address space,
@@ -874,9 +874,7 @@
 		it is no longer necessary to make separate virtual address mapping for kernel, and to switch page
 		table during user/kernel mode transition.  However, the address space \texttt{XKPHY} is
 		MIPS64-specific.  In 32-bit MIPS architecture a different mechanism should be developed.
-	}
-	
-	\textcolor{red}{
+
 		The kernel entry points to a small piece of assembly code,
 		\marginpar{
 			\footnotesize\ttfamily
@@ -889,14 +887,14 @@
 			\footnotesize\ttfamily
 			\textcolor{red}{kern/init.c}
 		}
-	}
+	\end{hilight}
 	
 	\section{Code: creating the first process}
 	Now the kernel runs within its own address space, we look at how the kernel creates 
 	user-level processes and ensures strong isolation between the kernel and user-level
 	processes, and between processes themselves.
 	
-	\textcolor{red}{
+	\begin{hilight}
 		The procedure which spawns initial tasks is \texttt{task\_init}.
 		\marginpar{
 			\footnotesize\ttfamily
@@ -924,9 +922,7 @@
 			\textcolor{red}{kern/sched/task.c:48}
 		}
 		(\texttt{task\_setup\_mm}).
-	}
-	
-	\textcolor{red}{
+
 		The initializer should then set up the process context and the kernel stack.
 		\texttt{task\_setup\_kstack}
 		\marginpar{
@@ -951,9 +947,7 @@
 		} written in assembly, which would restore a previously built trap frame
 		for restoring and returning in a way similar to that of finishing handling
 		an exception.  This setup is mostly the same for ordinary \texttt{fork}s.
-	}
-	
-	\textcolor{red}{
+
 		Now the initializer should build a trap frame inside the kernel stack in a
 		manner so as to make the process have the illusion that it is returning from
 		a trap handler after a context switch.  Building such trap frame is
@@ -1003,9 +997,7 @@
 			\footnotesize\ttfamily
 			\textcolor{red}{kern/sched/task.c:71}
 		}
-	}
-	
-	\textcolor{red}{
+
 		Unlike original xv6, the first process is loaded from a separate ELF program, named \texttt{init},
 		preferably stored on the disk, but now embedded in the kernel binary file as the box currently lacks
 		external storage.
@@ -1030,12 +1022,10 @@
 		loads each loadable segment into memory, mapping them to virtual address specified by the ELF
 		program headers.  The creation is complete after the entry is located by looking into the
 		corresponding field inside the ELF header.
-	}
-	
-	\textcolor{red}{
+
 		The process is now ready to run, and the initializer finalizes the procedure by setting appropriate
 		PID, process name, and state (\texttt{TASK\_RUNNABLE})
-	}
+	\end{hilight}
 	
 	\section{Code: running the first process}
 	Now that the first process's state is prepared, it is time to run it. After \texttt{main} bootstrapped
@@ -1079,7 +1069,7 @@
 		\texttt{switch\_context} also involves properly changing the current kernel stack.
 	} We’ll examine \texttt{switch\_context} in more detail in Chapter 5.
 	
-	\hilite{
+	\begin{hilight}
 		Consider the very initial execution of \texttt{init}. As \texttt{task\_bootstrap\_context}
 		\marginpar{
 			\footnotesize\ttfamily
@@ -1100,7 +1090,7 @@
 			\footnotesize\ttfamily
 			arch/mips/syscall/\\forkret.S
 		} restores the trap frame in the same way as returning from an exception.
-	}
+	\end{hilight}
 	
 	At this point, \hilite{
 		\texttt{sp} and program counter (set by \texttt{eret} instruction
@@ -1126,5 +1116,49 @@
 	},
 	and cannot modify sensitive hardware registers such as \hilite{CP0}.
 	So the process is constrained to using only its own memory.
+	
+	\section{The first system call: \hilite{\texttt{write}}}
+	Now we have seen how the kernel provides strong isolation for processes, let’s see
+	how a user-level process can enter back into the kernel to ask for services that it
+	cannot perform itself.
+	
+	\begin{hilight}
+		As \texttt{execve} system call depends on a file system, which is not implemented
+		yet, we'll consider \texttt{write} system call here.  But even \texttt{write} can
+		do nothing other than output a bunch of characters into serial console at present.
+
+		\texttt{write} is the first system call invoked by the user process \texttt{init}.
+		It requests kernel service according to a simplified version of Linux/MIPS64 system
+		call standard:
+		\begin{enumerate}
+			\item System calls are always requested by executing \texttt{syscall} instruction.
+			\item System call number is put in register \texttt{v0(\$2)}.
+			\item Arguments are put in \texttt{a0(\$4)} to \texttt{a7(\$11)} registers.
+			\marginpar{
+				\footnotesize
+				\texttt{n64} \texttt{a4} to \texttt{a7} registers are named \texttt{t0} to
+				\texttt{t3} in current code, while \texttt{n64} \texttt{t0} to \texttt{t3}
+				are named \texttt{t4} to \texttt{t7} due to \texttt{o32} legacy ABI naming
+				in current code.  Someday we'll fix that.
+			}
+			A C library is preferred to wrap user land system call functions into kernel-flavored
+			argument format in case of dealing with more-than-eight arguments.  But since few system
+			calls have so many parameters (there's no such system call in OpenBSD after all),
+			it is fine to simply ignore the case, and just put everything in the registers.
+			When it comes to \texttt{o32} ABI for MIPS32, things may become more complex.
+			\item Return values are placed in \texttt{v0(\$2)}, or both \texttt{v0(\$2)} and
+			\texttt{v1(\$3)} when one returns more values, e.g. returning from \texttt{pipe}.
+			\item Error number is stored in register \texttt{a3(\$7)}.
+		\end{enumerate}
+		
+		When \texttt{init} execute the following C code:
+		\begin{lstlisting}[style=c]
+		printf("%s", hellomsg);
+		\end{lstlisting}
+		The C library transforms the print request into something like the following system call:
+		\begin{lstlisting}[style=c]
+		write(STDERR_FILENO, hellomsg, strlen(hellomsg));
+		\end{lstlisting}
+	\end{hilight}
 	
 \end{document}
