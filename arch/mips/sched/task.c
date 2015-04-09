@@ -104,11 +104,6 @@ addr_t set_task_argv(task_t *task, int argc, char *const argv[])
 	return (addr_t)strtop;
 }
 
-void set_task_ustacktop(task_t *task, ptr_t utop)
-{
-	task->ustacktop = utop;
-}
-
 void set_task_main_args(task_t *task, int argc, char *const argv[])
 {
 	task->tf->gpr[_A0] = (unsigned long)argc;

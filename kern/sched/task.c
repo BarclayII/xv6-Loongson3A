@@ -126,7 +126,7 @@ void initproc_init(int argc, char *const argv[])
 	set_task_main_args(initproc, argc, (char **)initproc->ustacktop);
 	ptr_t utop = (ptr_t)set_task_argv(initproc, argc, argv);
 	assert(utop != 0);
-	set_task_ustacktop(initproc, utop);
+	initproc->ustacktop = utop;
 	set_task_entry(initproc, entry);
 
 	initproc->pid = PID_INIT;
