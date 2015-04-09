@@ -1035,7 +1035,7 @@
 		\hilite{kern/sched/sched.c}
 	} to start running processes (\hilite{NYI}). 
 	\texttt{sched} (\hilite{NYI})
-	looks for a process with \texttt{p->state} set to \texttt{TASK\_RUNNABLE}, and there’s only one:
+	looks for a process with \texttt{p->state} set to \texttt{TASK\_RUNNABLE}, and there's only one:
 	\texttt{init}. It
 	sets the per-cpu variable \texttt{current\_task}
 	\marginpar{
@@ -1051,14 +1051,14 @@
 		register
 	}. \hilite{In original xv6 implementation on x86,} switchuvm also sets up a task
 	state segment \texttt{SEG\_TSS} that instructs the hardware to execute system calls and 
-	interrupts on the process’s kernel stack. \hilite{
+	interrupts on the process's kernel stack. \hilite{
 		This is no longer required on MIPS hardware, since user/kernel stack switching is done
 		\emph{manually}.  User/kernel stack switching, along with other elements of exception
 		handling, will be explored in chapter 4.
 	}
 	
 	\texttt{sched} now sets p->state to RUNNING and calls \texttt{switch\_context} to perform a
-	context switch to the target process’s kernel thread. \texttt{switch\_context} saves the current registers
+	context switch to the target process's kernel thread. \texttt{switch\_context} saves the current registers
 	and loads the saved registers of the target kernel thread (proc->context) into the
 	hardware registers. \hilite{
 		Unlike original xv6, \texttt{switch\_context} is implemented like an ordinary function.
@@ -1067,7 +1067,7 @@
 		during clock interrupts.  As the current context is saved \emph{during} a switch, the processor
 		would run in the switching procedure of another process after restoring context registers.
 		\texttt{switch\_context} also involves properly changing the current kernel stack.
-	} We’ll examine \texttt{switch\_context} in more detail in Chapter 5.
+	} We'll examine \texttt{switch\_context} in more detail in Chapter 5.
 	
 	\begin{hilight}
 		Consider the very initial execution of \texttt{init}. As \texttt{task\_bootstrap\_context}
@@ -1096,7 +1096,7 @@
 		\texttt{sp} and program counter (set by \texttt{eret} instruction
 		according to \texttt{CP0\_EPC} register) are set to appropriate values.
 	} These are virtual addresses
-	in the process’s address space. The processor’s paging hardware translates them into
+	in the process's address space. The processor's paging hardware translates them into
 	physical addresses. The fact that \hilite{
 		\texttt{set\_task\_user}
 		\marginpar{
@@ -1118,7 +1118,7 @@
 	So the process is constrained to using only its own memory.
 	
 	\section{The first system call: \hilite{\texttt{write}}}
-	Now we have seen how the kernel provides strong isolation for processes, let’s see
+	Now we have seen how the kernel provides strong isolation for processes, let's see
 	how a user-level process can enter back into the kernel to ask for services that it
 	cannot perform itself.
 	
@@ -1190,5 +1190,104 @@
 			\hilite{fs/write.c}
 		}
 	\end{hilight}
+	
+	\chapter{Page tables}
+	Page tables are the mechanism through which the operating system controls what
+	memory addresses mean. They allow xv6 to multiplex the address spaces of different
+	processes onto a single physical memory, and to protect the memories of different
+	processes. The level of indirection provided by page tables is also a source for many neat
+	tricks. xv6 uses page tables primarily to multiplex address spaces and to protect
+	memory. It also uses a few simple page-table tricks: mapping the same memory (the
+	kernel) in several address spaces, mapping the same memory more than once in one
+	address space (each user page is also mapped into the kernel's physical view of memory),
+	and guarding a user stack with an unmapped page. The rest of this chapter explains
+	the page tables that the \hilite{MIPS64} hardware provides and how xv6 uses them.
+	
+	\section{Paging hardware}
+	\begin{hilight}
+		Different from x86, MIPS paging hardware \textbf{only consists of a TLB}.
+		The TLB have a number of entries (in case of Loongson 3A, 64 entries), each
+		containing a pair of adjacent virtual page numbers (VPN), and their mapping to physical
+		frame numbers (PFN), as well as permission flags.
+		
+		When a virtual address is requested, either for reading or for writing, TLB
+		tries to look up the virtual page number in its entry table.  The hardware throws an
+		exception if:
+		\begin{enumerate}
+			\item the VPN does not exist in TLB (\emph{TLB loading miss} or \emph{TLB storing miss},
+			depending on operation), or
+			\item the VPN does exist but is marked invalid, due to, for example, being swapped out
+			to external storage (\emph{TLB invalid load} or \emph{TLB invalid store}), or
+			\item the process tries to write on a read-only virtual page (\emph{TLB modify}).
+		\end{enumerate}
+		TLB then leave everything to the operating system to handle these exception.
+		
+		Side note: MIPS does not provide execution prevention similar to NX bit on \texttt{amd64} platform.
+		Loongson 2F used to have a similar feature, which is removed in Loongson 3A.
+	\end{hilight}
+	
+	\section{\hilite{MIPS Physical address convention}}
+	\begin{hilight}
+		It is previously mentioned that virtual address space \texttt{CKSEG0} corresponds to the lower
+		512MB physical address, while \texttt{XKPHY} can cover as large as $2^48$ bytes space.  However,
+		a further low-level mapping exist between physical addresses and \emph{real hardware}.
+		
+		\begin{enumerate}
+			\item Physical address \texttt{0x0} to \texttt{0x0fff ffff} maps to lower
+			256MB of main memory.
+			\item Usually, physical address \texttt{0x1000 0000} to \texttt{0x1fff ffff} corresponds to
+			I/O devices, BIOS (starting from \texttt{0x1fc00 000}), and other hardware.  These addresses
+			are normally directly accessed, not passing through caches during the process.
+			\item Method of accessing memory higher than 256MB generally varies between machines.
+			In case of Loongson 3A, the physical addresses mapped to memory addresses higher than
+			256MB equals to the memory address itself plus the overall memory size.  For example, if the
+			total memory capacity is 4GB, the physical address range corresponding to memory higher than
+			256MB is \texttt{0x0001 1000 0000} to \texttt{0x0001 ffff ffff}.
+		\end{enumerate}
+	\end{hilight}
+	
+	\section{Process address space}
+	Each process has a separate page table, and xv6 tells the page table hardware to
+	switch page tables when xv6 switches between processes. A
+	process's user memory resides in \hilite{\texttt{XUSEG}}, starts at virtual address zero 
+	and can grow up to \hilite{\texttt{XSSEG}},
+	allowing a process to address up to \hilite{256 TB} of memory (if there's really that much physical memory).
+	The file \hilite{\texttt{arch/mips/include/asm/addrspace.h}}
+	\marginpar{
+		\footnotesize\ttfamily
+		\hilite{arch/mips/include/\\asm/addrspace.h}
+	}
+	declares the constants for xv6's memory layout, and macros to convert virtual to physical
+	addresses \hilite{are defined in \texttt{include/mm/mmap.h}}.
+	\marginpar{
+		\footnotesize\ttfamily
+		\hilite{include/mm/mmap.h}
+	}
+	
+	When a process asks xv6 for more memory, xv6 first finds free physical pages to
+	provide the storage, and then adds PTEs to the process's page table that point to the
+	new physical pages. \hilite{xv6' sets the PTE\_DIRTY and PTE\_VALID flags in these PTEs when it's
+	running on MIPS processors}. Most
+	processes do not use the entire user address space; xv6' leaves \hilite{the entire PTE
+	clear if it's not used}. Different processes' page tables translate user addresses to different pages of
+	physical memory, so that each process has private user memory.
+	
+	Xv6' includes all mappings needed for the kernel to run in every process's page ta-
+	ble; these mappings \hilite{
+		are automatically enforced by MIPS hardware.  The kernel's instruction and static data
+		resides in \texttt{CKSEG0}, whereas the kernel's dynamically allocated data are in
+		\texttt{XKPHY}, both address spaces directly mapped to physical pages without looking up
+		in TLB, both protected by hardware so that they are only accessible in kernel mode.  This design
+		enables the kernel to read from and write to arbitrary positions, and negates the need
+		of switching page tables repeatedly during user/kernel mode transition since in this way the
+		kernel itself does \emph{not} require a page table to run.
+	}
+	
+	To review, xv6 ensures that each process can only use its own memory, and that
+	each process sees its memory as having contiguous virtual addresses starting at zero.
+	xv6' implements the first \hilite{by only filling valid information in} PTEs of virtual addresses
+	that refer to the process's own memory. It implements the second using the ability of
+	page tables to translate successive virtual addresses to whatever physical pages happen
+	to be allocated to the process.
 	
 \end{document}
