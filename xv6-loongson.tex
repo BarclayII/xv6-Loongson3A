@@ -1466,4 +1466,14 @@
 		which are not yet allocated to keep track of the index of next available chunk inside the slab,
 		as it is quite costly to allocate such list elsewhere.
 	\end{hilight}
+	
+	\section{User part of an address space}
+	The heap is above the stack so that it can expand (with \texttt{sbrk}, \hilite{NYI}). The stack is a single
+	page, and is shown with the initial contents as created by \texttt{execve}. Strings containing the
+	command-line arguments, as well as an array of pointers to them, are \hilite{between the user stack and the
+	heap}. Just under that are values that allow a program to start at \texttt{\_\_start}, \hilite{where the control
+	would soon transfer to \texttt{main()}}. To guard a stack growing off the
+	stack page, xv6 places a guard page right below the stack. The guard page is not
+	mapped and so if the stack runs off the stack page, the hardware will generate an ex-
+	ception because it cannot translate the faulting address.
 \end{document}
