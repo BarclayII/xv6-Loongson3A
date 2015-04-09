@@ -1,6 +1,8 @@
 \documentclass{report}
 \usepackage{color}
 \usepackage{listings}
+\usepackage{amsmath}
+\usepackage{amssymb}
 
 \def \hilite#1{\textcolor{red}{#1}}
 
@@ -1205,6 +1207,7 @@
 	
 	\section{Paging hardware}
 	\begin{hilight}
+		Literally, paging hardware deal with \emph{pages}, an aligned memory chunk of fixed size.
 		Different from x86, MIPS paging hardware \textbf{only consists of a TLB}.
 		The TLB have a number of entries (in case of Loongson 3A, 64 entries), each
 		containing a pair of adjacent virtual page numbers (VPN), and their mapping to physical
@@ -1226,6 +1229,55 @@
 		Loongson 2F used to have a similar feature, which is removed in Loongson 3A.
 	\end{hilight}
 	
+	\section{\hilite{Cache aliasing -- a MIPS specific issue}}
+	\begin{hilight}
+		For speeding up the processor, MIPS radically indexes its primary cache by virtual address.
+		This leads into a MIPS-specific problem called \emph{cache aliasing}.  The symptom is that
+		a physical address may appear on multiple cache lines, each with possibly different data.
+		Secondary cache is free from this issue.
+		
+		In Loongson 3A, the primary data cache is indexed by the last 14 bit of virtual address,
+		with the remaining high 24 bits serving as cache tag.  If the page size is 4KB, i.e. VPN
+		is the high 26 bits of a virtual address, the last 2 bits of VPN would become part of the
+		cache index.  If two virtual pages with VPNs different in the last 2 bits happen to point
+		to the same physical page, it is possible to have different cache lines in a same cache set,
+		referencing the same physical address, but caching different data, breaking coherency.
+		
+		A simple workaround is to tune the page size so as to prevent any bits from VPN being used as
+		cache index.  In Loongson 3A, a page size of 16KB is a good choice.
+	\end{hilight}
+	
+	\section{\hilite{Page table organization}}
+	\begin{hilight}
+		Since MIPS does not have hardware other than TLB to support paging, the operating system may
+		maintain a page table by its choice.  xv6' utilizes a page table hierarchy similar to the
+		classic two-level hierarchy on 32-bit x86 processors.
+		
+		Due to previously discussed \emph{cache aliasing} issue, the page size on Loongson 3A is chosen
+		to be 16KB.  That is, the higher 24 bits are VPN, while the lower 14 bits represent page offset.
+		
+		A straightforward attempt of maintaining a page table is to keep a huge array of pointers
+		pointing to virtual pages.  This approach is quite implausible and inefficient since such kind
+		of table needs $2^{24}\text{ pointers}\times 8\text{ bytes per pointer}=128$MB \textbf{per process},
+		storing nothing but pointers, while leaving most entries unused since most programs won't need that
+		many pages.
+		
+		One can employ a hierarchical scheme for reducing memory consumption of page tables.  That is, to
+		organize the page table as a page table \emph{tree}.  We can define \emph{leaf page tables}, pointing
+		to virtual pages to be used by user programs, and \emph{internal page tables}, which points to pages
+		storing another level of page tables, internal or leaf.  The leaf and internal page tables themselves
+		are stored in a one-table-per-page manner.  Therefore, a one-page-sized page table could point to $2^{14}/8=2048$ pages
+		when page size is 16KB.  The 11 bits next to the lowest 14 bits could be used as index of the leaf
+		page tables, another higher 11 bits as index of the \emph{page middle directories} (PMD), the last
+		11 bits as that of the \emph{page global directory} (PGD).  The highest bit of virtual address is
+		discarded and is always zero.
+		
+		Hierarchical page tables share similar structures and the same rationale across different
+		architectures.  The \texttt{amd64}
+		architecture uses a 4-level page table tree to deal with 4KB-paged 48-bit virtual addresses, each page
+		table pointing to 512 next-level pages.
+	\end{hilight}
+	
 	\section{\hilite{MIPS Physical address convention}}
 	\begin{hilight}
 		It is previously mentioned that virtual address space \texttt{CKSEG0} corresponds to the lower
@@ -1236,13 +1288,19 @@
 			\item Physical address \texttt{0x0} to \texttt{0x0fff ffff} maps to lower
 			256MB of main memory.
 			\item Usually, physical address \texttt{0x1000 0000} to \texttt{0x1fff ffff} corresponds to
-			I/O devices, BIOS (starting from \texttt{0x1fc00 000}), and other hardware.  These addresses
+			I/O devices, BIOS (starting from \texttt{0x1fc0 0000}), and other hardware.  These addresses
 			are normally directly accessed, not passing through caches during the process.
 			\item Method of accessing memory higher than 256MB generally varies between machines.
 			In case of Loongson 3A, the physical addresses mapped to memory addresses higher than
 			256MB equals to the memory address itself plus the overall memory size.  For example, if the
 			total memory capacity is 4GB, the physical address range corresponding to memory higher than
-			256MB is \texttt{0x0001 1000 0000} to \texttt{0x0001 ffff ffff}.
+			256MB is \texttt{0x0001 1000 0000} to \texttt{0x0001 ffff ffff}.  \texttt{setup\_page\_array}
+			\marginpar{
+				\footnotesize\ttfamily
+				\hilite{arch/mips/mach/\\loongson3a5/mm.c:14}
+			}
+			installs the array of \texttt{struct page} at high memory, just above the lower 256MB,
+			calculating the high physical memory offset during initialization.
 		\end{enumerate}
 	\end{hilight}
 	
@@ -1290,4 +1348,37 @@
 	page tables to translate successive virtual addresses to whatever physical pages happen
 	to be allocated to the process.
 	
+	\section{Code: creating an address space}
+	\begin{hilight}
+		The original xv6 implementation employs a \texttt{setupkvm} routine for initializing the
+		kernel page mapping.  This is no longer needed in xv6'.
+		
+		For user virtual memory, or other places where translation via a page table is needed,
+		one can install a mapping from a range of virtual addresses to a list of physical ones
+		by calling \texttt{map\_pages}.
+		\marginpar{
+			\footnotesize\ttfamily
+			\hilite{kern/mm/vm.c:126}
+		}  \texttt{map\_pages} maintains a list of virtual memory areas, and then establish
+		mapping page by page by inserting PTEs for each virtual page via calling \texttt{arch\_map\_page}.
+		
+		\texttt{arch\_map\_page}
+		\marginpar{
+			\footnotesize\ttfamily
+			\hilite{arch/mips/mm/hier/\\pgtable.c:238}
+		} installs one page into the page table, connecting the VPN to PFN, by calling \texttt{pgtable\_insert}.
+		\marginpar{
+			\footnotesize\ttfamily
+			\hilite{arch/mips/mm/hier/\\pgtable.c:154}
+		}
+		It is not strictly hardware-specific since page tables on different hardware may look the same.
+		The reason I put page-table-related code inside the \texttt{arch} directory is that one
+		can potentially implement any page table structure he prefer, since MIPS does not have
+		paging hardware other than TLB. \texttt{pgtable\_insert} traverses the page table hierarchy and
+		fill the PTE position located by \texttt{pgtable\_get}
+		\marginpar{
+			\footnotesize\ttfamily
+			\hilite{arch/mips/mm/hier/\\pgtable.c:88}
+		} with appropriate value.
+	\end{hilight}
 \end{document}
