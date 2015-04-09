@@ -1256,21 +1256,33 @@
 		Due to previously discussed \emph{cache aliasing} issue, the page size on Loongson 3A is chosen
 		to be 16KB.  That is, the higher 24 bits are VPN, while the lower 14 bits represent page offset.
 		
-		A straightforward attempt of maintaining a page table is to keep a huge array of pointers
+		A plain attempt of maintaining a page table is to keep a huge array of pointers
 		pointing to virtual pages.  This approach is quite implausible and inefficient since such kind
 		of table needs $2^{24}\text{ pointers}\times 8\text{ bytes per pointer}=128$MB \textbf{per process},
 		storing nothing but pointers, while leaving most entries unused since most programs won't need that
 		many pages.
 		
 		One can employ a hierarchical scheme for reducing memory consumption of page tables.  That is, to
-		organize the page table as a page table \emph{tree}.  We can define \emph{leaf page tables}, pointing
+		organize the page table as a page table \emph{tree}.
+		We can define \emph{leaf page tables}, pointing
 		to virtual pages to be used by user programs, and \emph{internal page tables}, which points to pages
-		storing another level of page tables, internal or leaf.  The leaf and internal page tables themselves
-		are stored in a one-table-per-page manner.  Therefore, a one-page-sized page table could point to $2^{14}/8=2048$ pages
+		storing another level of page tables, internal or leaf.  This way, a branch containing no
+		user pages could be easily pruned by maintaining page entry count inside the page structure,
+		recycling zero-count page tables during page freeing.
+		\marginpar{
+			\footnotesize\ttfamily
+			\hilite{arch/mips/mm/hier/\\pgtable.c:199}
+		}
+		
+		The leaf and internal page tables themselves
+		are stored in a one-table-per-page manner.  Therefore, a one-page-sized page table could point to
+		$2^{14}/8=2048$ pages
 		when page size is 16KB.  The 11 bits next to the lowest 14 bits could be used as index of the leaf
 		page tables, another higher 11 bits as index of the \emph{page middle directories} (PMD), the last
 		11 bits as that of the \emph{page global directory} (PGD).  The highest bit of virtual address is
 		discarded and is always zero.
+		
+		TLB refilling for dealing with TLB loading/storing misses becomes quite straightforward:
 		
 		Hierarchical page tables share similar structures and the same rationale across different
 		architectures.  The \texttt{amd64}
@@ -1299,7 +1311,7 @@
 				\footnotesize\ttfamily
 				\hilite{arch/mips/mach/\\loongson3a5/mm.c:14}
 			}
-			installs the array of \texttt{struct page} at high memory, just above the lower 256MB,
+			installs the array of \texttt{struct page} at high memory (see section 2.7), just above the lower 256MB,
 			calculating the high physical memory offset during initialization.
 		\end{enumerate}
 	\end{hilight}
@@ -1361,6 +1373,7 @@
 			\hilite{kern/mm/vm.c:126}
 		}  \texttt{map\_pages} maintains a list of virtual memory areas, and then establish
 		mapping page by page by inserting PTEs for each virtual page via calling \texttt{arch\_map\_page}.
+		\texttt{map\_pages} can also serve as basis of the \texttt{mmap} system call.
 		
 		\texttt{arch\_map\_page}
 		\marginpar{
@@ -1380,5 +1393,77 @@
 			\footnotesize\ttfamily
 			\hilite{arch/mips/mm/hier/\\pgtable.c:88}
 		} with appropriate value.
+	\end{hilight}
+	
+	\section{\hilite{Per-page property maintenance}}
+	\marginpar{
+		\footnotesize\ttfamily
+		\hilite{
+			kern/mm/init.c\\
+			include/mm/mmap.h
+		}
+	}
+	\begin{hilight}
+		The maintenance of various state information of pages needs memory, which in turn needs some of the
+		pages.  xv6' partitioned a portion of memory for specifically storing an array of page structures
+		(\texttt{struct page})
+		corresponding to all memory higher than 256MB.  The page structures related to pages storing this page
+		array partition are marked explicitly as for page structure array, and are reserved throughout the execution
+		of the operating system, and thus, never participate in dynamic page allocation, protecting the page array
+		from being corrupted by other kernel activities.
+	\end{hilight}
+	
+	\section{Physical memory allocation}
+	The kernel needs to allocate and free physical memory at run-time for page tables, 
+	process user memory, kernel stacks, and pipe buffers.
+	
+	\begin{hilight}
+		\marginpar{
+			\footnotesize\ttfamily
+			\hilite{
+				kern/mm/slab.c\\
+				include/mm/slab.h
+			}
+		}
+		The original xv6 implementation directly always allocates memory in full pages no matter what size the kernel
+		actually requested.  This is highly inefficient, especially when page size is larger, since occupying a
+		16KB-sized chunk to maintain a 64-byte data structure is almost certainly not a good idea.  A simplified
+		slab allocation, borrowed from Linux's SLUB implementation, is thus introduced to address this issue.
+		
+		The core of \emph{slab allocation} is to divide a page or several physically-continuous pages into smaller, 
+		equally-sized chunks; when the requested size of allocation matches the size of chunk, the allocator returns
+		one of the available chunk as a result.  The page or continuous pages storing those chunks are called a
+		\emph{slab}, while the set of \emph{slabs} storing one particular size of chunks is called a
+		\emph{slab cache}.  Each slab cache corresponds to one and only one specific chunk size.  In xv6', a slab
+		always consists of one page.
+		
+		Theoretically, strict slab allocation leaves \emph{no} fragments as long as each size have one
+		corresponding slab cache, as long as the probabilities of different requested sizes are equal.
+		However, consider the following case:
+		\begin{lstlisting}[style=c]
+		/* The page size is 16KB */
+		for (i = 520; i <= 1024; i += 8) {
+			kmalloc(i);
+		}
+		\end{lstlisting}
+		If the operating system is to prepare a slab cache dedicated to each requested size, a lot of
+		poorly-utilized slabs, each of which only holds one object, would be created.  It is somehow more
+		preferable to gather these sizes into one larger cache.  In xv6', the slab allocator defines 13
+		caches, each to hold a range of object sizes.
+		
+		When slab allocator receive a request, it first:
+		\begin{enumerate}
+			\item find whether there is an available chunk inside a slab in a proper cache.  Return the chunk
+			if such chunk is found, or
+			\item allocate a page and mark it as a slab, and add it into the list of slabs in the cache.
+		\end{enumerate}
+		
+		Slab allocation in xv6' deals with requests not greater than half the page size, aligned to 8 bytes.
+		If requests are greater than half of page size, the operating system reverts to allocate and
+		free whole pages.
+		
+		The operating system should maintain a list of available chunks per slab.  xv6' reuses the chunks
+		which are not yet allocated to keep track of the index of next available chunk inside the slab,
+		as it is quite costly to allocate such list elsewhere.
 	\end{hilight}
 \end{document}
