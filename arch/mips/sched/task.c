@@ -65,21 +65,9 @@ void set_task_enable_intr(task_t *task)
 	tf->cp0_status |= ST_IE;
 }
 
-int set_task_ustack(task_t *task)
+void set_task_startsp(task_t *task, addr_t startsp)
 {
-	int ret;
-	struct page *p = pgalloc();
-	ret = map_pages(task->mm, (addr_t)task->progtop, p, USTACK_PERM);
-	if (ret != 0)
-		goto rollback_page;
-	/* Set the starting sp inside trapframe */
-	task->tf->gpr[_SP] = (unsigned long)(task->progtop + USTACK_SIZE);
-	task->ustacktop = (void *)task->tf->gpr[_SP];
-	return 0;
-
-rollback_page:
-	pgfree(p);
-	return ret;
+	task->tf->gpr[_SP] = startsp;
 }
 
 /*

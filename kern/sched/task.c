@@ -68,6 +68,23 @@ ptr_t task_setup_kstack(task_t *task)
 	return sp;
 }
 
+int set_task_ustack(task_t *task)
+{
+	int ret;
+	struct page *p = pgalloc();
+	ret = map_pages(task->mm, (addr_t)task->progtop, p, USTACK_PERM);
+	if (ret != 0)
+		goto rollback_page;
+	/* Set the starting sp inside trapframe */
+	task->ustacktop = task->progtop + USTACK_SIZE;
+	set_task_startsp(task, (addr_t)(task->ustacktop));
+	return 0;
+
+rollback_page:
+	pgfree(p);
+	return ret;
+}
+
 void initproc_init(int argc, char *const argv[])
 {
 	printk("Spawning init...\r\n");

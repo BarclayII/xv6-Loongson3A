@@ -21,7 +21,15 @@
 #include <mm/vmm.h>
 #include <sys/types.h>
 #include <ds/list.h>
+#include <ds/rbtree.h>
 #include <asm/thread_info.h>
+
+/* One scheduler entity per task */
+struct sched_entity {
+	struct rb_node	*node;
+	unsigned long	vruntime;
+	unsigned int	priority;
+};
 
 /*
  * Somewhat an extremely-simplified version of Linux's task_struct, or an
@@ -80,10 +88,18 @@ typedef struct task_struct {
 	/* Global process list related */
 	list_node_t	proc_node;	/* Global process list */
 	list_node_t	hash_node;	/* Hash list */
+	/* Scheduler queue related */
+	struct sched_entity se;
 } task_t;
 
 #define HASH_LIST_SIZE	32
 #define HASH_LIST_ORDER	5
+
+#define rbnode_to_se(n)	\
+	member_to_struct(n, struct sched_entity, node)
+#define se_to_task(s)	\
+	member_to_struct(s, task_t, se)
+#define rbnode_to_task(n)	se_to_task(rbnode_to_se(n))
 
 typedef struct task_set {
 	list_node_t	proc_list;	/* Global process list */
@@ -177,6 +193,7 @@ ptr_t task_init_trapframe(task_t *task, ptr_t sp);
 void task_bootstrap_context(task_t *task, ptr_t sp);
 void set_task_user(task_t *task);
 void set_task_enable_intr(task_t *task);
+void set_task_startsp(task_t *task, addr_t startsp);
 int set_task_ustack(task_t *task);
 addr_t set_task_argv(task_t *task, int argc, char *const argv[]);
 void set_task_ustacktop(task_t *task, ptr_t sp);

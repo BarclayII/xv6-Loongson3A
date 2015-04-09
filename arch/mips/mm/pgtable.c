@@ -14,7 +14,9 @@
 
 int new_arch_mm(arch_mm_t *arch_mm)
 {
+#if 0
 	arch_mm->asid = ASID_INVALID;
+#endif
 	return arch_mm_new_pgtable(arch_mm);
 }
 

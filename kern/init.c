@@ -105,10 +105,7 @@ int main(void)
 
 	local_irq_enable();
 
-	current_task = initproc;
-	ptr_t ksp = kstacktop(initproc);
-	printk("init Kernel Stack Top: %016x\r\n", ksp);
-	switch_context(idleproc->context, initproc->context, ksp);
+	switch_task(initproc);
 
 	panic("context switching failed\r\n");
 

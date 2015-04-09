@@ -19,7 +19,9 @@
 
 typedef struct arch_mm_struct {
 	pgd_t		pgd;		/* PGD */
+#if 0
 	unsigned long	asid;		/* ASID */
+#endif
 } arch_mm_t;
 
 /* Page table hierarchy path retrieved by pgtable_get() function */

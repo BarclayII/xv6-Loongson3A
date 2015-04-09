@@ -71,6 +71,7 @@ OBJS		= arch/mips/entry.o \
 		  kern/mm/kmalloc.o \
 		  kern/mm/vm.o \
 		  kern/sched/task.o \
+		  kern/sched/sched.o \
 		  kern/sched/tasklist.o \
 		  kern/syscall/execve.o \
 		  kern/printk.o \
