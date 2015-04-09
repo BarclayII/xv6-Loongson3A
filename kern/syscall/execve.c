@@ -88,7 +88,8 @@ int task_load_segs_kmem(task_t *task, void *addr, elf64hdr_t *hdr)
 		off += hdr->e_phentsize;
 	}
 
-	task->progtop = (ptr_t)PGROUNDUP(task->progtop);
+	/* For preventing the consequences where the user stack is overrun */
+	task->progtop = (ptr_t)(PGROUNDUP(task->progtop) + PGSIZE);
 
 	return 0;
 
