@@ -1471,9 +1471,53 @@
 	The heap is above the stack so that it can expand (with \texttt{sbrk}, \hilite{NYI}). The stack is a single
 	page, and is shown with the initial contents as created by \texttt{execve}. Strings containing the
 	command-line arguments, as well as an array of pointers to them, are \hilite{between the user stack and the
-	heap}. Just under that are values that allow a program to start at \texttt{\_\_start}, \hilite{where the control
-	would soon transfer to \texttt{main()}}. To guard a stack growing off the
+	heap}. Just under that are values that allow a program to start at \texttt{\_\_start},
+	\marginpar{
+		\footnotesize\ttfamily
+		\hilite{
+			lib/libc/arch/\\mips/crt0.S
+		}
+	}
+	\hilite{where the control
+	would soon transfer to \texttt{main()}. The reason introducing a wrapper around \texttt{main()} by assembly
+	is to allow termination of user process by returning from \texttt{main()}}.  To guard a stack growing off the
 	stack page, xv6 places a guard page right below the stack. The guard page is not
 	mapped and so if the stack runs off the stack page, the hardware will generate an ex-
 	ception because it cannot translate the faulting address.
+	
+	\section{Code: execve}
+	\begin{hilight}
+		As file system is not implemented, here we could only describe how a program is loaded into
+		appropriate positions.
+		
+		\marginpar{
+			\footnotesize\ttfamily
+			\hilite{
+				include/elf.h
+			}
+		}
+		An ELF binary consists of an ELF header, \texttt{struct elf64hdr},
+		followed by a sequence of program section headers, \texttt{struct elf64\_phdr}. Each
+		program header describes a section of the application that must be loaded into memory; xv6
+		programs have only one program section header, but other systems might have separate
+		sections for instructions and data.
+	\end{hilight}
+	
+	\marginpar{
+		\footnotesize\ttfamily
+		\hilite{
+			kern/syscall/execve.c:119
+		}
+	}
+	The first step is a quick check that the file probably contains an ELF binary. An
+	ELF binary starts with the four-byte "magic number" \texttt{0x7F, 'E', 'L', 'F'}, or
+	\texttt{ELF\_MAGIC}, \hilite{as well as checking architecture, endianness, etc}.
+	
+	\begin{hilight}
+		\texttt{task\_load\_elf\_kmem} assumes that a page table is already established and emptied.
+		After integrity checks the procedure calls \texttt{task\_load\_segs\_kmem}, which repeatedly
+		call \texttt{task\_load\_seg\_kmem} to create user virtual memory areas (\texttt{mm\_create\_uvm}),
+		and copy data from kernel memory to user memory (\texttt{copy\_to\_uvm})
+	\end{hilight}
+	
 \end{document}
