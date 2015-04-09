@@ -63,15 +63,15 @@ void task_unload_seg(task_t *task, elf64_phdr_t *ph)
 
 int task_load_segs_kmem(task_t *task, void *addr, elf64hdr_t *hdr)
 {
-	elf64_phdr_t proghdr;
+	elf64_phdr_t *proghdr;
 	size_t off = hdr->e_phoff;
 	int ret, i;
 
 	for (i = 0; i < hdr->e_phnum; ++i) {
-		memcpy(&proghdr, addr + off, hdr->e_phentsize);
-		switch(proghdr.p_type) {
+		proghdr = (elf64_phdr_t *)(addr + off);
+		switch(proghdr->p_type) {
 		case PT_LOAD:
-			ret = task_load_seg_kmem(task, addr, &proghdr);
+			ret = task_load_seg_kmem(task, addr, proghdr);
 			if (ret != 0)
 				goto rollback_unload;
 			break;
@@ -81,9 +81,9 @@ int task_load_segs_kmem(task_t *task, void *addr, elf64hdr_t *hdr)
 
 		/* Setup program segment top to indicate where the user
 		 * stack should start */
-		addr_t vaddr = (addr_t)(proghdr.p_vaddr);
-		if ((addr_t)(task->progtop) < vaddr + proghdr.p_memsz)
-			task->progtop = (ptr_t)(vaddr + proghdr.p_memsz);
+		addr_t vaddr = (addr_t)(proghdr->p_vaddr);
+		if ((addr_t)(task->progtop) < vaddr + proghdr->p_memsz)
+			task->progtop = (ptr_t)(vaddr + proghdr->p_memsz);
 
 		off += hdr->e_phentsize;
 	}
@@ -96,8 +96,8 @@ int task_load_segs_kmem(task_t *task, void *addr, elf64hdr_t *hdr)
 rollback_unload:
 	off = hdr->e_phoff;
 	for (i = 0; i < hdr->e_phnum; ++i) {
-		memcpy(&proghdr, addr + off, hdr->e_phentsize);
-		task_unload_seg(task, &proghdr);
+		proghdr = (elf64_phdr_t *)(addr + off);
+		task_unload_seg(task, proghdr);
 		off += hdr->e_phentsize;
 	}
 	return ret;
