@@ -27,7 +27,7 @@
 struct sched_entity {
 	list_node_t	node;
 	struct cpu_run_queue *rq;
-	unsigned int	priority;
+	unsigned int	priority;	/* Higher priority means larger slice */
 	unsigned int	slice;
 };
 
@@ -49,7 +49,8 @@ typedef struct task_struct {
 #define TASK_DEAD		0x0040
 #define TASK_WAKEKILL		0x0080
 #define TASK_WAKING		0x0100
-#define TASK_RUNNABLE		0x0200	/* Needs to be scheduled if not set */
+#define TASK_RUNNABLE		0x0200
+#define TASK_YIELDED		0x0400
 	unsigned short	exit_state;	/* Exit state */
 #define EXIT_ZOMBIE		0x0010
 #define EXIT_DEAD		0x0020

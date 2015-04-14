@@ -27,6 +27,9 @@ int sched_init(void);
 int sched_enqueue(struct cpu_run_queue *rq, task_t *task);
 int sched_dequeue(struct cpu_run_queue *rq, task_t *task);
 task_t *sched_pick(struct cpu_run_queue *rq);
+/* Return 0 if the execution continues, or nonzero if the task is to be
+ * scheduled. */
+int sched_tick(task_t *task);
 
 void switch_task(task_t *newtask);
 void switch_context(context_t *old, context_t *new, ptr_t newksp);
