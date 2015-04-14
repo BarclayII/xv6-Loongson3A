@@ -13,12 +13,10 @@
 
 #include <asm/smp.h>
 #include <sched/task.h>
-#include <ds/rbtree.h>
+#include <ds/list.h>
 
 struct cpu_run_queue {
-	struct rb_root	root;
-	struct rb_node	*leftmost;
-	unsigned long	min_vruntime;
+	list_node_t	head;
 	unsigned long	payload;	/* Total payload per run queue */
 	unsigned long	cpu;		/* CPU # */
 };

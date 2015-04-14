@@ -21,14 +21,14 @@
 #include <mm/vmm.h>
 #include <sys/types.h>
 #include <ds/list.h>
-#include <ds/rbtree.h>
 #include <asm/thread_info.h>
 
 /* One scheduler entity per task */
 struct sched_entity {
-	struct rb_node	*node;
-	unsigned long	vruntime;
+	list_node_t	node;
+	struct cpu_run_queue *rq;
 	unsigned int	priority;
+	unsigned int	slice;
 };
 
 /*
@@ -95,11 +95,11 @@ typedef struct task_struct {
 #define HASH_LIST_SIZE	32
 #define HASH_LIST_ORDER	5
 
-#define rbnode_to_se(n)	\
+#define node_to_se(n)	\
 	member_to_struct(n, struct sched_entity, node)
 #define se_to_task(s)	\
 	member_to_struct(s, task_t, se)
-#define rbnode_to_task(n)	se_to_task(rbnode_to_se(n))
+#define node_to_task(n)		se_to_task(node_to_se(n))
 
 typedef struct task_set {
 	list_node_t	proc_list;	/* Global process list */

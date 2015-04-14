@@ -143,6 +143,7 @@ void idle_init(void)
 	idleproc = task_new();
 	if (idleproc == NULL)
 		panic("failed to spawn IDLE\r\n");
+	idleproc->mm = &kern_mm;
 	idleproc->pid = PID_IDLE;
 	idleproc->kstack = &init_stack;
 	idleproc->context = (ptr_t)(&init_stack) + THREAD_SIZE - TF_SIZE;
@@ -188,4 +189,6 @@ void task_init(void)
 
 	dump_task(idleproc);
 	dump_task(initproc);
+
+	current_task = idleproc;
 }

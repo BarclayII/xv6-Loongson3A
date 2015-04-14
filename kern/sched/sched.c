@@ -46,25 +46,13 @@
  *                                       [exit]
  */
 
-struct cpu_run_queue cpu_rq[NR_CPUS];
-
-int sched_init(void)
-{
-	int i;
-
-	memset(cpu_rq, 0, sizeof(cpu_rq));
-
-	for (i = 0; i < NR_CPUS; ++i) {
-		cpu_rq[i].cpu = i;
-	}
-	return 0;
-}
-
 void switch_task(task_t *newtask)
 {
-	context_t *old = current_task->context;
+	task_t *oldtask = current_task;
+	context_t *old = oldtask->context;
 	context_t *new = newtask->context;
 	ptr_t newksp = kstacktop(newtask);
+	current_task = newtask;
 	switch_context(old, new, newksp);
 }
 
