@@ -10,6 +10,8 @@
 
 #include <sched.h>
 #include <string.h>
+#include <ds/list.h>
+#include <assert.h>
 
 /*
  * A simplified O(1) scheduler
@@ -31,7 +33,7 @@ static inline int sched_exhaust(task_t *task)
 	return task->se.priority >= task->se.slice;
 }
 
-int sched_init(void)
+void sched_init(void)
 {
 	int i;
 
@@ -44,7 +46,6 @@ int sched_init(void)
 		list_init(&(cpu_rq[i].head[0]));
 		list_init(&(cpu_rq[i].head[1]));
 	}
-	return 0;
 }
 
 int sched_enqueue(struct cpu_run_queue *rq, task_t *task)
@@ -82,7 +83,7 @@ task_t *sched_pick(struct cpu_run_queue *rq)
 			rq->exhaust = tmp;
 		}
 	}
-	return node_to_task(list_next(&(rq->head)));
+	return node_to_task(list_next(&(rq->head[rq->run])));
 }
 
 int sched_tick(task_t *task)

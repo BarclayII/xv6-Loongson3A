@@ -44,8 +44,6 @@ extern union thread_stack_info init_thread_union;
  */
 register struct thread_info *current_thread_info __asm__("$28");
 
-#define current_task		(current_thread_info->task)
-
 #define init_thread_info	(init_thread_union.thread_info)
 #define init_stack		(init_thread_union.stack)
 

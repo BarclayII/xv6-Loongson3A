@@ -211,7 +211,10 @@ void initproc_init(int argc, char *const argv[]);
 void idle_init(void);
 
 void task_init(void);
+void task_init_sched(void);
 
 extern task_t *idleproc, *initproc;
+
+#define current_task		(current_thread_info->task)
 
 #endif

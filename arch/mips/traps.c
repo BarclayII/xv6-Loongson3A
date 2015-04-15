@@ -236,18 +236,7 @@ static int handle_int(struct trapframe *tf)
 {
 	unsigned int cause = tf->cp0_cause;
 	if ((cause & CR_IPx(7)) && (cause & CR_TI)) {
-		unsigned int cmp = read_c0_compare();
-		/* Repeatedly write into CP0_COMPARE until it is ahead, but
-		 * not too far from CP0_COUNT */
-		do {
-			cmp += 0x10000000;
-			write_c0_compare(cmp);
-		} while (cmp - read_c0_count() > 0x10000000);
-		printk("CPUID %d\tticks\t= %d\r\n",
-		    current_thread_info->cpu_number,
-		    current_thread_info->ticks);
-		++(current_thread_info->ticks);
-		return 0;
+		return handle_clock(tf);
 	} else if (cause & CR_IPx(2)) {
 		/* LPC Interrupts */
 		printk("Received LPC Interrupt\r\n");

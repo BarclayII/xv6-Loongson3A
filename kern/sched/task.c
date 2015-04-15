@@ -192,3 +192,9 @@ void task_init(void)
 
 	current_task = idleproc;
 }
+
+void task_init_sched(void)
+{
+	sched_enqueue(&cpu_rq[0], idleproc);
+	sched_enqueue(&cpu_rq[0], initproc);
+}

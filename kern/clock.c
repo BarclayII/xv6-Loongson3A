@@ -8,17 +8,16 @@
  *
  */
 
-#ifndef _ASM_TRAP_H
-#define _ASM_TRAP_H
+#include <asm/thread_info.h>
+#include <printk.h>
+#include <time.h>
+#include <sched.h>
 
-#include <asm/ptrace.h>
-
-void trap_init(void);
-void handle_exception(struct trapframe *tf);
-
-void dump_trapframe(struct trapframe *tf);
-
-int handle_sys(struct trapframe *tf);
-int handle_clock(struct trapframe *tf);
-
-#endif
+void generic_cpu_tick(void)
+{
+	printk("CPUID %d\tticks\t= %d\tPID\t=%d\r\n",
+	    current_thread_info->cpu_number,
+	    current_thread_info->ticks,
+	    current_task->pid);
+	++(current_thread_info->ticks);
+}

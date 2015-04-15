@@ -25,9 +25,9 @@ struct cpu_run_queue {
 
 extern struct cpu_run_queue cpu_rq[];
 
-int sched_init(void);
+void sched_init(void);
 int sched_enqueue(struct cpu_run_queue *rq, task_t *task);
-int sched_dequeue(struct cpu_run_queue *rq, task_t *task);
+int sched_dequeue(task_t *task);
 task_t *sched_pick(struct cpu_run_queue *rq);
 int sched_tick(task_t *task);
 
