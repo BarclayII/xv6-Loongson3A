@@ -15,3 +15,27 @@ CPU: Loongson 3A, MIPS64r2 instruction set, cache coherency maintained by hardwa
 BIOS: PMON2000, with caches and TLB initialization already done.
 
 GCC: 4.4.0 from [Loongnix website](http://www.loongnix.com:8000/dev/ftp/toolchain/gcc/release/CROSS_COMPILE/loongson3-gcc4.4.tar.gz)
+
+### Roadmap
+1. Trap handling (completed)
+  - Nested trap handling
+2. Memory management (completed)
+  - Physical page allocation
+  - Virtual memory management
+  - SLAB allocation
+3. Process & thread management
+  - Context switches (likely buggy)
+  - `fork(2)`, `exit(2)`, `waitpid(2)`, `kill(2)`, `yield()`
+  - O(1) scheduler (in progress)
+4. Concurrency maintenance
+  - Spinlocks
+  - (POSIX) Semaphores
+5. File system
+  - RAM disk
+  - `tmpfs`
+  - *Berkeley FFS*
+6. Multicore support
+  - Inter-process interrupts
+7. *Signal handling*
+8. *Dynamic loading* (not planned)
+
