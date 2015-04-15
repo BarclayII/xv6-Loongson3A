@@ -8,17 +8,14 @@
  *
  */
 
-#ifndef _LIMITS_H
-#define _LIMITS_H
+#include <smp.h>
+#include <sys/types.h>
+#include <string.h>
 
-#define INT_MAX		0x7fffffff
-#define INT_MIN		0x80000000
+bool cpu_online[NR_CPUS];
 
-#define UINT_MAX	0xffffffffU
-
-#define LONG_MAX	0x7fffffffffffffffLL
-#define LONG_MIN	0x8000000000000000LL
-
-#define ULONG_MAX	0xffffffffffffffffULL
-
-#endif
+void smp_init(void)
+{
+	memset(cpu_online, 0, sizeof(cpu_online));
+	cpu_online[smp_processor_id()] = 1;
+}

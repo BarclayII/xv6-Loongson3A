@@ -78,5 +78,4 @@ setup_arch(void)
 	probe_pcache();
 	setup_scache();
 	parse_env();
-	return;
 }

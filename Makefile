@@ -79,6 +79,7 @@ OBJS		= arch/mips/entry.o \
 		  kern/printk.o \
 		  kern/panic.o \
 		  kern/clock.o \
+		  kern/smp.o \
 		  kern/init.o $(LIBC_OBJS) \
 
 BINS		= ramdisk/init/init

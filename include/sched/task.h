@@ -50,7 +50,7 @@ typedef struct task_struct {
 #define TASK_WAKEKILL		0x0080
 #define TASK_WAKING		0x0100
 #define TASK_RUNNABLE		0x0200
-#define TASK_YIELDED		0x0400
+#define TASK_YIELDING		0x0400
 	unsigned short	exit_state;	/* Exit state */
 #define EXIT_ZOMBIE		0x0010
 #define EXIT_DEAD		0x0020
@@ -216,5 +216,11 @@ void task_init_sched(void);
 extern task_t *idleproc, *initproc;
 
 #define current_task		(current_thread_info->task)
+
+/* Task state information */
+static inline int task_yielding(task_t *task)
+{
+	return task->state & TASK_YIELDING;
+}
 
 #endif

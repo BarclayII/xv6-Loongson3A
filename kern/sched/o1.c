@@ -12,6 +12,7 @@
 #include <string.h>
 #include <ds/list.h>
 #include <assert.h>
+#include <smp.h>
 
 /*
  * A simplified O(1) scheduler
@@ -59,6 +60,17 @@ int sched_enqueue(struct cpu_run_queue *rq, task_t *task)
 	return 0;
 }
 
+int sched_enqueue_minload(task_t *task)
+{
+	int i, min = 0;
+	for (i = 0; i < NR_CPUS; ++i) {
+		if (cpu_rq[i].payload > cpu_rq[min].payload)
+			min = i;
+	}
+
+	return sched_enqueue(&cpu_rq[min], task);
+}
+
 int sched_dequeue(task_t *task)
 {
 	assert(task->se.rq != NULL);
@@ -90,7 +102,7 @@ int sched_tick(task_t *task)
 {
 	if (!sched_exhaust(task))
 		++(task->se.slice);
-	task->state |= TASK_YIELDED;	/* Always yields */
+	task->state |= TASK_YIELDING;	/* Always yields */
 
 	return 0;
 }

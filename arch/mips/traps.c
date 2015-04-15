@@ -416,22 +416,23 @@ static int handle_bp(struct trapframe *tf)
 void handle_exception(struct trapframe *tf)
 {
 	int exccode = EXCCODE(tf->cp0_cause);
+	printk("trapframe %016x\r\n", tf);
 	/* Someday I'll merge this switch block into function array */
 	switch (exccode) {
 	case EC_int:
 		if (handle_int(tf) == 0)
-			return;
+			goto success;
 		break;
 	case EC_bp:
 		if (handle_bp(tf) == 0)
-			return;
+			goto success;
 		break;
 	case EC_sys:
 		/* System call */
 		handle_sys(tf);
 		/* Skip the exception-generating instruction (syscall) */
 		skip_victim(tf);
-		return;
+		goto success;
 	case EC_tlbm:
 		/* Writing on read-only page */
 		break;
@@ -439,7 +440,7 @@ void handle_exception(struct trapframe *tf)
 	case EC_tlbs:
 		/* Loading/storing misses (page faults) */
 		if (handle_pgfault(tf) == 0)
-			return;
+			goto success;
 		break;
 	}
 
@@ -448,5 +449,8 @@ void handle_exception(struct trapframe *tf)
 	    exccode);
 	dump_trapframe(tf);
 	panic("SUSPENDING SYSTEM...\r\n");
+
+success:
+	printk("exiting handler...\r\n");
 }
 
