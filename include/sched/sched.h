@@ -16,9 +16,11 @@
 #include <ds/list.h>
 
 struct cpu_run_queue {
-	list_node_t	head;
+	list_node_t	head[2];
+	unsigned int	cpu;
+	unsigned short	run;		/* The index of running queue head */
+	unsigned short	exhaust;	/* The index of exhausted queue head */
 	unsigned long	payload;	/* Total payload per run queue */
-	unsigned long	cpu;		/* CPU # */
 };
 
 extern struct cpu_run_queue cpu_rq[];
@@ -27,8 +29,6 @@ int sched_init(void);
 int sched_enqueue(struct cpu_run_queue *rq, task_t *task);
 int sched_dequeue(struct cpu_run_queue *rq, task_t *task);
 task_t *sched_pick(struct cpu_run_queue *rq);
-/* Return 0 if the execution continues, or nonzero if the task is to be
- * scheduled. */
 int sched_tick(task_t *task);
 
 void switch_task(task_t *newtask);
