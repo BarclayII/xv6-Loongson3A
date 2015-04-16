@@ -11,7 +11,11 @@
 #ifndef _ASM_PTRACE_H
 #define _ASM_PTRACE_H
 
-#define TF_MEMBERS	38
+/*
+ * These constants should be changed if any modification of trap frame
+ * structure is made.
+ */
+#define TF_MEMBERS	39
 #define TF_SIZE		(TF_MEMBERS * 8)
 
 /* Offsets */

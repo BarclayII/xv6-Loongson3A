@@ -23,6 +23,7 @@
 #include <printk.h>
 #include <panic.h>
 #include <assert.h>
+#include <sched.h>
 
 unsigned long except_handlers[32];
 extern unsigned long except_generic, except_tlb;
@@ -416,7 +417,6 @@ static int handle_bp(struct trapframe *tf)
 void handle_exception(struct trapframe *tf)
 {
 	int exccode = EXCCODE(tf->cp0_cause);
-	printk("trapframe %016x\r\n", tf);
 	/* Someday I'll merge this switch block into function array */
 	switch (exccode) {
 	case EC_int:
@@ -451,6 +451,6 @@ void handle_exception(struct trapframe *tf)
 	panic("SUSPENDING SYSTEM...\r\n");
 
 success:
-	printk("exiting handler...\r\n");
+	return;
 }
 

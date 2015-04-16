@@ -21,12 +21,15 @@
 
 #ifndef __ASSEMBLER__
 
+#include <asm/ptrace.h>
+
 struct task_struct;
 
 struct thread_info {
 	unsigned int	cpu_number;
 	unsigned int	ticks;		/* for clock interrupt */
 	struct task_struct *task;	/* task currently running here */
+	context_t	idle_context;	/* CPU context when idle */
 };
 
 union thread_stack_info {

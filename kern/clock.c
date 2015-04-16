@@ -23,9 +23,6 @@ void generic_cpu_tick(void)
 	++(current_thread_info->ticks);
 
 	if (!sched_tick(current_task)) {
-		printk("%d ->\r\n", current_task->pid);
-		printk("sched()...\r\n");
 		sched();
-		printk("-> %d\r\n", current_task->pid);
 	}
 }

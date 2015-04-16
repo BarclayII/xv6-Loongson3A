@@ -26,6 +26,7 @@ struct cpu_run_queue {
 extern struct cpu_run_queue cpu_rq[];
 
 #define current_rq	(cpu_rq[current_thread_info->cpu_number])
+#define current_idle_context	(current_thread_info->idle_context)
 
 void sched_init(void);
 int sched_enqueue(struct cpu_run_queue *rq, task_t *task);
