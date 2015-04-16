@@ -14,6 +14,8 @@
 #include <asm/cpu.h>
 #include <printk.h>
 #include <panic.h>
+#include <sched.h>
+#include <stddef.h>
 
 void forkret(struct trapframe *tf)
 {
@@ -21,3 +23,4 @@ void forkret(struct trapframe *tf)
 	arch_forkret(tf);
 	panic("Returned from arch_forkret???\r\n");
 }
+

@@ -68,6 +68,18 @@ ptr_t task_setup_kstack(task_t *task)
 	return sp;
 }
 
+void task_early_init(task_t *task)
+{
+	/* init runs in user mode */
+	assert(task_setup_mm(task) == 0);
+	ptr_t ksp = task_setup_kstack(task);
+	assert(ksp != NULL);
+	ksp = task_init_trapframe(task, ksp);
+	task_bootstrap_context(task, ksp);
+	set_task_user(task);
+	set_task_enable_intr(task);
+}
+
 int set_task_ustack(task_t *task)
 {
 	int ret;
@@ -99,14 +111,7 @@ void initproc_init(int argc, char *const argv[])
 	if (initproc == NULL)
 		panic("failed to allocate process for init\r\n");
 
-	/* init runs in user mode */
-	assert(task_setup_mm(initproc) == 0);
-	ptr_t ksp = task_setup_kstack(initproc);
-	assert(ksp != NULL);
-	ksp = task_init_trapframe(initproc, ksp);
-	task_bootstrap_context(initproc, ksp);
-	set_task_user(initproc);
-	set_task_enable_intr(initproc);
+	task_early_init(initproc);
 
 	/* Directly referencing this symbol actually returns the content
 	 * inside, damn it. */

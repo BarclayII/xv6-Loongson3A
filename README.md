@@ -27,13 +27,14 @@ GCC: 4.4.0 from [Loongnix website](http://www.loongnix.com:8000/dev/ftp/toolchai
   - Context switches (mostly completed)
   - `fork(2)`, `exit(2)`, `waitpid(2)`, `kill(2)`, `yield()`
   - O(1) scheduler (mostly completed)
+  - `clone()` (not planned)
 4. Concurrency maintenance
   - Spinlocks
   - (POSIX) Semaphores
 5. File system
   - RAM disk
   - `tmpfs`
-  - *Berkeley FFS*
+  - *Berkeley FFS* (not planned)
 6. Multicore support
   - Inter-process interrupts
 7. *Signal handling*

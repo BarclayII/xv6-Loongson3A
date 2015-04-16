@@ -199,15 +199,14 @@ void task_bootstrap_context(task_t *task, ptr_t sp);
 void set_task_user(task_t *task);
 void set_task_enable_intr(task_t *task);
 void set_task_startsp(task_t *task, addr_t startsp);
-int set_task_ustack(task_t *task);
 addr_t set_task_argv(task_t *task, int argc, char *const argv[]);
 void set_task_ustacktop(task_t *task, ptr_t sp);
 void set_task_main_args(task_t *task, int argc, char *const argv[]);
 void set_task_entry(task_t *task, addr_t entry);
 /* Hardware independent */
 task_t *task_new(void);
-int task_setup_mm(task_t *task);
-ptr_t task_setup_kstack(task_t *task);
+int set_task_ustack(task_t *task);
+void task_early_init(task_t *task);
 
 int task_load_elf_kmem(task_t *task, void *addr, addr_t *entry);
 
