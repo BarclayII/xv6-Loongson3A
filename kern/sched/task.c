@@ -21,7 +21,7 @@
 
 task_set_t task_set;
 
-task_t *idleproc, *initproc;
+task_t *idleprocs[NR_CPUS], *initproc;
 
 task_t *task_new(void)
 {
@@ -139,7 +139,7 @@ void initproc_init(int argc, char *const argv[])
 
 void idle_init(void)
 {
-	printk("Spawning IDLE....\r\n");
+	printk("Spawning IDLEs....\r\n");
 	idleproc = task_new();
 	if (idleproc == NULL)
 		panic("failed to spawn IDLE\r\n");

@@ -137,8 +137,12 @@ static inline unsigned int task_num_sibling(task_t *t)
 	return (t == NULL) ? 0 : t->num_sibling;
 }
 
-/* IDLE and init are cached globally */
-extern task_t *idleproc, *initproc;
+/*
+ * IDLE and init are cached globally.
+ * Every CPU has its own IDLE process.
+ */
+extern task_t *idleprocs[], *initproc;
+#define idleproc	(idleprocs[current_thread_info->cpu_number])
 
 /*
  * The operating system utilizes XKPHY and CKSEG0 for kernel memory mappings.
@@ -212,8 +216,6 @@ void idle_init(void);
 
 void task_init(void);
 void task_init_sched(void);
-
-extern task_t *idleproc, *initproc;
 
 #define current_task		(current_thread_info->task)
 
