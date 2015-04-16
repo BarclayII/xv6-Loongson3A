@@ -24,9 +24,9 @@ GCC: 4.4.0 from [Loongnix website](http://www.loongnix.com:8000/dev/ftp/toolchai
   - Virtual memory management
   - SLAB allocation
 3. Process & thread management
-  - Context switches (likely buggy)
+  - Context switches (mostly completed)
   - `fork(2)`, `exit(2)`, `waitpid(2)`, `kill(2)`, `yield()`
-  - O(1) scheduler (in progress)
+  - O(1) scheduler (mostly completed)
 4. Concurrency maintenance
   - Spinlocks
   - (POSIX) Semaphores
