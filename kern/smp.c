@@ -8,17 +8,14 @@
  *
  */
 
-#ifndef _ASM_TRAP_H
-#define _ASM_TRAP_H
+#include <smp.h>
+#include <sys/types.h>
+#include <string.h>
 
-#include <asm/ptrace.h>
+bool cpu_online[NR_CPUS];
 
-void trap_init(void);
-void handle_exception(struct trapframe *tf);
-
-void dump_trapframe(struct trapframe *tf);
-
-int handle_sys(struct trapframe *tf);
-int handle_clock(struct trapframe *tf);
-
-#endif
+void smp_init(void)
+{
+	memset(cpu_online, 0, sizeof(cpu_online));
+	cpu_online[smp_processor_id()] = 1;
+}

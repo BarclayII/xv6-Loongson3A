@@ -21,12 +21,15 @@
 
 #ifndef __ASSEMBLER__
 
+#include <asm/ptrace.h>
+
 struct task_struct;
 
 struct thread_info {
 	unsigned int	cpu_number;
 	unsigned int	ticks;		/* for clock interrupt */
 	struct task_struct *task;	/* task currently running here */
+	context_t	idle_context;	/* CPU context when idle */
 };
 
 union thread_stack_info {
@@ -43,8 +46,6 @@ extern union thread_stack_info init_thread_union;
  * The pointer pointing current thread info is stored at GP.
  */
 register struct thread_info *current_thread_info __asm__("$28");
-
-#define current_task		(current_thread_info->task)
 
 #define init_thread_info	(init_thread_union.thread_info)
 #define init_stack		(init_thread_union.stack)

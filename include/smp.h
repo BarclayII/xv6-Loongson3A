@@ -8,14 +8,21 @@
  *
  */
 
-#ifndef _ASM_SMP_H
-#define _ASM_SMP_H
+#ifndef _SMP_H
+#define _SMP_H
 
 #include <asm/thread_info.h>
+#include <sys/types.h>
 
 #define smp_processor_id()	(current_thread_info->cpu_number)
 #define smp_current_task	(current_thread_info->task)
 
 #define NR_CPUS			4
+
+extern bool cpu_online[];
+#define cpu_is_online(i)	(cpu_online[i])
+
+void smp_init(void);
+void smp_boot(void);
 
 #endif

@@ -146,7 +146,7 @@ void idle_init(void)
 	idleproc->mm = &kern_mm;
 	idleproc->pid = PID_IDLE;
 	idleproc->kstack = &init_stack;
-	idleproc->context = (ptr_t)(&init_stack) + THREAD_SIZE - TF_SIZE;
+	idleproc->context = &current_idle_context;
 	strlcpy(idleproc->name, "IDLE", PROC_NAME_LEN_MAX);
 
 	idleproc->state = TASK_RUNNABLE;
@@ -160,10 +160,8 @@ void dump_task(task_t *task)
 	printk("State\t%04x\r\n", task->state);
 	printk("Flags\t%08x\r\n", task->flags);
 	if (task->pid != PID_IDLE) {
-		printk("Context\r\n");
-		dump_trapframe((trapframe_t *)(task->context));
-		printk("Trapframe\r\n");
-		dump_trapframe((trapframe_t *)(task->tf));
+		printk("Context %016x\r\n", task->context);
+		printk("Trapframe %016x\r\n", task->tf);
 	}
 	printk("KSTACK\t%016x\r\n", task->kstack);
 	if (task->pid != PID_IDLE) {
@@ -191,4 +189,9 @@ void task_init(void)
 	dump_task(initproc);
 
 	current_task = idleproc;
+}
+
+void task_init_sched(void)
+{
+	sched_enqueue(&current_rq, initproc);
 }

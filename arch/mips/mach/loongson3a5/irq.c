@@ -27,7 +27,7 @@
  */
 
 #include <asm/mipsregs.h>
-#include <asm/smp.h>
+#include <smp.h>
 #include <asm/irq.h>
 #include <irqregs.h>
 #include <ht_regs.h>

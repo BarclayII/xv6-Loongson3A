@@ -8,20 +8,21 @@
  *
  */
 
+#include <asm/thread_info.h>
+#include <printk.h>
+#include <time.h>
 #include <sched.h>
-#include <string.h>
+#include <limits.h>
 
-struct cpu_run_queue cpu_rq[NR_CPUS];
-
-int sched_init(void)
+void generic_cpu_tick(void)
 {
-	int i;
+	printk("CPUID %d\tticks\t= %d\tPID\t=%d\r\n",
+	    current_thread_info->cpu_number,
+	    current_thread_info->ticks,
+	    current_task->pid);
+	++(current_thread_info->ticks);
 
-	memset(cpu_rq, 0, sizeof(cpu_rq));
-
-	for (i = 0; i < NR_CPUS; ++i) {
-		cpu_rq[i].cpu = i;
+	if (!sched_tick(current_task)) {
+		sched();
 	}
-	return 0;
 }
-

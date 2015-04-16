@@ -46,6 +46,7 @@ OBJS		= arch/mips/entry.o \
 		  arch/mips/traps.o \
 		  arch/mips/except.o \
 		  arch/mips/cache.o \
+		  arch/mips/clock.o \
 		  arch/mips/mm/init.o \
 		  arch/mips/mm/tlbops.o \
 		  arch/mips/mm/pgtable.o \
@@ -72,10 +73,13 @@ OBJS		= arch/mips/entry.o \
 		  kern/sched/task.o \
 		  kern/sched/sched.o \
 		  kern/sched/tasklist.o \
+		  kern/sched/o1.o \
 		  kern/syscall/fork.o \
 		  kern/syscall/execve.o \
 		  kern/printk.o \
 		  kern/panic.o \
+		  kern/clock.o \
+		  kern/smp.o \
 		  kern/init.o $(LIBC_OBJS) \
 
 BINS		= ramdisk/init/init

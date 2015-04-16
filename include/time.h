@@ -8,17 +8,9 @@
  *
  */
 
-#ifndef _ASM_TRAP_H
-#define _ASM_TRAP_H
+#ifndef _TIME_H
+#define _TIME_H
 
-#include <asm/ptrace.h>
-
-void trap_init(void);
-void handle_exception(struct trapframe *tf);
-
-void dump_trapframe(struct trapframe *tf);
-
-int handle_sys(struct trapframe *tf);
-int handle_clock(struct trapframe *tf);
+void generic_cpu_tick(void);
 
 #endif

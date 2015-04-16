@@ -8,7 +8,8 @@
  *
  */
 
-#include <asm/smp.h>
+#include <smp.h>
+#include <asm/trap.h>
 #include <sys/types.h>
 #include <sched.h>
 #include <string.h>
@@ -53,10 +54,28 @@ void switch_task(task_t *newtask)
 	context_t *new = newtask->context;
 	ptr_t newksp = kstacktop(newtask);
 	current_task = newtask;
+
 	switch_context(old, new, newksp);
 }
 
 void sched(void)
 {
-	/* TODO: add lock */
+	/*
+	 * Scheduling is basically made of four steps:
+	 * 1. Push the current task into a run queue,
+	 * 2. Pick a new task from run queue of current processor,
+	 * 3. Pop the selected task,
+	 * 4. Switch to this task.
+	 */
+	task_t *oldtask = current_task;
+	sched_enqueue_minload(oldtask);
+
+	task_t *newtask = sched_pick(&current_rq);
+	if (newtask == NULL) {
+		newtask = idleproc;
+	} else {
+		sched_dequeue(newtask);
+	}
+
+	switch_task(newtask);
 }

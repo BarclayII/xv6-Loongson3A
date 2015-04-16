@@ -15,7 +15,7 @@
 #define _ASM_CPU_H
 
 #include <sys/types.h>
-#include <asm/smp.h>
+#include <smp.h>
 
 /*
  * Descriptor for a cache

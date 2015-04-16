@@ -99,16 +99,17 @@ int main(void)
 
 	srand(read_c0_count());
 
+	smp_init();
+
 	mm_init();
 
+	sched_init();
 	task_init();
+	task_init_sched();
 
 	local_irq_enable();
 
-	switch_task(initproc);
-
-	panic("context switching failed\r\n");
-
+	/* Code below is executed by IDLE */
 	for (;;)
 		/* do nothing */;
 

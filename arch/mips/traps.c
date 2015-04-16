@@ -23,6 +23,7 @@
 #include <printk.h>
 #include <panic.h>
 #include <assert.h>
+#include <sched.h>
 
 unsigned long except_handlers[32];
 extern unsigned long except_generic, except_tlb;
@@ -236,18 +237,7 @@ static int handle_int(struct trapframe *tf)
 {
 	unsigned int cause = tf->cp0_cause;
 	if ((cause & CR_IPx(7)) && (cause & CR_TI)) {
-		unsigned int cmp = read_c0_compare();
-		/* Repeatedly write into CP0_COMPARE until it is ahead, but
-		 * not too far from CP0_COUNT */
-		do {
-			cmp += 0x10000000;
-			write_c0_compare(cmp);
-		} while (cmp - read_c0_count() > 0x10000000);
-		printk("CPUID %d\tticks\t= %d\r\n",
-		    current_thread_info->cpu_number,
-		    current_thread_info->ticks);
-		++(current_thread_info->ticks);
-		return 0;
+		return handle_clock(tf);
 	} else if (cause & CR_IPx(2)) {
 		/* LPC Interrupts */
 		printk("Received LPC Interrupt\r\n");
@@ -431,18 +421,18 @@ void handle_exception(struct trapframe *tf)
 	switch (exccode) {
 	case EC_int:
 		if (handle_int(tf) == 0)
-			return;
+			goto success;
 		break;
 	case EC_bp:
 		if (handle_bp(tf) == 0)
-			return;
+			goto success;
 		break;
 	case EC_sys:
 		/* System call */
 		handle_sys(tf);
 		/* Skip the exception-generating instruction (syscall) */
 		skip_victim(tf);
-		return;
+		goto success;
 	case EC_tlbm:
 		/* Writing on read-only page */
 		break;
@@ -450,7 +440,7 @@ void handle_exception(struct trapframe *tf)
 	case EC_tlbs:
 		/* Loading/storing misses (page faults) */
 		if (handle_pgfault(tf) == 0)
-			return;
+			goto success;
 		break;
 	}
 
@@ -459,5 +449,8 @@ void handle_exception(struct trapframe *tf)
 	    exccode);
 	dump_trapframe(tf);
 	panic("SUSPENDING SYSTEM...\r\n");
+
+success:
+	return;
 }
 
