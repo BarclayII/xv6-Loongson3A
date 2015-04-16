@@ -14,6 +14,7 @@
 #include <asm/mm/page.h>
 #include <asm/addrspace.h>
 #include <asm/bitops.h>
+#include <asm/atomic.h>
 #include <sys/types.h>
 #include <ds/list.h>
 #include <mm/slab.h>
@@ -206,11 +207,14 @@ struct page *free_pages(struct page *base, size_t num);
 void free_all_pages(struct page *freep);
 #define pgfree(p)	free_pages(p, 1)
 
-#define inc_pageref(p)		(++((p)->ref_count))
-#define dec_pageref(p)		(--((p)->ref_count))
+static inline void page_ref(struct page *p)
+{
+	atomic_incd(&(p->ref_count));
+}
+
 static inline void page_unref(struct page *p)
 {
-	dec_pageref(p);
+	atomic_decd(&(p->ref_count));
 	if ((p)->ref_count == 0)
 		pgfree(p);
 }

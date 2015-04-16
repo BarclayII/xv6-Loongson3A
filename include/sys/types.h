@@ -16,7 +16,7 @@ typedef unsigned char uint8, uchar, __u8, uint8_t;
 typedef signed char __s8, int8_t;
 typedef unsigned short uint16, ushort, __u16, uint16_t;
 typedef signed short __s16, int16_t;
-typedef unsigned int uint32, uint, __u32, uint32_t;
+typedef unsigned int uint32, uint, __u32, u32, uint32_t;
 typedef signed int __s32, int32_t;
 typedef unsigned long ulong;
 typedef unsigned long long uint64, __u64, u64, uint64_t;

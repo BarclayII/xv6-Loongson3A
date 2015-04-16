@@ -118,6 +118,12 @@ int vm_area_insert(mm_t *mm, vm_area_t *new_vma)
 	return 0;
 }
 
+/*
+ * FIXME:
+ * Current map_pages() and unmap_pages() implementation does not allow
+ * shared memory.  Should be rewritten
+ */
+
 /* 
  * Map (incontiguous) page list @p to virtual address @vaddr of memory
  * mapping structure @mm.

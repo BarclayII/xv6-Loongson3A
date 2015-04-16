@@ -14,8 +14,6 @@
 #include <asm/cpu.h>
 #include <printk.h>
 #include <panic.h>
-#include <sched.h>
-#include <stddef.h>
 
 void forkret(struct trapframe *tf)
 {

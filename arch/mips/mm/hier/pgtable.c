@@ -239,16 +239,10 @@ int arch_map_page(struct arch_mm_struct *arch_mm, addr_t vaddr,
     struct page *p, unsigned int perm)
 {
 	int retcode;
-	struct page *replace = NULL;
 	pdebug("Mapping physical %016x to virtual %016x (in PGD %016x)\r\n",
 	    PAGE_TO_PADDR(p), vaddr, arch_mm->pgd);
-	retcode = pgtable_insert(&(arch_mm->pgd), vaddr, p, perm, true,
-	    &replace);
-	if (retcode != 0)
-		return retcode;
-	if (replace != NULL)
-		pgfree(replace);
-	return 0;
+	retcode = pgtable_insert(&(arch_mm->pgd), vaddr, p, perm, false, NULL);
+	return retcode;
 }
 
 struct page *arch_unmap_page(arch_mm_t *arch_mm, addr_t vaddr)
