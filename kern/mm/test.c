@@ -68,32 +68,6 @@ static void test_mm(void)
 	printk("Current free pages: %d\r\n", nr_free_pages);
 }
 
-static void test_mm2(void)
-{
-	printk("**********test_mm2**********\r\n");
-	size_t freepages = nr_free_pages;
-	printk("Current free pages: %d\r\n", nr_free_pages);
-	struct page *first = alloc_pages(20);
-	struct page *base, *last;
-	int i;
-	printk("After allocation: %d\r\n", nr_free_pages);
-	for (i = 0, base = first; i < 6; ++i, base = next_page(base))
-		/* nothing */;
-	last = free_pages(base, 7);
-	printk("After freeing middle pages: %d\r\n", nr_free_pages);
-	assert(page_count(first) == 6);
-	assert(page_count(last) == 7);
-	free_pages(last, 7);
-	printk("After freeing tail pages: %d\r\n", nr_free_pages);
-	first = free_pages(first, 1);
-	printk("After freeing first single page: %d\r\n", nr_free_pages);
-	first = free_pages(prev_page(first), 1);
-	printk("After freeing last single page: %d\r\n", nr_free_pages);
-	free_all_pages(first);
-	printk("After freeing all pages: %d\r\n", nr_free_pages);
-	assert(nr_free_pages == freepages);
-}
-
 static void test_pgtable(void)
 {
 	printk("**********test_pgtable**********\r\n");
@@ -361,6 +335,7 @@ static void test_slab3(void)
 void test_uvm(void)
 {
 	printk("**********test_uvm**********\r\n");
+	size_t nr_free = nr_free_pages;
 	mm_t *mm = mm_new();
 	assert(mm != NULL);
 	printk("PGD = %016x\r\n", mm->arch_mm.pgd);
@@ -372,7 +347,9 @@ void test_uvm(void)
 	ret = mm_create_uvm(mm, (void *)0x400000, 5 * PGSIZE,
 	    VMA_READ | VMA_WRITE);
 	assert(ret == 0);
-	assert(!unmap_pages(mm, 0x400000 + 2 * PGSIZE, 1));
+	struct page *p;
+	assert(!unmap_pages(mm, 0x400000 + 2 * PGSIZE, 1, &p));
+	page_list_unref(p);
 	assert(!copy_to_uvm(mm, (void *)0x400080, msg, strlen(msg) + 1));
 	assert(!copy_from_uvm(mm, (void *)0x400080, msg2, strlen(msg) + 1));
 	printk("%s", msg2);
@@ -382,12 +359,12 @@ void test_uvm(void)
 
 	mm_destroy(mm);
 	printk("free pages: %d\r\n", nr_free_pages);
+	assert(nr_free_pages == nr_free);
 }
 
 void mm_test(void)
 {
 	test_mm();
-	test_mm2();
 
 	test_pgtable();
 	test_tlb();

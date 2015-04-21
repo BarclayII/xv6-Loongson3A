@@ -144,7 +144,7 @@ struct page *alloc_cont_pages(size_t num)
  *
  * Returns the first page following the freed page section.
  */
-struct page *free_pages(struct page *base, size_t num)
+struct page *split_pages(struct page *base, size_t num)
 {
 	if (num == 0 || base == NULL)
 		return NULL;
@@ -192,10 +192,16 @@ struct page *free_pages(struct page *base, size_t num)
 	/* From now on the page list is splitted into @base, @first (possibly)
 	 * and (also possibly) @last. */
 
+	return base;
+}
+
+void free_pages(struct page *base, size_t num)
+{
+	struct page *p;
+	if ((p = split_pages(base, num)) == NULL)
+		return;
 	/* Free the pages */
 	free_all_pages(base);
-
-	return last;
 }
 
 void free_all_pages(struct page *fp)
@@ -235,4 +241,26 @@ void free_all_pages(struct page *fp)
 	}
 
 	EXIT_CRITICAL_SECTION(NULL, intr_flag);
+}
+
+void page_list_ref(struct page *p)
+{
+	unsigned int i;
+	struct page *curp = first_page(p);
+	for (i = 0; i < curp->page_count; ++i) {
+		page_ref(curp);
+		curp = next_page(curp);
+	}
+}
+
+void page_list_unref(struct page *p)
+{
+	unsigned int i;
+	struct page *curp = first_page(p), *nextp;
+	unsigned int count = page_count(p);
+	for (i = 0; i < count; ++i) {
+		nextp = next_page(curp);
+		page_unref(curp);
+		curp = nextp;
+	}
 }

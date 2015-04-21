@@ -177,11 +177,14 @@ rollback_vma:
  * UNIX munmap(2) system call allows to unmap only some part of the previously
  * mapped pages, so we probably need to shrink the virtual address area
  * containing the given address, or decompose it into two smaller pieces.
- * Here, unmap_pages() unmaps and _frees_ @nr_pages virtual pages starting from
+ * Here, unmap_pages() unmaps and @nr_pages virtual pages starting from
  * (page-aligned) virtual address @vaddr.  The actual region requested may span
  * across several virtual memory areas, and even contain unmapped pages.
+ *
+ * Does not free pages.  It splits the pages to be freed out from the allocated
+ * page set.
  */
-int unmap_pages(mm_t *mm, addr_t vaddr, size_t nr_pages)
+int unmap_pages(mm_t *mm, addr_t vaddr, size_t nr_pages, struct page **ret)
 {
 	pdebug("Unmapping %d pages from %016x\r\n", nr_pages, vaddr);
 	assert(PAGE_OFF(vaddr) == 0);
@@ -235,17 +238,22 @@ int unmap_pages(mm_t *mm, addr_t vaddr, size_t nr_pages)
 		vm_area_dump(vma_end);
 	}
 
-	/* Unmap and free physical pages */
-	struct page *p;
+	/* Unmap pages */
+	struct page *p, *base = NULL;
 	addr_t cur_vaddr = vaddr;
 	int i;
 	for (i = 0; i < nr_pages; ++i) {
-		/* Unmapped pages are automatically handled in the following
-		 * two functions.  No special handling is needed. */
 		p = arch_unmap_page(&(mm->arch_mm), cur_vaddr);
+		if (!base)
+			base = p;
 		cur_vaddr += PGSIZE;
-		pgfree(p);
 	}
+
+	/* Split the page list */
+	if (ret != NULL)
+		*ret = split_pages(base, nr_pages);
+	else
+		split_pages(base, nr_pages);
 
 	return 0;
 
@@ -273,6 +281,9 @@ int mm_create_uvm(mm_t *mm, void *addr, size_t len, unsigned long vm_flags)
 	if (retcode != 0)
 		goto rollback_pages;
 
+	/* Increase reference counter */
+	page_list_ref(p);
+
 	return 0;
 
 rollback_pages:
@@ -289,7 +300,14 @@ int mm_destroy_uvm(mm_t *mm, void *addr)
 	vm_area_dump(vma);
 	size_t len = vma->end - vma->start;
 	size_t pages = NR_PAGES_NEEDED(len);
-	return unmap_pages(mm, vma->start, pages);
+	struct page *p;
+	int ret;
+	if ((ret = unmap_pages(mm, vma->start, pages, &p)) != 0)
+		return ret;
+
+	page_list_unref(p);
+
+	return 0;
 }
 
 /*

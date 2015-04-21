@@ -203,7 +203,8 @@ struct page *alloc_pages(size_t num);
 struct page *alloc_cont_pages(size_t num);
 #define alloc_page()	alloc_pages(1)
 #define pgalloc()	alloc_page()
-struct page *free_pages(struct page *base, size_t num);
+struct page *split_pages(struct page *base, size_t num);
+void free_pages(struct page *base, size_t num);
 void free_all_pages(struct page *freep);
 #define pgfree(p)	free_pages(p, 1)
 
@@ -219,7 +220,10 @@ static inline void page_unref(struct page *p)
 		pgfree(p);
 }
 
-static inline size_t page_count(struct page *p)
+void page_list_ref(struct page *p);
+void page_list_unref(struct page *p);
+
+static inline unsigned int page_count(struct page *p)
 {
 	return first_page(p)->page_count;
 }

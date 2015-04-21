@@ -124,7 +124,7 @@ vm_area_t *vm_area_find(mm_t *mm, addr_t addr);
 int vm_area_insert(mm_t *mm, vm_area_t *new_vma);
 
 int map_pages(mm_t *mm, addr_t vaddr, struct page *p, unsigned long flags);
-int unmap_pages(mm_t *mm, addr_t vaddr, size_t nr_pages);
+int unmap_pages(mm_t *mm, addr_t vaddr, size_t nr_pages, struct page **ret);
 int mm_create_uvm(mm_t *mm, void *addr, size_t len, unsigned long vm_flags);
 int mm_destroy_uvm(mm_t *mm, void *addr);
 int copy_to_uvm(mm_t *mm, void *uvaddr, void *kvaddr, size_t len);
