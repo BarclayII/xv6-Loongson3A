@@ -354,3 +354,7 @@ int copy_from_uvm(mm_t *mm, void *uvaddr, void *kvaddr, size_t len)
 {
 	return copy_uvm(mm, uvaddr, kvaddr, len, false);
 }
+
+int dup_uvm(mm_t *src, mm_t *dst)
+{
+}

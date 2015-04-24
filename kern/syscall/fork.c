@@ -22,3 +22,13 @@ void forkret(struct trapframe *tf)
 	panic("Returned from arch_forkret???\r\n");
 }
 
+int do_fork(task_t *parent, task_t **child)
+{
+	int ret;
+	task_t *child = task_new();
+	if ((ret = task_early_init(child)) != 0)
+		return ret;
+
+	if ((ret = dup_uvm(parent->mm, child->mm)) != 0)
+		return ret;
+}

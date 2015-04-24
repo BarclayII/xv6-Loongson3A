@@ -49,8 +49,20 @@ int task_setup_mm(task_t *task)
 {
 	int retcode;
 	task->mm = mm_new();
+	if (task->mm == NULL)
+		return -ENOMEM;
 	retcode = arch_mm_new_pgtable(&(task->mm->arch_mm));
-	return retcode;
+	if (retcode != 0) {
+		mm_destroy(task->mm);
+		return retcode;
+	}
+	return 0;
+}
+
+void task_destroy_mm(task_t *task)
+{
+	arch_mm_destroy_pgtable(&(task->mm->arch_mm));
+	mm_destroy(task->mm);
 }
 
 /*
@@ -68,16 +80,27 @@ ptr_t task_setup_kstack(task_t *task)
 	return sp;
 }
 
-void task_early_init(task_t *task)
+void task_destroy_kstack(task_t *task)
+{
+	kfree(task->kstack);
+}
+
+int task_early_init(task_t *task)
 {
 	/* init runs in user mode */
-	assert(task_setup_mm(task) == 0);
+	int retcode;
+	if ((retcode = task_setup_mm(task)) != 0)
+		return retcode;
 	ptr_t ksp = task_setup_kstack(task);
-	assert(ksp != NULL);
+	if (ksp == NULL) {
+		task_destroy_mm(task);
+		return -ENOMEM;
+	}
 	ksp = task_init_trapframe(task, ksp);
 	task_bootstrap_context(task, ksp);
 	set_task_user(task);
 	set_task_enable_intr(task);
+	return 0;
 }
 
 int set_task_ustack(task_t *task)
@@ -106,7 +129,8 @@ void initproc_init(int argc, char *const argv[])
 	if (initproc == NULL)
 		panic("failed to allocate process for init\r\n");
 
-	task_early_init(initproc);
+	if (task_early_init(initproc) != 0)
+		panic("failed to initialize init\r\n");
 
 	/* Directly referencing this symbol actually returns the content
 	 * inside, damn it. */
