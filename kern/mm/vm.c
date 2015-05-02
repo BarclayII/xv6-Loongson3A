@@ -68,17 +68,22 @@ static inline void vm_area_destroy(vm_area_t *vma)
 	kfree(vma);
 }
 
-void mm_destroy(mm_t *mm)
+static void destroy_vma_list(mm_t *mm)
 {
-	/* Destroy hardware-specific memory mapping */
-	destroy_arch_mm(&(mm->arch_mm));
-	/* Traverse virtual memory area list and free each node */
 	vm_area_t *vma, *next_vma;
 	for (vma = first_vma(mm); vma != end_vma(mm); vma = next_vma) {
 		vm_area_remove(mm, vma);
 		next_vma = next_vma(vma);
 		vm_area_destroy(vma);
 	}
+}
+
+void mm_destroy(mm_t *mm)
+{
+	/* Destroy hardware-specific memory mapping */
+	destroy_arch_mm(&(mm->arch_mm));
+	/* Traverse virtual memory area list and free each node */
+	destroy_vma_list(mm);
 	/* Destroy @mm itself */
 	kfree(mm);
 }
@@ -118,34 +123,12 @@ int vm_area_insert(mm_t *mm, vm_area_t *new_vma)
 	return 0;
 }
 
-/*
- * FIXME:
- * Current map_pages() and unmap_pages() implementation does not allow
- * shared memory.  Should be rewritten
- */
-
-/* 
- * Map (incontiguous) page list @p to virtual address @vaddr of memory
- * mapping structure @mm.
- * @vaddr should be page-aligned.
- */
-int map_pages(mm_t *mm, addr_t vaddr, struct page *p, unsigned long flags)
+static int map_page_list(mm_t *mm, addr_t vaddr, struct page *p,
+    unsigned long flags)
 {
-	assert(PAGE_OFF(vaddr) == 0);
-
-	struct page *curp = first_page(p);
 	int i, retcode;
-	addr_t cur_vaddr;
-
-	/* Create a new virtual memory area entry first */
-	cur_vaddr = vaddr;
-	addr_t vaddr_end = cur_vaddr + PGSIZE * page_count(p);
-	vm_area_t *vma = vm_area_new(cur_vaddr, vaddr_end, flags);
-
-	/* Add it to virtual memory area list */
-	if ((retcode = vm_area_insert(mm, vma)) != 0)
-		goto rollback_vma;
-
+	addr_t cur_vaddr = vaddr;
+	struct page *curp = first_page(p);
 	/* Add relations between virtual address sections and physical pages
 	 * into the corresponding page table. */
 	for (i = 0; i < page_count(p); ++i, curp = next_page(curp)) {
@@ -166,6 +149,33 @@ rollback_map:
 		arch_unmap_page(&(mm->arch_mm), cur_vaddr);
 		cur_vaddr += PGSIZE;
 	}
+}
+
+/* 
+ * Map (incontiguous) page list @p to virtual address @vaddr of memory
+ * mapping structure @mm.
+ * @vaddr should be page-aligned.
+ */
+int map_pages(mm_t *mm, addr_t vaddr, struct page *p, unsigned long flags)
+{
+	assert(PAGE_OFF(vaddr) == 0);
+
+	int i, retcode;
+	addr_t cur_vaddr;
+
+	/* Create a new virtual memory area entry first */
+	cur_vaddr = vaddr;
+	addr_t vaddr_end = cur_vaddr + PGSIZE * page_count(p);
+	vm_area_t *vma = vm_area_new(cur_vaddr, vaddr_end, flags);
+
+	/* Add it to virtual memory area list */
+	if ((retcode = vm_area_insert(mm, vma)) != 0)
+		goto rollback_vma;
+
+	if ((retcode = map_page_list(mm, vaddr, p, flags)) != 0)
+		goto rollback_vma;
+
+	return 0;
 
 rollback_vma:
 	vm_area_destroy(vma);
@@ -355,6 +365,68 @@ int copy_from_uvm(mm_t *mm, void *uvaddr, void *kvaddr, size_t len)
 	return copy_uvm(mm, uvaddr, kvaddr, len, false);
 }
 
-int dup_uvm(mm_t *src, mm_t *dst)
+/* Duplicate a memory map */
+int dup_uvm(mm_t *src, mm_t *dst, bool share)
 {
+	/*
+	 * Since we use copy-on-write technique here, duplicating memory
+	 * maps consists of these steps:
+	 * 1. Copy virtual memory area list,
+	 * 2. Find the corresponding physical pages in @src and map them to
+	 *    @dst,
+	 * 3. Mark both lists of physical pages copy-on-write.
+	 */
+	vm_area_t *vma, *new_vma;
+	struct page *p;
+	unsigned int flags, page_lists_mapped = 0;
+	for (vma = first_vma(src); vma != end_vma(src); vma = next_vma(vma)) {
+		new_vma = vm_area_new(vma->start, vma->end, vma->flags);
+		if (new_vma == NULL) {
+			retcode = -ENOMEM;
+			goto rollback_vma;
+		}
+		vm_area_insert(dst, new_vma);
+	}
+
+	for (vma = first_vma(src), new_vma = first_vma(dst);
+	    vma != end_vma(src);
+	    vma = next_vma(vma), new_vma = next_vma(new_vma)) {
+		assert(vma->start == new_vma->start);
+		assert(vma->end == new_vma->end);
+		retcode = arch_mm_get_page(&(src->arch_mm), vma->start, &p,
+		    &flags);
+		if (retcode != 0)
+			goto rollback_share;
+		if (share) {
+			retcode = map_pages(dst, vma->start, p, flags);
+			if (retcode != 0)
+				goto rollback_share;
+		} else {
+			unsigned int new_flags = flags | VMA_COW;
+			change_perm(src, vma->start, new_flags);
+			retcode = map_pages(dst, vma->start, p, new_flags);
+			if (retcode != 0)
+				goto rollback_share;
+		}
+		page_list_ref(p);
+		++page_lists_mapped;
+	}
+	return 0;
+
+rollback_share:
+	int i;
+	size_t nr_pages;
+	vma = first_vma(src);
+	new_vma = first_vma(dst);
+	for (i = 0; i < page_lists_mapped; ++i) {
+		assert(vma->start == new_vma->start);
+		assert(vma->end == new_vma->end);
+		nr_pages = NR_PAGES_NEEDED(new_vma->end - new_vma->start);
+		assert(unmap_pages(dst, new_vma->start, nr_pages, &p) == 0);
+		page_list_unref(p);
+		assert(p->ref_count > 0);
+	}
+rollback_vma:
+	destroy_vma_list(mm);
+	return retcode;
 }

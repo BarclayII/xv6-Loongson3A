@@ -27,11 +27,24 @@ void destroy_arch_mm(arch_mm_t *arch_mm)
 
 unsigned int page_perm(unsigned long vm_flags)
 {
-	unsigned int perm = PTE_VALID | PTE_NOEXEC;
+	unsigned int perm = PTE_VALID;
 	if (vm_flags & VMA_WRITE)
 		perm |= PTE_DIRTY;
 	if (!(vm_flags & VMA_EXEC))
 		perm |= PTE_NOEXEC;
+	if (vm_flags & VMA_COW)
+		perm |= PTE_COW;
 	return perm;
 }
 
+unsigned int vma_perm(unsigned long pte_flags)
+{
+	unsigned int perm = VMA_READ;
+	if (pte_flags & PTE_DIRTY)
+		perm |= VMA_WRITE;
+	if (!(pte_flags & PTE_NOEXEC))
+		perm |= VMA_EXEC;
+	if (pte_flags & PTE_COW)
+		perm |= VMA_COW;
+	return perm;
+}

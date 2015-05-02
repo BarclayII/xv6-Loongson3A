@@ -29,10 +29,13 @@ typedef struct vm_area_struct {
 	addr_t		end;		/* ending address (exclusive) */
 	/* values of this field are defined in <asm/mm/[imp]/vmm.h> */
 	unsigned long	flags;		/* various flags */
-/* These flags match ELF segment flags */
+/*
+ * VMA_EXEC, VMA_WRITE and VMA_READ match ELF flags.
+ */
 #define VMA_EXEC	0x01
 #define VMA_WRITE	0x02
 #define VMA_READ	0x04
+#define VMA_COW		0x08		/* Copy on Write */
 	struct mm_struct *mm;		/* memory mapping structure */
 	list_node_t	node;		/* list node */
 } vm_area_t;

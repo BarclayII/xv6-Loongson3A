@@ -261,6 +261,20 @@ unsigned long arch_mm_get_pfn(struct arch_mm_struct *arch_mm, addr_t vaddr)
 		return 0;
 }
 
+int arch_mm_get_page(struct arch_mm_struct *arch_mm, addr_t vaddr,
+    struct page **p, unsigned int *flags)
+{
+	struct pagedesc pdesc;
+	pgtable_get(&(arch_mm->pgd), vaddr, false, &pdesc);
+	if (pdesc.pte) {
+		*p = PADDR_TO_PAGE(pdesc.pte[pdesc.ptx]);
+		*flags = vma_perm(pdesc.pte[pdesc.ptx] & PTE_LOWMASK);
+		return 0;
+	} else {
+		return -ENOENT;
+	}
+}
+
 int arch_mm_new_pgtable(struct arch_mm_struct *arch_mm)
 {
 	/* Allocate a PGD here */
