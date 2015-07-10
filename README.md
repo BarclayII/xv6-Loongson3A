@@ -1,4 +1,7 @@
 # xv6-Loongson3A
+
+**This repository is superseded by [AIMv6](https://github.com/BarclayII/AIMv6).**
+
 Well, I intended to port xv6 onto Loongson 3A (or MIPS64r2) first, but I soon found out that xv6 is too... primitive, yeah.  It simply does not satisfy current
 operating system research standard.
 

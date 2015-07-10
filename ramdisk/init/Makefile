@@ -6,7 +6,7 @@
 # option) any later version.
 
 ######## Configuration goes here ########
-CROSS_COMPILE	= mips64el-linux-
+CROSS_COMPILE	= mips64-linux-gnu-
 
 MACH		= loongson3a5
 
@@ -15,8 +15,8 @@ ROOT		= ../..
 
 OUTPUT_FORMAT	= elf64-tradlittlemips
 
-CC		= $(CROSS_COMPILE)gcc
-LD		= $(CROSS_COMPILE)ld
+CC		= $(CROSS_COMPILE)gcc -EL
+LD		= $(CROSS_COMPILE)ld -EL
 OBJDUMP		= $(CROSS_COMPILE)objdump
 OBJCOPY		= $(CROSS_COMPILE)objcopy
 
